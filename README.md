@@ -1,6 +1,7 @@
 jQuery grid plugin based on jQueryui widget design
 ==================================================
 Copyright (C) 2012 Paramvir Dhindsa
+
 http://paramquery.com/
 
 ParamQuery grid is a lightweight jQuery grid plugin inspired by MS Excel and Google spreadsheet. 

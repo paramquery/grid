@@ -4,6 +4,9 @@ Copyright (C) 2012 Paramvir Dhindsa
 
 http://paramquery.com/
 
+Released under MIT license
+
+
 ParamQuery grid is a lightweight jQuery grid plugin inspired by MS Excel and Google spreadsheet. 
 
 It supports all the major browsers. and has been tested in IE 6,7,8, Firefox, Chrome, Opera, etc. 

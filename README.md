@@ -20,6 +20,8 @@ API: http://paramquery.com/api
 
 Demos or Examples: http://paramquery.com/demos
 
+Download: http://paramquery.com/download
+
 /*********************************************/
 
 Features:

@@ -12,20 +12,20 @@ ParamQuery grid is a lightweight jQuery grid plugin inspired by MS Excel and Goo
 
 It's free to use in any commercial or open source project and is licensed under very permissive MIT license.
 
-/*********************************************/
 
-Tutorial: http://paramquery.com/tutorial
 
-API: http://paramquery.com/api
+- Tutorial: http://paramquery.com/tutorial
 
-Demos or Examples: http://paramquery.com/demos
+- API: http://paramquery.com/api
 
-Download: http://paramquery.com/download
+- Demos or Examples: http://paramquery.com/demos
 
-/*********************************************/
+- Download: http://paramquery.com/download
 
-Features:
 
+# Features:
+
+```
 It's designed on jQueryui widget pattern so it has all the advantages of it e.g. changing any option during runtime, methods like enable, disable, destroy, etc.
 
 Sorting for common data formats like Integer, real numbers, Strings, etc.
@@ -53,3 +53,4 @@ Customizable theme.
 Hiding / Showing columns.
 
 Many more...
+```

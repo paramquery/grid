@@ -5,7 +5,7 @@
  * Released under MIT license
  * http://paramquery.com/license
  * 
- */       
+ */     	
 (function($){
 	$.adapter={
 		xmlToArray:function(data,obj){
@@ -1378,6 +1378,7 @@ fnSB._setOptions=function(){
         }
         else if (that.$td_focus) {
             var obj = that._getRowColIndx(that.$td_focus);
+			if(obj==undefined)return;
             rowIndx = obj.rowIndx;
             colIndx = obj.colIndx;
         }

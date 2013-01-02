@@ -23,7 +23,7 @@ It's free to use in any commercial or open source project and is licensed under 
 - Download: http://paramquery.com/download
 
 
-# Features:
+### Features:
 
 ```
 It's designed on jQueryui widget pattern so it has all the advantages of it e.g. changing any option during runtime, methods like enable, disable, destroy, etc.

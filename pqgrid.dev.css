@@ -1,11 +1,11 @@
 /**
- * ParamQuery Grid a.k.a. pqGrid v1.0
+ * ParamQuery Grid a.k.a. pqGrid v1.0.1
  * 
  * Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
  * Released under MIT license
  * http://paramquery.com/license
  * 
- */       
+ */     	
 div.pq-grid{
 	font-family: Tahoma;
     font-size: 11px;
@@ -61,8 +61,7 @@ div.pq-grid-header{
 }
 div.pq-grid-header td{
 	background:url('images/column-header-bg.png');
-	font-weight:bold;
-	vertical-align:middle;
+	font-weight:bold;	
 }
 div.pq-grid-header td.pq-col-sort-asc,div.pq-grid-header td.pq-col-sort-desc{
 	background: url(images/column-header-over-bg.gif) #ebf3fd repeat-x 0px top;								
@@ -249,6 +248,13 @@ div.pq-hvscroll-square{
 .pq-pager  span{
 	font-size:11px;				
 }	
+.pq-pager span.pq-seperator{
+	height:18px;
+	border-left:1px solid #ccc;
+	border-right:1px solid #fff;
+	display:inline-block;
+	margin-right:5px;
+}
 .pq-pager button{
 	height:24px;width:24px;margin-right:5px;
 }
@@ -258,7 +264,7 @@ div.pq-hvscroll-square{
 	width:35px;
 	margin-right:5px;	
 }
-div.pq-pager span,input{
+div.pq-pager span,div.pq-pager select{
 	margin-right:5px;
 }
 div.pq-pager .ui-button-icon-primary{
@@ -275,6 +281,9 @@ div.pq-pager .page-next{
 }
 div.pq-pager .page-last{
 	background:url('images/page-last.gif')
+}
+div.pq-pager .refresh{
+	background:url('images/refresh.gif')
 }
 .pq-scrollbar-vert{
 	display:block;

@@ -1,5 +1,5 @@
 /**
- * ParamQuery Grid a.k.a. pqGrid v1.0
+ * ParamQuery Grid a.k.a. pqGrid v1.0.1
  * 
  * Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
  * Released under MIT license
@@ -79,7 +79,7 @@ fnPG._create=function(){
 	var that=this;
 	this.element.addClass("pq-pager").css({});
 	this.element.disableSelection();
-	this.first = $( "<button></button>", {
+	this.first = $( "<button title='First Page'></button>", {
 	})
 	.appendTo( this.element )
 	.button({
@@ -95,7 +95,7 @@ fnPG._create=function(){
 			}
 		}					
 	});
-	this.prev=$( "<button></button>", {					
+	this.prev=$( "<button title='Previous Page'></button>", {					
 	})
 	.appendTo( this.element )
 	.button({icons:{primary:"page-prev"}}).bind("click",function(evt){
@@ -108,6 +108,10 @@ fnPG._create=function(){
 			}						
 		}
 	});
+	$("<span class='pq-seperator'></span>").appendTo(this.element);
+	$( "<span>Page </span>", {					
+	})
+	.appendTo( this.element )
 	this.page=$( "<input type='text' tabindex='0' />")
 	.appendTo( this.element )
 	.click(function(evt){
@@ -141,7 +145,8 @@ fnPG._create=function(){
 	this.$total=$( "<span class='total'>3</span>", {					
 	})
 	.appendTo( this.element )
-	this.next=$( "<button></button>", {					
+	$("<span class='pq-seperator'></span>").appendTo(this.element);
+	this.next=$( "<button title='Next Page'></button>", {					
 	})
 	.appendTo( this.element )
 	.button({icons:{primary:"page-next"}}).bind("click",function(evt){
@@ -150,7 +155,7 @@ fnPG._create=function(){
 			that.option( {currentPage:val} );
 		}				
 	});
-	this.last=$( "<button></button>", {					
+	this.last=$( "<button title='Last Page'></button>", {					
 	})
 	.appendTo( this.element )
 	.button({icons:{primary:"page-last"}}).bind("click",function(evt){
@@ -159,13 +164,14 @@ fnPG._create=function(){
 			that.option( {currentPage:val} );
 		}									
 	});
+	$("<span class='pq-seperator'></span>").appendTo(this.element);
 	$("<span>Records per page: </span>")
 	.appendTo(this.element)
 	this.$rPP=$("<select></select>")
 	.appendTo(this.element)
 	.click(function(evt){
-		if($.browser.opera)
-		$(this).focus();
+		if(!$.browser.msie)
+			$(this).focus();
 	})								
 	.change(function(evt){
 		var val=$(this).val();
@@ -173,6 +179,14 @@ fnPG._create=function(){
 			that.options.rPP=val;
 		}
 	})
+	$("<span class='pq-seperator'></span>").appendTo(this.element);
+	this.$refresh=$("<button title='Refresh'></button>")
+	.appendTo(this.element)
+	.button({icons:{primary:"refresh"}}).bind("click",function(evt){		
+		if ( that._trigger( "refresh", evt ) !== false ) {			
+		}				
+	});
+	$("<span class='pq-seperator'></span>").appendTo(this.element);
 	this.$msg=$("<span class='pq-pager-msg'></span>")
 	.appendTo( this.element )
 	this._refresh();
@@ -462,61 +476,73 @@ fnSB._setOptions=function(){
 (function ($) {
     var fn = {};
     fn.options = {
-		colModel: null,
+        cellSelected: null,
+        colModel: null,
         columnBorders: true,
-        dataModel: {curPage:0,totalPages:0,rPP:10,location:"local", sorting:"local",sortDir:"up",method:"GET",rPPOptions:[10,20,50,100]},
+        dataModel: {
+            curPage: 0,
+            totalPages: 0,
+            rPP: 10,
+            location: "local",
+            sorting: "local",
+            sortDir: "up",
+            method: "GET",
+            rPPOptions: [10, 20, 50, 100]
+        },
+        draggable: false,
         editable: true,
         freezeCols: 0,
-		height: 400,
-        resizable: false,
-		draggable:false,
-        minWidth: 50,                		        
+        height: 400,
+        minWidth: 50,
         numberCell: true,
-		numberCellWidth: 50,        		
-		sortable:true,
-		cellSelected:null,
-		width: 600,
-		wrap: true
+        numberCellWidth: 50,
+        resizable: false,
+        sortable: true,
+        title: "&nbsp;",
+        width: 600,
+        wrap: true
     }
     fn._destroyResizable = function () {
-        if (this.element.data("resizable"))
-            this.element.resizable('destroy');
+        if (this.element.data("resizable")) this.element.resizable('destroy');
     }
     fn._destroyDraggable = function () {
-        if (this.element.data("draggable"))
-            this.element.draggable('destroy');
+        if (this.element.data("draggable")) this.element.draggable('destroy');
     }
-    fn.disable=function(){
-		if(this.$disable==null)
-		this.$disable= $("<div class='pq-grid-disable'></div>").css("opacity",0.2).appendTo(this.element);
-	}
-    fn.enable=function(){
-		if(this.$disable){
-			this.element[0].removeChild(this.$disable[0]);
-			this.$disable=null;	
-		}					
-	}	
-	fn._destroy = function () {
+    fn.disable = function () {
+        if (this.$disable == null) this.$disable = $("<div class='pq-grid-disable'></div>").css("opacity", 0.2).appendTo(this.element);
+    }
+    fn.enable = function () {
+        if (this.$disable) {
+            this.element[0].removeChild(this.$disable[0]);
+            this.$disable = null;
+        }
+    }
+    fn._destroy = function () {
         this._destroyResizable();
-		this._destroyDraggable();
+        this._destroyDraggable(); 
         this.element.empty(); 
         this.element.css('height', "");
         this.element.css('width', "");
         this.element.removeClass('pq-grid').removeData();
     }
     fn._findCellFromEvtCoords = function (evt) {
-		if(this.$tbl==null){
-			return { $td: null, rowIndx: null, colIndx: null };
-		}
+        if (this.$tbl == null) {
+            return {
+                $td: null,
+                rowIndx: null,
+                colIndx: null
+            };
+        }
         var top = evt.pageY - this.$cont.offset().top;
         var left = evt.pageX - this.$cont.offset().left;
         var $trs = this.$tbl.find("tr");
-        var indx = 0, rowIndx = 0, colIndx = 0;
+        var indx = 0,
+            rowIndx = 0,
+            colIndx = 0;
         for (var i = 1; i < $trs.length; i++) {
             if ($trs[i].offsetTop > top) {
                 break;
-            }
-            else {
+            } else {
                 indx++;
             }
         }
@@ -527,8 +553,7 @@ fnSB._setOptions=function(){
         for (var i = 1; i < $tds.length; i++) {
             if ($tds[i].offsetLeft > left) {
                 break;
-            }
-            else {
+            } else {
                 indx++;
             }
         }
@@ -537,13 +562,22 @@ fnSB._setOptions=function(){
             $td = $(evt.target).parent("td");
         }
         colIndx = parseInt($td.attr('pq-col-indx'))
-        return { $td: $td, rowIndx: rowIndx, colIndx: colIndx };
+        return {
+            $td: $td,
+            rowIndx: rowIndx,
+            colIndx: colIndx
+        };
     }
     fn._create = function () {
         this.minWidth = this.options.minWidth ? this.options.minWidth : 50;
-        this.cols = []; this.widths = []; this.outerWidths = [];
+        this.cols = [];
+        this.widths = [];
+        this.outerWidths = [];
         this.rowHeight = 22;
-        this.hidearr = []; this.hidearrHS = []; this.lockedarr = []; this.flexarr = [];
+        this.hidearr = [];
+        this.hidearrHS = [];
+        this.lockedarr = [];
+        this.flexarr = [];
         this.lockedGrid = false;
         this.numberCell = this.options.numberCell;
         this.numberCellWidth = 50;
@@ -556,11 +590,9 @@ fnSB._setOptions=function(){
         $(this.colModel).each(function (i, col) {
             if (col.width != undefined) {
                 var wd = parseInt(col.width)
-                if (wd < that.minWidth)
-                    wd = that.minWidth;
+                if (wd < that.minWidth) wd = that.minWidth;
                 that.widths[i] = wd;
-            }
-            else {
+            } else {
                 that.widths[i] = that.minWidth;
             }
         });
@@ -581,20 +613,23 @@ fnSB._setOptions=function(){
         this.$header_o = $("div.pq-header-outer", this.$grid_right);
         this.$header = $("div.pq-grid-header", this.$grid_right);
         this.$footer = $("div.pq-grid-footer", this.element); 
-        this.$cont_o = $("div.pq-cont-right", this.$grid_right)
+        this.$cont_o = $("div.pq-cont-right", this.$grid_right);
         this.$cont = $("div.pq-cont", this.$grid_right).click(function (evt) {
-            if (evt.target.nodeName.toUpperCase() == "INPUT") return; 
-            if (that._isEditCell(evt)) { return true; } 
+            if (that._isEditCell(evt)) {
+                return true;
+            } 
             var obj = that._findCellFromEvtCoords(evt);
-            var $td = obj.$td, rowIndx = obj.rowIndx, colIndx = obj.colIndx;
-			if($td==null||$td.length==0){
-				return;
-			}
-            if (that.$td_edit && (that.$td_edit[0] == $td[0])) {
+            var $td = obj.$td,
+                rowIndx = obj.rowIndx,
+                colIndx = obj.colIndx;
+            if ($td == null || $td.length == 0) {
+                return;
+            }
+            if (that.$td_edit && (that.$td_edit[0] == $td[0])) { 
                 return true;
             }
-            if (that.$tr_focus == null && that.$td_focus && (that.$td_focus[0] == $td[0])) {
-                that.editCell($td);
+            if (that.$tr_focus == null && that.$td_focus && (that.$td_focus[0] == $td[0])) { 
+                that._editCell($td);
                 return true;
             }
             if ($td.hasClass('pq-row-selector')) {
@@ -602,7 +637,7 @@ fnSB._setOptions=function(){
                 return;
             }
             if ($td)
-                that.setSelection(rowIndx, colIndx);
+            that.setSelection(rowIndx, colIndx, evt);
         }).dblclick(function (evt) {
             return true;
         });
@@ -611,22 +646,22 @@ fnSB._setOptions=function(){
             var evt = evt.originalEvent; 
             if (evt.wheelDelta) {
                 num = evt.wheelDelta / 120;
-            }
-            else if (evt.detail) {
+            } else if (evt.detail) { 
                 num = evt.detail * -1 / 3;
             }
             var cur_pos = parseInt(that.$vscroll.pqScrollBar('option', 'cur_pos'));
-			var new_pos = cur_pos - num;
-			if(new_pos >= 0){
-            	that.$vscroll.pqScrollBar('option', 'cur_pos', cur_pos - num).pqScrollBar('scroll');				
-			}
+            var new_pos = cur_pos - num;
+            if (new_pos >= 0) {
+                that.$vscroll.pqScrollBar('option', 'cur_pos', cur_pos - num).pqScrollBar('scroll');
+            }
             return false;
         })
         var prevVScroll = 0;
         $("<div class='pq-hvscroll-square'></div>").appendTo(this.$grid_inner);
         this.$vscroll = $("<div class='pq-vscroll'></div>").appendTo(this.$grid_inner);
         this.prevVScroll = 0;
-        this.$vscroll.pqScrollBar({ direction: "vertical",
+        this.$vscroll.pqScrollBar({
+            direction: "vertical",
             cur_pos: 0,
             scroll: function (evt, obj) {
                 that.$cont[0].scrollTop = 0; 
@@ -638,7 +673,8 @@ fnSB._setOptions=function(){
         });
         var prevHScroll = 0;
         this.$hscroll = $("<div class='pq-hscroll'></div>").appendTo(this.$grid_inner);
-        this.$hscroll.pqScrollBar({ direction: "horizontal",
+        this.$hscroll.pqScrollBar({
+            direction: "horizontal",
             cur_pos: 0,
             scroll: function (evt, obj) {
                 that._bufferObj_calcInitFinalH();
@@ -653,81 +689,84 @@ fnSB._setOptions=function(){
         this.element.width(this.options.width + "px").height(this.options.height + "px");
         this.element.disableSelection();
         if ($.browser.opera) {
-            this.$grid_inner.bind("keypress.pq-grid", { that: this }, function (evt) {
+            this.$grid_inner.bind("keypress.pq-grid", {
+                that: this
+            }, function (evt) {
+                that.keyPressDown(evt);
+            })
+        } else {
+            this.$grid_inner.bind("keydown.pq-grid", {
+                that: this
+            }, function (evt) {
                 that.keyPressDown(evt);
             })
         }
-        else {
-            this.$grid_inner.bind("keydown.pq-grid", { that: this }, function (evt) {
-                that.keyPressDown(evt);
-            })
-        }
-		this._refreshOptions();
-		this._refreshTitle();        
+        this._refreshOptions();
+        this._refreshTitle();
         var DM = this.options.dataModel;
-        if (typeof DM.sortIndx == "number" && DM.sorting=="local" && DM.location=="local") {
+        if (typeof DM.sortIndx == "number" && DM.sorting == "local" && DM.location == "local") {
             this._sortLocalData(DM.sortIndx, DM.sortDir, this.colModel[DM.sortIndx].dataType); 
         }
-		this._initData(); 
+        this._initData(); 
         this._refresh();
     }
-	fn._getCreateEventData=function(){
-		return {
-			dataModel: this.options.dataModel,
-			data:this.data,
-			colModel:this.options.colModel
-		};
-	}
-	fn._refreshOptions=function(){
-		this._refreshDataOptions();
-	}
-	fn._refreshDataOptions=function(){
-	}
+    fn._getCreateEventData = function () {
+        return {
+            dataModel: this.options.dataModel,
+            data: this.data,
+            colModel: this.options.colModel
+        };
+    }
+    fn._refreshOptions = function () {
+        this._refreshDataOptions();
+    }
+    fn._refreshDataOptions = function () {
+    }
     fn._isEditCell = function (evt) {
         var $targ = $(evt.target);
-        if ($targ.hasClass("pq-cell-selected-border-edit") || $targ.parent('div.pq-cell-selected-border-edit').length > 0) {
+        if ($targ.hasClass("pq-cell-selected-border-edit") || $targ.parents('div.pq-cell-selected-border-edit').length > 0) {
             return true;
         }
         return false;
     }
-	fn._initPager=function(){
-		var DM = this.options.dataModel;
-		var that=this;
+    fn._initPager = function () {
+        var DM = this.options.dataModel;
+        var that = this;
         var obj2 = {
             rPP: DM.rPP,
             rPPOptions: DM.rPPOptions,
             change: function (evt, obj) {
                 if (obj.curPage != undefined) DM.curPage = obj.curPage;
                 if (obj.rPP != undefined) DM.rPP = obj.rPP;
-				if(DM.paging=="remote")
-                	that.remoteRequest();
-				else{
-					that._refreshDataFromDataModel();
-					that._refresh();
-				}	
+                if (DM.paging == "remote") that.remoteRequest();
+                else {
+                    that._refreshDataFromDataModel();
+                    that._refresh();
+                }
+            },
+            refresh: function (evt) {
+                that.refreshDataAndView();
             }
         };
         if (DM.paging) {
             this.$footer.pqPager(obj2);
-        }
-        else {
+        } else {
             this.$footer.height(15);
-        }		
-	}
-	fn._initData = function () {
+        }
+    }
+    fn._initData = function () {
         var that = this;
         var dataModel = this.options.dataModel;
         if (dataModel == undefined) {
             throw ("dataModel not found.");
         }
-		this._initPager();
+        this._initPager();
         if (dataModel.location == "remote") {
             var that = this;
             this.generateLoading();
             this.remoteRequest();
-        }
-        else {
-			this._refreshDataFromDataModel();
+        } else { 
+            this._refreshDataFromDataModel();
         }
     }
     fn._refreshHideArrHS = function () {
@@ -743,8 +782,7 @@ fnSB._setOptions=function(){
                 }
                 that.hidearrHS[i] = true;
             }
-        }
-        else {
+        } else { 
         }
     }
     fn.generateLoading = function () {
@@ -758,101 +796,110 @@ fnSB._setOptions=function(){
     fn.hideLoading = function () {
         this.element.find("div.pq-loading").hide();
     }
-	fn._refreshDataFromDataModel=function(){
-		var DM = this.options.dataModel;
-		if(DM.data==null||DM.data.length==0){
-			if(DM.paging){
-				DM.curPage=0;
-				DM.totalPages=0;				
-			}
-			return;
-		}
-		if(DM.paging && DM.paging=='local'){
-			DM.totalPages = Math.ceil(DM.data.length/DM.rPP);
-			if(DM.curPage>DM.totalPages){
-				DM.curPage=DM.totalPages;
-			}			
-			if(DM.curPage<1 && DM.totalPages>0){
-				DM.curPage=1;
-			}
-			var begIndx=(DM.curPage-1)*DM.rPP;
-			var endIndx=DM.curPage*DM.rPP;			
-			if(endIndx>DM.data.length){
-				endIndx=DM.data.length;	
-			}			
-			this.data = DM.data.slice(begIndx,endIndx);					
-		}
-		else{
-			this.data = DM.data;
-		}
-	}
+    fn._refreshDataFromDataModel = function () {
+        var DM = this.options.dataModel;
+        if (DM.data == null || DM.data.length == 0) {
+            if (DM.paging) {
+                DM.curPage = 0;
+                DM.totalPages = 0;
+            }
+            return;
+        }
+        if (DM.paging && DM.paging == 'local') {
+            DM.totalPages = Math.ceil(DM.data.length / DM.rPP); 
+            if (DM.curPage > DM.totalPages) {
+                DM.curPage = DM.totalPages; 
+            }
+            if (DM.curPage < 1 && DM.totalPages > 0) {
+                DM.curPage = 1;
+            }
+            var begIndx = (DM.curPage - 1) * DM.rPP;
+            var endIndx = DM.curPage * DM.rPP;
+            if (endIndx > DM.data.length) {
+                endIndx = DM.data.length;
+            }
+            this.data = DM.data.slice(begIndx, endIndx);
+        } else {
+            this.data = DM.data;
+        }
+    }
     fn.remoteRequest = function (callback_fn) {
-		if(this.loading){
-			this.xhr.abort();
-		}
+        if (this.loading) { 
+            this.xhr.abort();
+        }
         var that = this;
         var url = "";
-		var dataURL="";
+        var dataURL = "";
         var DM = this.options.dataModel;
         if (typeof DM.getUrl == "function") {
-			var objURL=DM.getUrl();
-            if(objURL && objURL.url) url = objURL.url;
-			if(objURL && objURL.data) dataURL=objURL.data;
+            var objURL = DM.getUrl();
+            if (objURL && objURL.url) url = objURL.url;
+            if (objURL && objURL.data) dataURL = objURL.data;
         }
-		if(!url){
-			return;
-		}
+        if (!url) {
+            return;
+        }
         this.loading = true;
         this.showLoading();
-        this.xhr=$.ajax({ url: url, dataType: DM.dataType,
-            async: true, cache: false, type:DM.method,
-			data:dataURL,
-			beforeSend:function(jqXHR, settings){
+        this.xhr = $.ajax({
+            url: url,
+            dataType: DM.dataType,
+            async: true,
+            cache: false,
+            type: DM.method,
+            data: dataURL,
+            beforeSend: function (jqXHR, settings) {
                 if (typeof DM.beforeSend == "function") {
-					return DM.beforeSend(jqXHR,settings);
-				}				
-			},
-            success: function (responseObj, textStatus, jqXHR) {
-				var dataLoaded=false;
-                if (typeof DM.getData == "function") {
-                    var retObj = DM.getData(responseObj,textStatus,jqXHR); 
-                    DM.data=retObj.data;
-                    if(DM.paging){
-						if(DM.paging=="remote"){
-							if(retObj.curPage)	
-		                    	DM.curPage = retObj.curPage;
-							if(retObj.totalPages)	
-		                    	DM.totalPages = retObj.totalPages;							
-						}
-					}
-					that._refreshDataFromDataModel();
-					if(DM.sorting=="local" && DM.sortIndx !=undefined ){ 
-						that._refreshSortingDataAndView(true);	
-					}
-					else{
-						that._refreshViewAfterDataSort();	
-					}							
+                    return DM.beforeSend(jqXHR, settings);
                 }
-                else {
-					throw("getData callback not found!");
-                }					
+            },
+            success: function (responseObj, textStatus, jqXHR) {
+                var dataLoaded = false;
+                if (typeof DM.getData == "function") {
+                    var retObj = DM.getData(responseObj, textStatus, jqXHR); 
+                    DM.data = retObj.data;
+                    if (DM.paging) {
+                        if (DM.paging == "remote") {
+                            if (retObj.curPage) DM.curPage = retObj.curPage;
+                            if (retObj.totalPages) DM.totalPages = retObj.totalPages;
+                        }
+                    }
+                    that._refreshDataFromDataModel();
+                    if (DM.sorting == "local" && DM.sortIndx != undefined) { 
+                        that._refreshSortingDataAndView(true);
+                    } else {
+                        that._refreshViewAfterDataSort();
+                    }
+                } else {
+                    throw ("getData callback not found!");
+                }
                 that.hideLoading();
                 that.loading = false;
-				that._trigger("load",null,{dataModel:that.options.dataModel,data:that.data});
-				if(typeof callback_fn=="function")
-					callback_fn();
-            }, error: function (jqXHR, textStatus, errorThrown) {
+                that._trigger("load", null, {
+                    dataModel: that.options.dataModel,
+                    data: that.data
+                });
+                if (typeof callback_fn == "function") callback_fn();
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
                 that.hideLoading();
-				that.loading = false;
+                that.loading = false;
             }
         });
     }
+	fn._fixFireFoxContentEditableIssue=function(){
+        if(!$.browser.msie){
+			this.$grid_inner.focus(); 	
+		}							
+	}
     fn.selectCellRowCallback = function (fn) {
         var rowIndx, colIndx;
         if (this.$tr_focus) {
             rowIndx = this.$tr_focus.attr("pq-row-indx");
-        }
-        else if (this.$td_focus) {
+        } else if (this.$td_edit) {
+            rowIndx = this.$td_edit.parent("tr").attr("pq-row-indx");
+            colIndx = this.$td_edit.attr("pq-col-indx");
+        } else if (this.$td_focus) {
             rowIndx = this.$td_focus.parent("tr").attr("pq-row-indx");
             colIndx = this.$td_focus.attr("pq-col-indx");
         }
@@ -861,15 +908,17 @@ fnSB._setOptions=function(){
             fn.call(that); 
         }, '_generateTables');
         if (this.$tr_focus) {
-			this._boundRow(rowIndx);
+            this._boundRow(rowIndx); 
+        } else if (this.$td_edit) {
+            this._boundCell(rowIndx, colIndx); 
+        } else if (this.$td_focus) { 
+            this._boundCell(rowIndx, colIndx); 
         }
-        else if (this.$td_focus) {
-			this._boundCell(rowIndx,colIndx);
-        }
+        this._setGridFocus(); 
     }
-	fn._refreshTitle=function(){
-		this.$title.html(this.options.title);
-	}
+    fn._refreshTitle = function () {
+        this.$title.html(this.options.title);
+    }
     fn._refreshDraggable = function () {
         if (this.options.draggable) {
             this.$title.addClass('draggable');
@@ -878,8 +927,7 @@ fnSB._setOptions=function(){
                 start: function (evt, ui) {
                 }
             });
-        }
-        else {
+        } else {
             this._destroyDraggable();
         }
     }
@@ -905,8 +953,7 @@ fnSB._setOptions=function(){
                     that.element.css("position", "relative");
                 }
             });
-        }
-        else {
+        } else {
             this._destroyResizable();
         }
     }
@@ -929,171 +976,166 @@ fnSB._setOptions=function(){
             that._computeOuterWidths();
         });
         this._setHScrollWidth();
-		this._refreshPager();
+        this._refreshPager();
     }
-	fn._refreshPager=function(){
-		var DM = this.options.dataModel;
+    fn._refreshPager = function () {
+        var DM = this.options.dataModel;
         if (DM.paging) {
-            this.$footer.pqPager("option", 
-			{
+            this.$footer.pqPager("option", {
                 currentPage: DM.curPage,
                 totalPages: DM.totalPages,
                 rPP: DM.rPP,
                 rPPOptions: DM.rPPOptions
             });
-        }		
-	}
+        }
+    }
     fn._refreshViewAfterDataSort = function () {
-		this.$td_focus=null;this.$tr_focus=null;this.$td_edit=null;
+        this.$td_focus = null;
+        this.$tr_focus = null;
         this._setVScrollHeight();
         this._generateTables();
-		this._computeOuterWidths();
+        this._computeOuterWidths(); 
         this._refreshHeaderSortIcons();
         this._setRightGridHeight();
         this._setVScrollHeight(); 
         this._setHScrollWidth(); 
-		this._refreshPager();
+        this._refreshPager();
     }
-	fn.refreshSortingDataAndView = function(){
-		this._refreshSortingDataAndView(true);
-	}
-	fn.refreshDataAndView = function(){
-		this.data=null;
-		this.$td_focus=null;
-		this.$tr_focus=null;
-		this.$td_edit=null;
-		var DM=this.options.dataModel;
-		if(DM.location=="remote"){
-			DM.data=null;
-			this.remoteRequest();
-		}
-		else{
-			this._refreshSortingDataAndView();	
-		}
-	}	
-    fn._refreshSortingDataAndView = function (sorting,fn) {
+    fn.refreshSortingDataAndView = function () {
+        this._refreshSortingDataAndView(true);
+    }
+    fn.refreshDataAndView = function () {
+        this.data = null;
+        this.$td_focus = null;
+        this.$tr_focus = null;
+        var DM = this.options.dataModel;
+        if (DM.location == "remote") {
+            DM.data = null;
+            this.remoteRequest();
+        } else {
+            this._refreshSortingDataAndView();
+        }
+    }
+    fn._refreshSortingDataAndView = function (sorting, fn) {
         var DM = this.options.dataModel;
         var indx = DM.sortIndx;
-        if (indx == undefined ) {
+        if (indx == undefined) {
             return;
+        } else if (indx > this.colModel.length - 1) {
+            indx = this.colModel.length - 1;
+            DM.sortIndx = indx;
         }
-		else if(indx>this.colModel.length-1){			
-			indx=this.colModel.length-1;
-			DM.sortIndx=indx;
-		}
         var dir = DM.sortDir;
         var that = this;
-        if (sorting==true){			
-			if (DM.sorting == "remote") {
-				this.remoteRequest(fn);
-			}
-			else{
-	            var dataType = this.colModel[indx].dataType;
-	            this._sortLocalData(indx, dir, dataType);
-				this._refreshDataFromDataModel();	
-	            that._refreshViewAfterDataSort();	
-				if(typeof fn=="function")fn();			
-			}
-        }
-		else if(DM.location=="remote"){
-			this.remoteRequest(fn);
-		}
-        else {
+        if (sorting == true) {
+            if (DM.sorting == "remote") {
+                this.remoteRequest(fn);
+            } else {
+                var dataType = this.colModel[indx].dataType;
+                this._sortLocalData(indx, dir, dataType);
+                this._refreshDataFromDataModel();
+                that._refreshViewAfterDataSort();
+                if (typeof fn == "function") fn();
+            }
+        } else if (DM.location == "remote") {
+            this.remoteRequest(fn);
+        } else {
             var dataType = this.colModel[indx].dataType;
             this._sortLocalData(indx, dir, dataType);
             that._refreshViewAfterDataSort();
-			if(typeof fn=="function")fn();
+            if (typeof fn == "function") fn();
         }
     }
     fn._computeOuterWidths = function () {
-		if(this.$tbl==null || this.data.length==0){
-	        for (var i = 0; i < this.colModel.length; i++) {
-	            this.outerWidths[i] = this.widths[i];
-	        }			
-			this.numberCell_outerWidth = this.numberCellWidth;
-			return;
-		}
-		var $tr = this.$tbl.find("tr:first");
+        if (this.$tbl == null || this.data.length == 0) {
+            for (var i = 0; i < this.colModel.length; i++) {
+                this.outerWidths[i] = this.widths[i];
+            }
+            this.numberCell_outerWidth = this.numberCellWidth;
+            return;
+        }
+        var $tr = this.$tbl.find("tr:first");
         var $tds = this.$tbl.find("tr:first>td");
         for (var i = 0; i < this.colModel.length; i++) {
-			var $td=$tr.find("td[pq-col-indx="+i+"]");
-			if($td.length>0){
-				this.outerWidths[i] = parseInt($td[0].offsetWidth);	
-			}
-			else{
-				this.outerWidths[i] = null;
-			}			
+            var $td = $tr.find("td[pq-col-indx=" + i + "]");
+            if ($td.length > 0) {
+                this.outerWidths[i] = parseInt($td[0].offsetWidth);
+            } else {
+                this.outerWidths[i] = null;
+            }
         }
         if (this.numberCell) {
-			this.numberCell_outerWidth = parseInt($tds[0].offsetWidth);
+            this.numberCell_outerWidth = parseInt($tds[0].offsetWidth);
         }
     }
     fn._setOption = function (key, value) {
         if (key == "height") {
             this.element.height(value + "px");
             $.Widget.prototype._setOption.call(this, key, value);
-        }
-        else if (key == "width") {
+        } else if (key == "width") {
             this.element.width(value + "px");
             $.Widget.prototype._setOption.call(this, key, value);
-        }
-		else if(key=="title"){
+        } else if (key == "title") {
             $.Widget.prototype._setOption.call(this, key, value);
-			this._refreshTitle();			
-		}
-        else if (key == "freezeCols") {
+            this._refreshTitle();
+        } else if (key == "freezeCols") {
             if (!isNaN(value) && value >= 0 && parseInt(value) <= this.colModel.length - 2) {
                 this.freezeCols = parseInt(value);
                 this._refreshFreezeLine(); 
                 this._setHScrollWidth();
                 $.Widget.prototype._setOption.call(this, key, value);
             }
-        }
-        else if (key == "resizable") {
+        } else if (key == "resizable") {
             $.Widget.prototype._setOption.call(this, key, value);
-        }
-        else if (key == "dataModel") {
+        } else if (key == "dataModel") {
             $.Widget.prototype._setOption.call(this, key, value);
             this._refreshSortingDataAndView();
         }
     }
     fn._setOptions = function () {
         $.Widget.prototype._setOptions.apply(this, arguments); 
-        this._refresh();
-    }
+        this._refresh(); 
+    }    
     fn._generateCellHighlighter = function (offsetParent, lft, top, wd, ht) {
         if (this.$div_focus && this.$div_focus[0].offsetParent == offsetParent) {
-            this.$div_focus.css({ left: lft, top: top, height: ht, width: wd }).empty()
-				.removeClass('pq-cell-selected-border-edit');
-        }
-        else {
+			if (this.$td_edit != null) {				
+				this._fixFireFoxContentEditableIssue();
+				this.$div_focus.empty().removeClass('pq-cell-selected-border-edit');
+				this.$td_edit=null;
+			}						
+            this.$div_focus.css({
+                left: lft,
+                top: top,
+                height: ht,
+                width: wd
+            });
+        } else {
             if (this.$div_focus) this.$div_focus.remove();
-            this.$div_focus =
-		$("<div class='pq-cell-selected-border'></div>")
-				.appendTo(offsetParent);
-            var that = this;
-            this.$div_focus.css({ left: lft, top: top, height: ht, width: wd });
+            this.$div_focus = $("<div class='pq-cell-selected-border'></div>")
+                .appendTo(offsetParent);
+            this.$div_focus.css({
+                left: lft,
+                top: top,
+                height: ht,
+                width: wd
+            });
         }
     }
-	fn._selectRow = function(rowIndx, evt){
-		this.selectRow(rowIndx,evt)
-	}
-	fn._findfirstUnhiddenColIndx=function(){
-		for(var i=0;i<this.colModel.length;i++){
-			if(!this.colModel[i].hidden){
-				return i	
-			}				
-		}
-	}
-	fn._boundRow=function(rowIndx){
-		if(this.$tbl==null){
-			return false;
-		}
-        var $tr = this.$tbl.find("tr[pq-row-indx=" + rowIndx + "]");
-        if ($tr.length == 0){
-			return false;
-		} 
-        if (this.$td_edit) this.undoEditedCell();
+    fn._selectRow = function (rowIndx, evt) {
+        this.selectRow(rowIndx, evt)
+    }
+    fn._findfirstUnhiddenColIndx = function () {
+        for (var i = 0; i < this.colModel.length; i++) {
+            if (!this.colModel[i].hidden) {
+                return i
+            }
+        }
+    }
+    fn._boundRow = function (rowIndx) {
+        var $tr = this._get$TR(rowIndx); 
+        if ($tr == null || $tr.length == 0) {
+            return false;
+        }
         var wd = this._calcRightEdgeCol(this.colModel.length - 1);
         wd -= 4; 
         var ht = $tr[0].offsetHeight - 4;
@@ -1102,16 +1144,19 @@ fnSB._setOptions=function(){
         var lft = $tr[0].offsetLeft + $table[0].offsetLeft;
         var top = $tr[0].offsetTop + $table[0].offsetTop;
         var that = this;
-        that.$grid_inner.focus(); 
         this.$tr_focus = $tr;
-        this.$td_focus = $tr.find("td[pq-col-indx="+this._findfirstUnhiddenColIndx()+"]");
+        this.$td_focus = $tr.find("td[pq-col-indx=" + this._findfirstUnhiddenColIndx() + "]");
         this._generateCellHighlighter(offsetParent, lft, top, wd, ht);
-	}
-    fn.selectRow = function (rowIndx,evt) {
-		if(this._boundRow(rowIndx)==false){
-			return;
-		}
-		this._trigger("rowSelect",evt, {rowIndx: rowIndx,data:this.data});
+    }
+    fn.selectRow = function (rowIndx, evt) {
+        if (this._boundRow(rowIndx) == false) {
+            return false;
+        }
+        this._trigger("rowSelect", evt, {
+            rowIndx: rowIndx,
+            data: this.data
+        }); 
+        return true;
     }
     fn._bringRowIntoView = function (rowIndx) {
         if (rowIndx < this._bufferObj_getInit()) {
@@ -1120,13 +1165,13 @@ fnSB._setOptions=function(){
         var $tr = this.$tbl.find("tr[pq-row-indx=" + rowIndx + "]");
         if ($tr[0] == undefined) {
             this.$vscroll.pqScrollBar("option", "cur_pos", rowIndx).pqScrollBar("scroll");
-        }
-        else {
+        } else {
             var td_bottom = $tr[0].offsetTop + $tr[0].offsetHeight;
             if (td_bottom > this.$cont[0].offsetHeight - 17) {
                 var diff = td_bottom - (this.$cont[0].offsetHeight - 17); 
                 var $trs = this.$tbl.children().children("tr");
-                var ht = 0, indx = 0;
+                var ht = 0,
+                    indx = 0;
                 $trs.each(function (i, tr) {
                     ht += tr.offsetHeight;
                     if (ht >= diff) {
@@ -1141,34 +1186,36 @@ fnSB._setOptions=function(){
             }
         }
     }
-    fn.setSelection = function (rowIndx, colIndx) {
-        if (rowIndx < 0) {
-            rowIndx = 0;
+    fn.setSelection = function (rowIndx, colIndx, evt) {
+        if (rowIndx < 0 || colIndx < 0) {
+            return false;
         }
-        else if (rowIndx > this.data.length) {
-            rowIndx = this.data.length - 1;
+        if (this.data == null || this.data.length == 0) {
+            return false;
+        }
+        if (rowIndx > this.data.length || colIndx > this.colModel.length) {
+            return false;
         }
         this._bringRowIntoView(rowIndx);
         if (colIndx == null) {
-            this.selectRow(rowIndx);
-			return;
+            return this.selectRow(rowIndx, evt); 
         }
         if (this.hidearrHS[colIndx]) {
             this.hidearrHS[colIndx] = false; 
             var cur_pos = colIndx - this.freezeCols - this._calcNumHiddenUnFrozens(colIndx);
             this.$hscroll.pqScrollBar("option", "cur_pos", cur_pos).pqScrollBar("scroll");
-        }
-        else {
+        } else {
             var $td = this.$tbl.find("tr[pq-row-indx=" + rowIndx + "]>td[pq-col-indx=" + colIndx + "]");
             if ($td.length == 0) {
-                return;
+                return false;
             }
             var td_right = this._calcRightEdgeCol(colIndx);
             if (td_right > this.$cont[0].offsetWidth - 17) {
                 var diff = this._calcWidthCols(colIndx) - (this.$cont[0].offsetWidth - 17); 
                 var $tds = $td.parent("tr").children("td");
                 var data_length = this.colModel.length;
-                var wd = 0, initH = 0;
+                var wd = 0,
+                    initH = 0;
                 for (var i = this.freezeCols; i < data_length; i++) {
                     if (!this.colModel[i].hidden) {
                         wd += this.outerWidths[i];
@@ -1176,8 +1223,7 @@ fnSB._setOptions=function(){
                     if (i == colIndx) {
                         initH = i - this.freezeCols - this._calcNumHiddenUnFrozens(i);
                         break;
-                    }
-                    else if (wd >= diff) {
+                    } else if (wd >= diff) {
                         initH = i - this.freezeCols - this._calcNumHiddenUnFrozens(i) + 1;
                         break;
                     }
@@ -1185,47 +1231,43 @@ fnSB._setOptions=function(){
                 this.$hscroll.pqScrollBar("option", "cur_pos", initH).pqScrollBar("scroll");
             }
         }
-		this.selectCell(rowIndx,colIndx);
+        return this.selectCell(rowIndx, colIndx, evt);
     }
-    fn.saveEditedCell = function () {
-        this.element.disableSelection(); 
+    fn.saveEditCell = function () {
+        if (this.$td_edit == null) return;
         var $td = this.$td_edit;
         var obj = this._getRowColIndx($td);
-        var rowIndx = obj.rowIndx, colIndx = obj.colIndx;
-        if (!isNaN(obj.rowIndx)) {
+        var rowIndx = obj.rowIndx,
+            colIndx = obj.colIndx;
+        if (rowIndx != null) {
             var $cell = this.$div_focus;
             if (this.colModel[obj.colIndx].saveCell) {
-                var ret=this.colModel[colIndx].saveCell({
-					cell: $cell,
-					data: this.data,
-					rowIndx: rowIndx,
-					colIndx: colIndx
-				});
-				if(ret!=undefined){
-					this.data[rowIndx][colIndx] = ret;
-				}
-            }
-            else {
+                var ret = this.colModel[colIndx].saveCell({
+                    cell: $cell,
+                    data: this.data,
+                    rowIndx: rowIndx,
+                    colIndx: colIndx
+                });
+                if (ret != undefined) {
+                    this.data[rowIndx][colIndx] = ret;
+                }
+            } else {
                 var dataCell = $cell.children().html();
                 this.data[rowIndx][colIndx] = dataCell;
             }
             var $tr = this._get$TR(rowIndx);
             for (var i = 0; i < this.colModel.length; i++) {
                 var $td = $tr.find("td[pq-col-indx=" + i + "]");
-                if ($td && $td.length > 0)
-                    this._renderCell(rowIndx, i, $td);
+                if ($td && $td.length > 0) this._renderCell(rowIndx, i, $td);
             }
         }
-        this.$td_edit = null;
     }
-    fn.undoEditedCell = function () {
-        this.element.disableSelection(); 
-        var $td = this.$td_edit;
-        var obj = this._getRowColIndx($td);
-        if (isNaN(obj.rowIndx) == false) {
-            this._renderCell(obj.rowIndx, obj.colIndx, $td);
+    fn.quitEditMode = function () {
+        if (this.$td_edit) {
+            this.element.disableSelection(); 
+            this._boundCell(null, null, this.$td_edit);
+            this._setGridFocus();
         }
-        this.$td_edit = null;
     }
     fn.getData = function () {
         return this.data;
@@ -1233,31 +1275,35 @@ fnSB._setOptions=function(){
     fn.getSelection = function () {
         if (this.$tr_focus) {
             var rowIndx = this.$tr_focus.attr("pq-row-indx");
-            return { rowIndx: rowIndx,colIndx:null, data: this.data };
-        }
-		else if (this.$td_focus) {
+            return {
+                rowIndx: rowIndx,
+                colIndx: null,
+                data: this.data
+            };
+        } else if (this.$td_focus) {
             var rowIndx = this.$td_focus.parent("tr").attr("pq-row-indx");
             var colIndx = this.$td_focus.attr("pq-col-indx");
-            return { rowIndx: rowIndx, colIndx: colIndx, data: this.data };
-        }
-        else {
-            return { rowIndx: null, colIndx: null, data: this.data };
+            return {
+                rowIndx: rowIndx,
+                colIndx: colIndx,
+                data: this.data
+            };
+        } else {
+            return {
+                rowIndx: null,
+                colIndx: null,
+                data: this.data
+            };
         }
     }
-    fn._boundCell = function (rowIndx,colIndx) {
-		if(this.$tbl==null){
-			return false;
-		}
-		var $td = this.$tbl.find("tr[pq-row-indx=" + rowIndx + "]>td[pq-col-indx=" + colIndx + "]");
-        if ($td == undefined || $td[0] == undefined || $td[0].nodeName.toUpperCase() != "TD") {
+    fn._boundCell = function (rowIndx, colIndx, $td) {
+        if ($td == null) var $td = this._get$TD(rowIndx, colIndx); 
+        if ($td == null || $td.length == 0) {
             return false;
         }
         if ($td.css("visibility") == "hidden") {
             return false;
         }
-        this.$td_focus = $td;
-        this.$td_edit = null;
-        this.$tr_focus = null;
         var $table = $($td[0].offsetParent);
         var offsetParent = $table[0].offsetParent;
         var wd = $td[0].offsetWidth - 4;
@@ -1265,90 +1311,114 @@ fnSB._setOptions=function(){
         var lft = $td[0].offsetLeft + $table[0].offsetLeft;
         var top = $td[0].offsetTop + $table[0].offsetTop;
         this._generateCellHighlighter(offsetParent, lft, top, wd, ht);
+        this.$td_focus = $td;        
+        this.$tr_focus = null;		
     }
-	fn.selectCell = function (rowIndx,colIndx,evt) {
+    fn.selectCell = function (rowIndx, colIndx, evt) {
+        if (this._boundCell(rowIndx, colIndx) == false) {
+            return false;
+        }
+        this._setGridFocus();
+        this._trigger("cellSelect", evt, {
+            rowIndx: rowIndx,
+            colIndx: colIndx,
+            data: this.data
+        }); 
+        return true;
+    }
+    fn._setGridFocus = function () {
         var that = this;
-        that.$grid_inner.focus(); 
-        if (window.getSelection) window.getSelection().removeAllRanges(); 
-		if(this._boundCell(rowIndx,colIndx)==false){
-			return false;
-		}
         window.setTimeout(function () {
-            that.$grid_inner.focus(); 
-			that._trigger("cellSelected",evt, {rowIndx: rowIndx,colIndx:colIndx,data:that.data});
-        }, 0)        
+            if (that.$td_edit == null) {
+                that.$grid_inner.focus(); 
+            }
+        }, 0)
     }
-    fn._pSetCaretPos = function (ele, units) {
-        if (document.all) {
-            var tr = ele.createTextRange();
-            tr.moveStart('character', units);
-            tr.moveEnd('character', -ele.value.length + units);
-            tr.select();
-        }
-        else {
-            ele.selectionStart = units;
-            ele.selectionEnd = units;
+    fn.editCell = function (rowIndx, colIndx) {
+        var $td = this._get$TD(rowIndx, colIndx);
+        if ($td == null || this.$td_focus == null || this.$td_focus[0] != $td[0]) {
+            if (this.setSelection(rowIndx, colIndx) == true) this._editCell(this.$td_focus);
+        } else {
+            this._editCell($td);
         }
     }
-    fn.editCell = function ($td) {
+    fn._editCell = function ($td) {
         var that = this;
         var obj = that._getRowColIndx($td);
         var rowIndx = obj.rowIndx;
         var colIndx = obj.colIndx;
-        if (this.colModel[colIndx].editable === false) {
-            return;
+        if (this.options.editable == false || this.colModel[colIndx].editable === false) {
+            return false;
         }
-        if (this.$td_focus[0] != $td[0]) {
-            this.selectCell($td);
+        if (this.$td_edit && this.$td_edit[0] == $td[0]) { 
+            return false;
         }
         this.$td_edit = $td;
         this.element.enableSelection();
         var $cell = this.$div_focus.addClass('pq-cell-selected-border-edit');
         if (this.colModel[colIndx].align == "right") {
             $cell.css("text-align", "right");
-        }
-        else if (this.colModel[colIndx].align == "center") {
+        } else if (this.colModel[colIndx].align == "center") {
             $cell.css("text-align", "center");
-        }
-        else {
+        } else {
             $cell.css("text-align", "left");
         }
         if (this.colModel[colIndx].editor) {
             this.colModel[colIndx].editor({
-				cell: $cell,
-				data: this.data,
-				rowIndx: rowIndx,
-				colIndx: colIndx
-			});
-        }
-        else {
+                cell: $cell,
+                data: this.data,
+                rowIndx: rowIndx,
+                colIndx: colIndx
+            });
+        } else {
             $cell.html("<div contenteditable='true' tabindx='0' style='background:#fff;padding:2px;'></div>");
-            $cell.children().html(this.data[rowIndx][colIndx]).focus();
+            var that = this;
+            $cell.children().html(that.data[rowIndx][colIndx]);
         }
+        var that = this;
+        window.setTimeout(function () {
+            if (that.$td_edit != null) $cell.children().focus();
+        }, 0)
     }
     fn._get$TR = function (rowIndx) {
         var $tr;
-        if (this.$tbl != undefined)
-            $tr = this.$tbl.find("tr[pq-row-indx=" + rowIndx + "]");
+        if (this.$tbl != undefined) $tr = this.$tbl.find("tr[pq-row-indx=" + rowIndx + "]");
         return $tr;
     }
     fn._get$TD = function (rowIndx, colIndx) {
         var $td;
-        if (this.$tbl != undefined)
-            $td = this.$tbl.find("tr[pq-row-indx=" + rowIndx + "]>td[pq-col-indx=" + colIndx + "]");
+        if (this.$tbl != undefined) $td = this.$tbl.find("tr[pq-row-indx=" + rowIndx + "]>td[pq-col-indx=" + colIndx + "]");
         return $td;
     }
     fn._getRowColIndx = function ($td) {
-        if ($td == null || $td.length == 0) return;
+        if ($td == null || $td.length == 0) return {
+            rowIndx: null,
+            colIndx: null
+        };
         var $tr = $td.parent("tr");
         var $tbl = $tr.parent("tbody"); 
         var rowIndx = parseInt($tr.attr("pq-row-indx"));
         var colIndx = parseInt($td.attr("pq-col-indx"));
-        return { rowIndx: rowIndx, colIndx: colIndx }
+        return {
+            rowIndx: rowIndx,
+            colIndx: colIndx
+        }
     }
     fn.keyPressDown = function (evt) {
         var that = this;
-        var keyCodes = { left: 37, up: 38, right: 39, down: 40, tab: 9, enter: 13, pageDown: 34, pageUp: 33, esc: 27, home: 36, end: 35 }
+        var keyCodes = {
+            left: 37,
+            up: 38,
+            right: 39,
+            down: 40,
+            tab: 9,
+            enter: 13,
+            pageDown: 34,
+            pageUp: 33,
+            esc: 27,
+            home: 36,
+            end: 35
+        }
         var rowIndx;
         var colIndx;
         function incr_colIndx() {
@@ -1366,111 +1436,113 @@ fnSB._setOptions=function(){
             var obj = that._getRowColIndx(that.$td_focus);
             rowIndx = obj.rowIndx;
             colIndx = obj.colIndx;
-            if (evt.keyCode == keyCodes.enter) {
-                that.saveEditedCell();
-				that.selectCell(rowIndx,colIndx);
+            if (evt.keyCode == keyCodes.tab) { 
+                that.saveEditCell();
+                that.quitEditMode();
+                if (evt.shiftKey) {
+                    decr_colIndx();
+                    if (colIndx < 0) {
+                        colIndx = that.colModel.length - 1;
+                        rowIndx--;
+                    }
+                } else {
+                    incr_colIndx();
+                    if (colIndx >= that.colModel.length) {
+                        rowIndx++;
+                        colIndx = 0;
+                    }
+                }
+                that.setSelection(rowIndx, colIndx, evt);
+                evt.preventDefault();
+                return false;
+            } else if (evt.keyCode == keyCodes.esc) {
+                that.quitEditMode();
             }
-            else if (evt.keyCode == keyCodes.esc) {
-                that.undoEditedCell();
-				that.selectCell(rowIndx,colIndx);
-            }
-            return;
+            return; 
         }
         else if (that.$td_focus) {
             var obj = that._getRowColIndx(that.$td_focus);
-			if(obj==undefined)return;
             rowIndx = obj.rowIndx;
             colIndx = obj.colIndx;
-        }
-        else {
+            if (rowIndx == null || colIndx == null) return;
+        } else {
             return;
         }
         if (evt.keyCode == keyCodes.left) {
             decr_colIndx();
-            that.setSelection(rowIndx, colIndx);
+            that.setSelection(rowIndx, colIndx, evt);
             evt.preventDefault();
             return;
-        }
-        else if (evt.keyCode == keyCodes.right) {
+        } else if (evt.keyCode == keyCodes.right) {
             incr_colIndx();
-            that.setSelection(rowIndx, colIndx);
+            that.setSelection(rowIndx, colIndx, evt);
             evt.preventDefault();
             return;
-        }
-        else if (evt.keyCode == keyCodes.tab) {
+        } else if (evt.keyCode == keyCodes.tab) {
             if (evt.shiftKey) {
                 decr_colIndx();
                 if (colIndx < 0) {
                     colIndx = that.colModel.length - 1;
                     rowIndx--;
                 }
-            }
-            else {
+            } else {
                 incr_colIndx();
                 if (colIndx >= that.colModel.length) {
                     rowIndx++;
                     colIndx = 0;
                 }
             }
-            that.setSelection(rowIndx, colIndx);
+            that.setSelection(rowIndx, colIndx, evt);
             evt.preventDefault();
             return;
-        }
-        else if (evt.keyCode == keyCodes.up) {
+        } else if (evt.keyCode == keyCodes.up) {
             rowIndx = (rowIndx > 0) ? rowIndx - 1 : rowIndx;
-            that.setSelection(rowIndx, colIndx);
+            that.setSelection(rowIndx, colIndx, evt);
             evt.preventDefault();
             return;
-        }
-        else if (evt.keyCode == keyCodes.down) {
+        } else if (evt.keyCode == keyCodes.down) {
             rowIndx = (rowIndx < that.data.length - 1) ? (rowIndx + 1) : rowIndx;
-            that.setSelection(rowIndx, colIndx);
+            that.setSelection(rowIndx, colIndx, evt);
             evt.preventDefault();
             return;
-        }
-        else if (evt.keyCode == keyCodes.pageDown) {
+        } else if (evt.keyCode == keyCodes.pageDown) {
             var rowIndx = that.init + 10;
             if (rowIndx > that.data.length - 1) {
                 rowIndx = that.data.length - 1;
             }
             that.$vscroll.pqScrollBar("option", "cur_pos", rowIndx).pqScrollBar("scroll");
             var $td = that.$tbl.find("tr[pq-row-indx=" + rowIndx + "]>td[pq-col-indx=" + colIndx + "]");
-			that.selectCell(rowIndx,colIndx)
+            that.selectCell(rowIndx, colIndx, evt)
             evt.preventDefault();
             return;
-        }
-        else if (evt.keyCode == keyCodes.pageUp) {
+        } else if (evt.keyCode == keyCodes.pageUp) {
             var rowIndx = that.init - 10;
             if (rowIndx < 0) {
                 rowIndx = 0;
             }
             that.$vscroll.pqScrollBar("option", "cur_pos", rowIndx).pqScrollBar("scroll");
             var $td = that.$tbl.find("tr[pq-row-indx=" + rowIndx + "]>td[pq-col-indx=" + colIndx + "]");
-			that.selectCell(rowIndx,colIndx)
+            that.selectCell(rowIndx, colIndx, evt)
             evt.preventDefault();
             return;
-        }
-        else if (evt.keyCode == keyCodes.home) {
+        } else if (evt.keyCode == keyCodes.home) {
             rowIndx = 0;
-            that.setSelection(rowIndx, colIndx);
+            that.setSelection(rowIndx, colIndx, evt);
             evt.preventDefault();
             return;
-        }
-        else if (evt.keyCode == keyCodes.end) {
+        } else if (evt.keyCode == keyCodes.end) {
             rowIndx = that.data.length - 1;
-            that.setSelection(rowIndx, colIndx);
+            that.setSelection(rowIndx, colIndx, evt);
             evt.preventDefault();
             return;
-        }
-        else if (evt.keyCode == keyCodes.enter) {
+        } else if (evt.keyCode == keyCodes.enter) {
             if (that.$tr_focus != null) {
                 that._boundCell(that.$td_focus);
             }
-            that.editCell(that.$td_focus);
+            that._editCell(that.$td_focus);
             evt.preventDefault();
             return;
-        }
-        else {
+        } else {
         }
     }
     fn._calcNumHiddenFrozens = function () {
@@ -1505,8 +1577,7 @@ fnSB._setOptions=function(){
         var width_vscroll = 0;
         if (this.$vscroll.css("display") == "none") {
             this.$hscroll.css("right", 0);
-        }
-        else {
+        } else {
             width_vscroll = 17;
             this.$hscroll.css("right", "");
         }
@@ -1544,17 +1615,16 @@ fnSB._setOptions=function(){
         return Math.ceil(ht / this.rowHeight);
     }
     fn._bufferObj_calcInitFinal = function () {
-		if(this.data==null || this.data.length==0){
-			this['final']=this['init']=null;
-		}
-		else{
-	        var cur_pos = parseInt(this.$vscroll.pqScrollBar("option", "cur_pos"));
-	        this.init = cur_pos;
-	        this['final'] = this.init + this._bufferObj_minRowsPerGrid();
-	        if (this['final'] + 1 > this.data.length) {
-	            this['final'] = this.data.length - 1;
-	        }			
-		}		
+        if (this.data == null || this.data.length == 0) {
+            this['final'] = this['init'] = null;
+        } else {
+            var cur_pos = parseInt(this.$vscroll.pqScrollBar("option", "cur_pos"));
+            this.init = cur_pos;
+            this['final'] = this.init + this._bufferObj_minRowsPerGrid();
+            if (this['final'] + 1 > this.data.length) {
+                this['final'] = this.data.length - 1;
+            }
+        }
     }
     fn._bufferObj_calcInitFinalH = function () {
         var cur_pos = parseInt(this.$hscroll.pqScrollBar("option", "cur_pos"));
@@ -1563,11 +1633,9 @@ fnSB._setOptions=function(){
         for (var i = this.freezeCols; i < this.colModel.length; i++) {
             if (this.colModel[i].hidden) {
                 initH++;
-            }
-            else if (indx == cur_pos) {
+            } else if (indx == cur_pos) {
                 break;
-            }
-            else {
+            } else {
                 initH++;
                 indx++;
             }
@@ -1580,8 +1648,7 @@ fnSB._setOptions=function(){
             wd += this.numberCell_outerWidth; 
         }
         for (var i = 0; i <= colIndx; i++) {
-            if (!this.colModel[i].hidden)
-                wd += this.outerWidths[i];
+            if (!this.colModel[i].hidden) wd += this.outerWidths[i];
         }
         return wd;
     }
@@ -1591,8 +1658,7 @@ fnSB._setOptions=function(){
             wd += this.numberCell_outerWidth; 
         }
         for (var i = 0; i <= colIndx; i++) {
-            if (!this.colModel[i].hidden && this.hidearrHS[i] == false)
-                wd += this.outerWidths[i];
+            if (!this.colModel[i].hidden && this.hidearrHS[i] == false) wd += this.outerWidths[i];
         }
         return wd;
     }
@@ -1603,7 +1669,11 @@ fnSB._setOptions=function(){
         var ht = this.$grid_inner.outerHeight();
         var ele = $("td[pq-grid-col-indx=" + this.freezeCols + "]", this.$header)[0];
         var lft = this._calcWidthCols(this.freezeCols - 1) - 1;
-        this.$freezeLine.height(ht).css({ backgroundColor: "blue", top: "0", left: lft });
+        this.$freezeLine.height(ht).css({
+            backgroundColor: "blue",
+            top: "0",
+            left: lft
+        });
     }
     fn._getDragHelper = function (evt) {
         var $target = $(evt.currentTarget);
@@ -1615,9 +1685,17 @@ fnSB._setOptions=function(){
         this.$clleft.height(ht);
         var ele = $("td[pq-grid-col-indx=" + indx + "]", this.$header)[0];
         var lft = ele.offsetLeft;
-        this.$clleft.css({ backgroundColor: "#000", top: "0", left: lft });
+        this.$clleft.css({
+            backgroundColor: "#000",
+            top: "0",
+            left: lft
+        });
         lft = lft + ele.offsetWidth;
-        this.$cl.css({ backgroundColor: "#000", top: "0", left: lft });
+        this.$cl.css({
+            backgroundColor: "#000",
+            top: "0",
+            left: lft
+        });
     }
     fn._setDragLimits = function (indx) {
         var that = this;
@@ -1637,27 +1715,25 @@ fnSB._setOptions=function(){
         }
         var hidearrHS1 = [];
         $.each(this.colModel, function (i, col) {
-            if (that.colModel[i].hidden) {
+            if (that.colModel[i].hidden) { 
                 return;
-            }
-            else if (that.hidearrHS[i]) {
+            } else if (that.hidearrHS[i]) {
                 hidearrHS1.push(i)
                 return;
             }
             var cls = "pq-grid-col";
             if (col.align == "right") {
                 cls += ' pq-align-right';
-            }
-            else if (col.align == "center") {
+            } else if (col.align == "center") {
                 cls += ' pq-align-center';
             }
             if (i == that.freezeCols - 1) {
                 cls += " pq-last-freeze-col";
             }
-			var wd=that.widths[i];
-			if(that.columnBorders==false){
-				wd-=1;
-			}
+            var wd = that.widths[i];
+            if (that.columnBorders == false) {
+                wd -= 1;
+            }
             var stile = "width:" + wd + "px;";
             str += "<td style='" + stile + "' pq-grid-col-indx='" + i + "' class='" + cls + "'>\
 		<div class='pq-grid-header-table-div'>" + col.title + "<span class='pq-col-sort-icon'>&nbsp;</span></div></td>";
@@ -1667,8 +1743,7 @@ fnSB._setOptions=function(){
             var cls = "pq-grid-col";
             if (col.align == "right") {
                 cls += ' pq-align-right';
-            }
-            else if (col.align == "center") {
+            } else if (col.align == "center") {
                 cls += ' pq-align-center';
             }
             var stile = "width:" + that.widths[i] + "px;visibility:hidden;";
@@ -1679,13 +1754,17 @@ fnSB._setOptions=function(){
         this.$header.empty();
         this.$header.append(str);
         this.$header.find("td").click(function () {
-			if(!that.options.sortable){
-				return;
-			}
-			var indx = $(this).attr("pq-grid-col-indx");
-			if(that._trigger("beforeSort",null,{dataModel:that.dataModel,data:that.data,sortIndx:indx})==false){
-				return;
-			}
+            if (!that.options.sortable) {
+                return; 
+            }
+            var indx = $(this).attr("pq-grid-col-indx");
+            if (that._trigger("beforeSort", null, {
+                dataModel: that.dataModel,
+                data: that.data,
+                sortIndx: indx
+            }) == false) {
+                return;
+            }
             var dir = "up";
             var DM = that.options.dataModel;
             if (DM.sortIndx == indx) {
@@ -1693,17 +1772,19 @@ fnSB._setOptions=function(){
             }
             DM.sortIndx = indx;
             DM.sortDir = dir;
-            that._refreshSortingDataAndView(true,function(){
-				that._trigger("sort",null,{dataModel:that.dataModel,data:that.data});
-			});
+            that._refreshSortingDataAndView(true, function () {
+                that._trigger("sort", null, {
+                    dataModel: that.dataModel,
+                    data: that.data
+                });
+            });
         })
         var $pQuery_cols = that.$header.find(".pq-grid-col");
         var lft = 0;
         $.each(this.colModel, function (i, col) {
             if (that.hidearrHS[i]) {
                 return;
-            }
-            else if (that.colModel[i].hidden) {
+            } else if (that.colModel[i].hidden) {
                 return;
             }
             if (that.colModel[i].resizable != undefined && that.colModel[i].resizable == false) {
@@ -1712,7 +1793,10 @@ fnSB._setOptions=function(){
             var $handle = $("<div pq-grid-col-indx='" + i + "' class='pq-grid-col-resize-handle'>&nbsp;</div>").appendTo(that.$header);
             var pq_col = that.$header.find("td[pq-grid-col-indx=" + i + "]")[0];
             lft = pq_col.offsetLeft + pq_col.offsetWidth - 10;
-            $handle.css({ left: lft, height: that.$header.height() });
+            $handle.css({
+                left: lft,
+                height: that.$header.height()
+            });
         })
         var drag_left, drag_new_left, cl_left;
         var $pQuery_handles = that.$header.find(".pq-grid-col-resize-handle").draggable({
@@ -1760,46 +1844,41 @@ fnSB._setOptions=function(){
         var top = 0;
         this._bufferObj_calcInitFinal();
         var init = this._bufferObj_getInit(),
-			finall = this._bufferObj_getFinal();
-		if(init==null || finall==null){
+            finall = this._bufferObj_getFinal();
+        if (init == null || finall == null) {
             this.$cont.empty();
-            this.$tbl = null;			
-			return;
-		}
+            this.$tbl = null;
+            return;
+        }
         var const_cls = "";
-        if (this.columnBorders)
-            const_cls = "pq-grid-td-border-right ";
-        if (this.options.wrap == false)
-            const_cls += "pq-wrap-text ";
+        if (this.columnBorders) const_cls = "pq-grid-td-border-right ";
+        if (this.options.wrap == false) const_cls += "pq-wrap-text ";
         var buffer = ["<table style='table-layout:fixed;width:0px;position:absolute;top:0px;' cellpadding=0 cellspacing=0>"];
         for (var i = init; i <= finall; i++) {
             var row_cls = "";
-            if (i / 2 == parseInt(i / 2))
-                row_cls = "pq-grid-oddRow";
+            if (i / 2 == parseInt(i / 2)) row_cls = "pq-grid-oddRow";
             var row_str = "<tr pq-row-indx='" + i + "' class='" + row_cls + "'>"
             buffer.push(row_str)
             if (this.numberCell) {
                 buffer.push("<td style='width:" + this.numberCellWidth + "px;' class='pq-grid-number-cell pq-row-selector'>\
-			<div class='pq-td-div'>" + (i + 1) + "</div></td>")
+			<div class='pq-td-div'>" + (i + 1) + "</div></td>") 
             }
             var hidearrHS1 = [];
             for (var j = 0; j < noColumns; j++) {
-                if (this.colModel[j].hidden) {
+                if (this.colModel[j].hidden) { 
                     continue;
-                }
-                else if (this.hidearrHS[j]) {
+                } else if (this.hidearrHS[j]) {
                     hidearrHS1.push(j)
                     continue;
                 }
                 var strStyle = "";
-                if (i == init) {
+                if (i == init) { 
                     strStyle = "width:" + this.widths[j] + "px;";
                 }
                 var cls = const_cls; 
                 if (this.colModel[j].align == "right") {
                     cls += ' pq-align-right';
-                }
-                else if (this.colModel[j].align == "center") {
+                } else if (this.colModel[j].align == "center") {
                     cls += ' pq-align-center';
                 }
                 if (j == this.freezeCols - 1) {
@@ -1819,8 +1898,7 @@ fnSB._setOptions=function(){
                 var cls = const_cls; 
                 if (this.colModel[j].align == "right") {
                     cls += ' pq-align-right';
-                }
-                else if (this.colModel[j].align == "center") {
+                } else if (this.colModel[j].align == "center") {
                     cls += ' pq-align-center';
                 }
                 var str = "<td class='" + cls + "' style='" + strStyle + "' pq-col-indx='" + j + "'>" + this._renderCell(i, j) + "</td>";
@@ -1833,9 +1911,12 @@ fnSB._setOptions=function(){
         if (this.$tbl == undefined) {
             this.$tbl = $(str);
             this.$cont.append(this.$tbl)
-        }
-        else {
+        } else {
+			if (this.$td_edit != null) {
+				this._fixFireFoxContentEditableIssue();
+			}			
             this.$cont.empty();
+			this.$td_edit = null;
             this.$tbl = $(str);
             this.$cont.append(this.$tbl)
         }
@@ -1844,10 +1925,10 @@ fnSB._setOptions=function(){
         var dataCell = this.data[rowIndx][colIndx];
         if (this.colModel[colIndx].render) {
             dataCell = this.colModel[colIndx].render({
-				data: this.data,
-				rowIndx: rowIndx,
-				colIndx: colIndx
-			});
+                data: this.data,
+                rowIndx: rowIndx,
+                colIndx: colIndx
+            });
         }
         if (dataCell == "" || dataCell == undefined) dataCell = "&nbsp;"; 
         var cls = "pq-td-div";
@@ -1860,11 +1941,11 @@ fnSB._setOptions=function(){
     }
     fn._sortLocalData = function (indx, dir, dataType) {
         var m_index = indx;
-		var m_sort_dir = dir;
-		var data = this.options.dataModel.data;
-		if(data==null||data.length==0){
-			return;
-		}
+        var m_sort_dir = dir;
+        var data = this.options.dataModel.data; 
+        if (data == null || data.length == 0) {
+            return;
+        }
         function innerSort() {
             function sort_integer(obj1, obj2) {
                 var val1 = obj1[indx];
@@ -1894,22 +1975,18 @@ fnSB._setOptions=function(){
                 val2 = val2 ? val2 : "";
                 if (val1 > val2) {
                     return 1;
-                }
-                else if (val1 < val2) {
+                } else if (val1 < val2) {
                     return -1;
                 }
                 return 0;
             }
             if (dataType == "integer") {
                 data = data.sort(sort_integer)
-            }
-            else if (dataType == "float") {
+            } else if (dataType == "float") {
                 data = data.sort(sort_float)
-            }
-            else if (typeof dataType == "function") {
+            } else if (typeof dataType == "function") {
                 data = data.sort(sort_custom);
-            }
-            else {
+            } else {
                 data = data.sort(sort_string)
             }
             if (m_sort_dir == "down") {
@@ -1918,7 +1995,7 @@ fnSB._setOptions=function(){
         }
         $.measureTime(innerSort, "innerSort"); 
     }
-    $.widget("paramquery.pqGrid", fn);	
+    $.widget("paramquery.pqGrid", fn);
     $.measureTime = function (fn, nameofFunc) {
         var initTime = (new Date()).getTime();
         fn();
@@ -1926,29 +2003,25 @@ fnSB._setOptions=function(){
         var cnt = finalTime - initTime;
     }
 })(jQuery);
-var cons={
-	log:function(str){
-		try{
-			if($.browser.msie && typeof str=='object')
-				throw "";
-			console.log(str);
-		}
-		catch(e){
-			var st="";
-			if(typeof str=='object'){
-				for(var key in str){
-					if(typeof str[key]!='function')
-						st+=key+" = "+str[key]
-				}
-			}
-			else{
-				if(document.getElementById('console')==undefined){
-					$("<textarea id='console' rows=8 cols=100>"+str+"</textarea>").appendTo(document.body);
-				}
-				var $console=$("#console")
-				$console.text($console.text()+'\r\n'+str);
-				$console[0].scrollTop=10000000000000;	
-			}
-		}
-	}
+var cons = {
+    log: function (str) {
+        try {
+            if ($.browser.msie && typeof str == 'object') throw "";
+            console.log(str);
+        } catch (e) {
+            var st = "";
+            if (typeof str == 'object') {
+                for (var key in str) {
+                    if (typeof str[key] != 'function') st += key + " = " + str[key]
+                }
+            } else {
+                if (document.getElementById('console') == undefined) {
+                    $("<textarea id='console' rows=8 cols=100>" + str + "</textarea>").appendTo(document.body);
+                }
+                var $console = $("#console")
+                $console.text($console.text() + '\r\n' + str);
+                $console[0].scrollTop = 10000000000000;
+            }
+        }
+    }
 };

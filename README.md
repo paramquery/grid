@@ -32,7 +32,7 @@ Sorting for common data formats like Integer, real numbers, Strings, etc.
 
 Support for custom sorting through callback function.
 
-Paging with support for local (Browser) or remote (Ajax) data in any format.
+Paging with local (Browser) or remote (Ajax) data in any format.
 
 Freeze any number of Columns like Excel.
 

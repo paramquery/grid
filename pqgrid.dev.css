@@ -1,5 +1,5 @@
 /**
- * ParamQuery Grid a.k.a. pqGrid v1.0.1
+ * ParamQuery Grid a.k.a. pqGrid v1.0.2
  * 
  * Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
  * Released under MIT license
@@ -21,22 +21,41 @@ div.pq-grid *{
     padding: 0px;
 	line-height:normal;			
 }
+div.pq-grid-top{
+	border-radius:5px 5px 0 0 ;
+	background:#eee;
+	color:#666;
+}
 div.pq-grid-title{
 	border-bottom:1px solid #c5c5c5;
-	padding:5px;				
-	background:#eee;
-	overflow:hidden;
-	border-radius:5px 5px 0 0 ;
+	zoom:1;
+	padding:5px;					
+	overflow:hidden;	
 }
+div.pq-grid-toolbar{	
+	border-top:1px solid #fff;	
+	border-bottom:1px solid #c5c5c5;			
+	padding:3px 5px 4px;	
+	zoom:1;
+	overflow:hidden;		
+}
+div.pq-grid-toolbar .ui-button
+{
+    margin:0px 4px;
+}    
 div.pq-grid div.draggable{
 	cursor:move;
 }
-div.pq-grid-footer{
+div.pq-grid-bottom{
 	border-top:1px solid #c5c5c5;
-	padding:5px;
 	background:#eee;
-	overflow:hidden;
+	color:#333;
 	border-radius:0 0 5px 5px;
+}
+div.pq-grid-footer{
+	border-top:1px solid #fff;
+	padding:2px 5px 5px;
+	overflow:hidden;	
 	position:relative; 
 }	
 div.pq-grid-inner{
@@ -233,56 +252,41 @@ div.pq-hvscroll-square{
 	bottom:0px;
 	background:#eee;
 }			
-.pq-pager .ui-button-text-only .ui-button-text {
-	padding:0.2em 0.2em;
-}
 .pq-pager{
-	font-size:1em;		
-	padding:2px 5px;
+	padding:2px 5px 13px;
 	overflow:hidden;
+	vertical-align:middle;
 }	
 .pq-pager *{
 	vertical-align:middle;
-	font-size:11px;
 }	
-.pq-pager  span{
-	font-size:11px;				
-}	
-.pq-pager span.pq-seperator{
+.pq-grid span.pq-separator{
 	height:18px;
 	border-left:1px solid #ccc;
 	border-right:1px solid #fff;
 	display:inline-block;
 	margin-right:5px;
 }
-.pq-pager button{
-	height:24px;width:24px;margin-right:5px;
-}
 .pq-pager input{
-	padding:2px 4px;
+	padding:0px 1px;
 	text-align:center;
 	width:35px;
-	margin-right:5px;	
+	margin-right:5px;
+	height:16px;	
 }
 div.pq-pager span,div.pq-pager select{
 	margin-right:5px;
 }
-div.pq-pager .ui-button-icon-primary{
-	left:0.3em;
+.pq-grid button.ui-button-icon-only{
+	height:22px;width:22px;
+	margin-right:5px;
+	padding:0.2em 0.2em;
 }
-div.pq-pager .page-first{
-	background:url('images/page-first.gif')
-}
-div.pq-pager .page-prev{
-	background:url('images/page-prev.gif')
-}
-div.pq-pager .page-next{
-	background:url('images/page-next.gif')
-}
-div.pq-pager .page-last{
-	background:url('images/page-last.gif')
-}
-div.pq-pager .refresh{
+.ui-state-default .pq-page-first{background:url('images/page-first.gif');}
+.ui-state-default .pq-page-prev{background:url('images/page-prev.gif');}
+.ui-state-default .pq-page-next{background:url('images/page-next.gif');}
+.ui-state-default .pq-page-last{background:url('images/page-last.gif');}
+.ui-state-default .pq-refresh{
 	background:url('images/refresh.gif')
 }
 .pq-scrollbar-vert{

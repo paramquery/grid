@@ -1,3 +1,9 @@
+Version: 1.0.2
+
+1) Added render event.
+2) Absolute address with paging made possible with setSelection and getSelection.
+3) Support for adding toolbar.
+
 Version: 1.0.1
 
 1) Added refresh button in pager.

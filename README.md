@@ -1,32 +1,30 @@
 jQuery grid plugin based on jQueryui widget design
 ==================================================
-ParamQuery Grid a.k.a. pqGrid v1.0
+[ParamQuery Grid](http://paramquery.com) a.k.a. pqGrid v1.0
 
-Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
+Copyright (c) 2012 Paramvir Dhindsa 
 
-Released under MIT license
-http://paramquery.com/license
+[Released under MIT license](http://paramquery.com/license)
  
       
 ParamQuery grid is a lightweight jQuery grid plugin inspired by MS Excel and Google spreadsheet. 
 
-It's free to use in any commercial or open source project and is licensed under very permissive MIT license.
 
 
+1. [Tutorial](http://paramquery.com/tutorial)
 
-- Tutorial: http://paramquery.com/tutorial
+2. [API](http://paramquery.com/api)
 
-- API: http://paramquery.com/api
+3. [Demos or Examples](http://paramquery.com/demos)
 
-- Demos or Examples: http://paramquery.com/demos
-
-- Download: http://paramquery.com/download
+4. [Download](http://paramquery.com/download)
 
 
 ### Features:
 
 ```
-It's designed on jQueryui widget pattern so it has all the advantages of it e.g. changing any option during runtime, methods like enable, disable, destroy, etc.
+It's designed on jQueryui widget pattern so it has all the advantages of it e.g. changing any 
+option during runtime, methods like enable, disable, destroy, etc.
 
 Sorting for common data formats like Integer, real numbers, Strings, etc.
 

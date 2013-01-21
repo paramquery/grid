@@ -153,6 +153,9 @@ div.pq-grid-header_ddn_icon_bg{
 div.ui-resizable-handle{
 	z-index:1;
 }
+div.pq-grid-col{
+	overflow: hidden;
+}
 div.pq-grid-col-resize-handle{
 }
 div.pq-grid tr{

@@ -1,3 +1,10 @@
+Version: 1.0.3
+
+1) Added beforeTableView event
+2) Added DataModel > error method
+3) Added classes pq-row-select,pq-cell-select,pq-grid-row, pq-grid-row-hover
+4) Added scrollPace option 
+
 Version: 1.0.2
 
 1) Added render event.

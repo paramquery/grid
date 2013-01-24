@@ -1,5 +1,5 @@
 /**
- * ParamQuery Grid a.k.a. pqGrid v1.0.2
+ * ParamQuery Grid a.k.a. pqGrid v1.0.3
  * 
  * Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
  * Released under MIT license
@@ -152,6 +152,9 @@ div.pq-grid-header_ddn_icon_bg{
 }
 div.ui-resizable-handle{
 	z-index:1;
+}
+td.pq-grid-col{
+	overflow: hidden;
 }
 div.pq-grid-col-resize-handle{
 }

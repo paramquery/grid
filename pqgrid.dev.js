@@ -1,5 +1,5 @@
 /**
- * ParamQuery Grid a.k.a. pqGrid v1.0.2
+ * ParamQuery Grid a.k.a. pqGrid v1.0.3
  * 
  * Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
  * Released under MIT license
@@ -79,7 +79,7 @@ fnPG.options={
 fnPG._create=function(){
 	var that=this;
 	this.element.addClass("pq-pager").css({});
-	this.first = $( "<button title='First Page'></button>", {
+	this.first = $( "<button type='button' title='First Page'></button>", {
 	})
 	.appendTo( this.element )
 	.button({
@@ -95,8 +95,7 @@ fnPG._create=function(){
 			}
 		}					
 	});
-	this.prev=$( "<button title='Previous Page'></button>", {					
-	})
+	this.prev=$( "<button type='button' title='Previous Page'></button>")
 	.appendTo( this.element )
 	.button({icons:{primary:"pq-page-prev"},text:false}).bind("click",function(evt){
 		if(that.options.currentPage>1){
@@ -143,8 +142,7 @@ fnPG._create=function(){
 	})
 	.appendTo( this.element )
 	$("<span class='pq-separator'></span>").appendTo(this.element);
-	this.next=$( "<button title='Next Page'></button>", {					
-	})
+	this.next=$( "<button type='button' title='Next Page'></button>")
 	.appendTo( this.element )
 	.button({icons:{primary:"pq-page-next"},text:false}).bind("click",function(evt){
 		var val=that.options.currentPage+1;
@@ -152,8 +150,7 @@ fnPG._create=function(){
 			that.option( {currentPage:val} );
 		}				
 	});
-	this.last=$( "<button title='Last Page'></button>", {					
-	})
+	this.last=$( "<button type='button' title='Last Page'></button>")
 	.appendTo( this.element )
 	.button({icons:{primary:"pq-page-last"},text:false}).bind("click",function(evt){
 		var val=that.options.totalPages;
@@ -173,7 +170,7 @@ fnPG._create=function(){
 		}
 	})
 	$("<span class='pq-separator'></span>").appendTo(this.element);
-	this.$refresh=$("<button title='Refresh'></button>")
+	this.$refresh=$("<button type='button' title='Refresh'></button>")
 	.appendTo(this.element)
 	.button({icons:{primary:"pq-refresh"},text:false}).bind("click",function(evt){		
 		if ( that._trigger( "refresh", evt ) !== false ) {			
@@ -255,6 +252,7 @@ fnSB.options={
 	num_eles:3,
 	cur_pos:0,
 	timeout:350,
+	pace:'optimum',
 	direction:'vertical'
 }
 fnSB._destroy=function(){
@@ -289,6 +287,7 @@ fnSB._create=function(){
 		<div class='right-btn pq-sb-btn'></div>");					
 	}
 	this.element.disableSelection().bind('click.pq-scrollbar',function(evt){
+		if(that.options.disabled)return;
 		if(that.$slider.is(":hidden"))return;
 		if(that.direction=="vertical"){
 			var clickY=evt.pageY;
@@ -326,6 +325,13 @@ fnSB._create=function(){
 		helper: function(evt, ui){
 			that._setDragLimits();
 			return this;
+		},
+		drag:function(evt){
+			var pace=that.options.pace;
+			if(pace=="optimum")
+				that._setNormalPace(evt);
+			else if(pace=="fast")
+				that._updateCurPosAndTrigger(evt);	
 		},	
 		stop:function(evt){
 			that._updateCurPosAndTrigger(evt);
@@ -339,16 +345,19 @@ fnSB._create=function(){
 		}				
 	}
 	this.$top_btn = $("div.top-btn,div.left-btn",this.element).click(function(evt){
+		if(that.options.disabled)return;
 		decr_cur_pos(evt);
 		evt.preventDefault();
 		return false;
 	}).mousedown(function(evt){
+		if(that.options.disabled)return;
 		that.mousedownTimeout=window.setTimeout(function(){
 			that.mousedownInterval = window.setInterval(function(){
 				decr_cur_pos(evt)
 			},50);					
 		},that.options.timeout)				
 	}).bind('mouseup mouseout',function(evt){
+		if(that.options.disabled)return;
 		that._mouseup(evt);
 	});
 	function incr_cur_pos(evt){
@@ -359,21 +368,25 @@ fnSB._create=function(){
 		}
 	}			
 	this.$bottom_btn = $("div.bottom-btn,div.right-btn",this.element).click(function(evt){
+		if(that.options.disabled)return;
 		incr_cur_pos(evt);
 		evt.preventDefault();
 		return false;
 	}).mousedown(function(evt){
+		if(that.options.disabled)return;
 		that.mousedownTimeout=window.setTimeout(function(){
 			that.mousedownInterval = window.setInterval(function(){
 				incr_cur_pos(evt)
 			},50);					
 		},that.options.timeout)						
 	}).bind('mouseup mouseout',function(evt){
+		if(that.options.disabled)return;
 		that._mouseup(evt);
 	});
 	this._refresh();
 }
 fnSB._mouseup=function(evt){
+	if(this.options.disabled)return;
 	var that=this;			
 	window.clearTimeout(that.mousedownTimeout);
 	that.mousedownTimeout=null;
@@ -441,14 +454,36 @@ fnSB._setSliderBgLength=function(){
 		this.$slider.width(this.slider_length);
 	}
 }
-fnSB._updateCurPosAndTrigger=function(evt){
+fnSB._updateCurPosAndTrigger = function(evt,top){
 	var that=this;
-	var top=(this.direction=="vertical")?parseInt(that.$slider.css("top")):parseInt(that.$slider.css("left"));
-	var scroll_space =that.length-34-((that.direction=="vertical")?that.$slider.height():that.$slider.width());
+	var $slider=that.$slider;
+	if(top==null){
+		top=(that.direction=="vertical")?parseInt($slider[0].style.top):parseInt($slider[0].style.left);
+	}
+	var scroll_space =that.length-34-((that.direction=="vertical")?$slider[0].offsetHeight:$slider[0].offsetWidth);
 	var cur_pos = (top-17)*(that.num_eles-1)/scroll_space;
-	cur_pos=Math.round(cur_pos)
-	that.options.cur_pos=cur_pos;
-	that._trigger("scroll",evt, {cur_pos: that.options.cur_pos});			
+	cur_pos=Math.round(cur_pos);
+	if(that.options.cur_pos!=cur_pos){
+		that.options.cur_pos=cur_pos;
+		that._trigger("scroll",evt, {cur_pos: that.options.cur_pos});
+	}				
+}
+fnSB._setNormalPace=function(evt){
+	if(this.timer){
+		window.clearInterval(this.timer);
+		this.timer=null;
+	}
+	var that=this;
+	that.timer=window.setInterval(function(){
+		var $slider=that.$slider;
+		var top=(that.direction=="vertical")?parseInt($slider[0].style.top):parseInt($slider[0].style.left);
+		if(that.prev_top==top){
+			that._updateCurPosAndTrigger(evt,top);
+			window.clearInterval(that.timer);
+			that.timer=null;
+		}
+		that.prev_top = top;				
+	},20);				
 }
 fnSB._validateCurPos=function(){
 	if(this.options.cur_pos>=this.num_eles){
@@ -470,6 +505,12 @@ fnSB.scroll=function(){
 	this._trigger("scroll",evt, {cur_pos: this.options.cur_pos});
 }
 fnSB._setOption=function(key,value){
+	if(key=="disabled"){
+		if(value==true)
+			this.$slider.draggable("disable");
+		else
+			this.$slider.draggable("enable");
+	}
 	$.Widget.prototype._setOption.call( this, key, value );
 }
 fnSB._setOptions=function(){
@@ -503,8 +544,9 @@ fnSB._setOptions=function(){
         height: 400,
         minWidth: 50,
         numberCell: true,
-        numberCellWidth: 50,
-        resizable: false,		
+        numberCellWidth: 50,		
+        resizable: false,	
+		scrollPace:'optimum',	
         sortable: true,
         title: "&nbsp;",
         width: 600,
@@ -577,21 +619,18 @@ fnSB._setOptions=function(){
         };
     }
     fn._create = function () {
-        this.minWidth = this.options.minWidth ? this.options.minWidth : 50;
+        this.minWidth = this.options.minWidth;
         this.cols = [];
+		this.dataModel = this.options.dataModel;
         this.widths = [];
         this.outerWidths = [];
         this.rowHeight = 22;
         this.hidearr = [];
         this.hidearrHS = [];
-        this.lockedarr = [];
-        this.flexarr = [];
-        this.lockedGrid = false;
         this.numberCell = this.options.numberCell;
-        this.numberCellWidth = 50;
+        this.numberCellWidth = this.options.numberCellWidth;
         this.freezeCols = this.options.freezeCols ? this.options.freezeCols : 0;
         this.columnBorders = this.options.columnBorders ? true : false;
-        var gridID = (Math.random() + "").replace(".", "a");
         var that = this;
         this.$tbl = null; 
         this.colModel = this.options.colModel ? this.options.colModel : [];
@@ -677,24 +716,27 @@ fnSB._setOptions=function(){
         this.$vscroll = $("<div class='pq-vscroll'></div>").appendTo(this.$grid_inner);
         this.prevVScroll = 0;
         this.$vscroll.pqScrollBar({
+			pace:that.options.scrollPace,
             direction: "vertical",
             cur_pos: 0,
-            scroll: function (evt, obj) {
+            scroll: function (evt, obj) {				
                 that.$cont[0].scrollTop = 0; 
-                that.init = obj.cur_pos;
-                $.measureTime(function () {
-                    that.selectCellRowCallback(that._generateTables);
-                }, 'that.selectCellRowCallback(that._generateTables)');
-		        that._trigger("refresh", null, {
-		            dataModel: that.dataModel,
-		            data: that.data
-		        });
+                if(that.init!=obj.cur_pos){
+	                $.measureTime(function () {
+	                    that.selectCellRowCallback(that._generateTables);
+	                }, 'that.selectCellRowCallback(that._generateTables)');
+			        that._trigger("refresh", null, {
+			            dataModel: that.dataModel,
+			            data: that.data
+			        });					
+				}
             }
         });
         var prevHScroll = 0;
         this.$hscroll = $("<div class='pq-hscroll'></div>").appendTo(this.$grid_inner);
         this.$hscroll.pqScrollBar({
             direction: "horizontal",
+			pace:that.options.scrollPace,
             cur_pos: 0,
             scroll: function (evt, obj) {
                 that._bufferObj_calcInitFinalH();
@@ -922,7 +964,10 @@ fnSB._setOptions=function(){
             },
             error: function (jqXHR, textStatus, errorThrown) {
                 that.hideLoading();
-                that.loading = false;
+                that.loading = false;				
+				if(typeof DM.error == "function"){
+					DM.error(jqXHR, textStatus, errorThrown);
+				}
             }
         });
     }
@@ -1156,6 +1201,10 @@ fnSB._setOptions=function(){
             }
         } else if (key == "resizable") {
             $.Widget.prototype._setOption.call(this, key, value);
+        } else if (key == "scrollPace") {
+			this.$hscroll.pqScrollBar("option",value);
+			this.$vscroll.pqScrollBar("option",value);
+            $.Widget.prototype._setOption.call(this, key, value);			
         } else if (key == "dataModel") {
             $.Widget.prototype._setOption.call(this, key, value);
             this._refreshSortingDataAndView();
@@ -1216,7 +1265,10 @@ fnSB._setOptions=function(){
         var lft = $tr[0].offsetLeft + $table[0].offsetLeft;
         var top = $tr[0].offsetTop + $table[0].offsetTop;
         var that = this;
+		if(this.$td_focus)this.$td_focus.removeClass("pq-cell-select");
+		if(this.$tr_focus)this.$tr_focus.removeClass("pq-row-select");
         this.$tr_focus = $tr;
+		this.$tr_focus.addClass("pq-row-select");
         this.$td_focus = $tr.find("td[pq-col-indx=" + this._findfirstUnhiddenColIndx() + "]");
         this._generateCellHighlighter(offsetParent, lft, top, wd, ht);
     }
@@ -1378,7 +1430,11 @@ fnSB._setOptions=function(){
     fn.getData = function () {
         return this.data;
     }
-    fn.getSelection = function () {
+    fn.getViewPortRowsIndx=function(){
+		this._bufferObj_calcInitFinal();
+		return {beginIndx:this.init,endIndx:this['final']};
+	}
+	fn.getSelection = function () {
 		function rr(rowIndx){
 			if(rowIndx==null){
 				return null;
@@ -1418,6 +1474,12 @@ fnSB._setOptions=function(){
             };
         }
     }
+	fn._cellblurred=function(){
+		this.$div_focus.remove();
+		this.$div_focus=null;
+		this.$td_focus=null;
+		this.$tr_focus=null;		
+	}
     fn._boundCell = function (rowIndx, colIndx, $td) {
         if ($td == null) var $td = this._get$TD(rowIndx, colIndx); 
         if ($td == null || $td.length == 0) {
@@ -1433,7 +1495,10 @@ fnSB._setOptions=function(){
         var lft = $td[0].offsetLeft + $table[0].offsetLeft;
         var top = $td[0].offsetTop + $table[0].offsetTop;
         this._generateCellHighlighter(offsetParent, lft, top, wd, ht);
-        this.$td_focus = $td;        
+		if(this.$tr_focus)this.$tr_focus.removeClass("pq-row-select");
+		if(this.$td_focus)this.$td_focus.removeClass("pq-cell-select");
+        this.$td_focus = $td;
+		this.$td_focus.addClass("pq-cell-select");        
         this.$tr_focus = null;		
     }
     fn.selectCell = function (rowIndx, colIndx, evt) {
@@ -1993,21 +2058,27 @@ fnSB._setOptions=function(){
         var noColumns = this.colModel.length;
         var top = 0;
         this._bufferObj_calcInitFinal();
-        var init = this._bufferObj_getInit(),
-            finall = this._bufferObj_getFinal();
+        var init = this.init,
+            finall = this['final'];			
         if (init == null || finall == null) {
             this.$cont.empty();
             this.$tbl = null;
             return;
-        }
+        }							
+        this._trigger("beforeTableView", null, {
+			data:this.data,
+            curPos: init,
+			finalPos: finall,
+			curPage: this.dataModel.curPage			            
+        });					
         var const_cls = "";
         if (this.columnBorders) const_cls = "pq-grid-td-border-right ";
         if (this.options.wrap == false) const_cls += "pq-wrap-text ";
         var buffer = ["<table style='table-layout:fixed;width:0px;position:absolute;top:0px;' cellpadding=0 cellspacing=0>"];
 		var columnOrder=this.options.columnOrder;
         for (var i = init; i <= finall; i++) {
-            var row_cls = "";
-            if (i / 2 == parseInt(i / 2)) row_cls = "pq-grid-oddRow";
+            var row_cls = "pq-grid-row";
+            if (i / 2 == parseInt(i / 2)) row_cls += " pq-grid-oddRow";
             var row_str = "<tr pq-row-indx='" + i + "' class='" + row_cls + "'>"
             buffer.push(row_str)
             if (this.numberCell) {

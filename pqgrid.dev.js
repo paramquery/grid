@@ -546,7 +546,7 @@ fnSB._setOptions=function(){
         numberCell: true,
         numberCellWidth: 50,		
         resizable: false,	
-		scrollPace:'optimum',	
+		scrollPace:'fast',	
         sortable: true,
         title: "&nbsp;",
         width: 600,

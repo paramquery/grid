@@ -1411,6 +1411,12 @@ fnSB._setOptions=function(){
                 var dataCell = $cell.children().html();
                 this.data[rowIndx][colIndx] = dataCell;
             }
+            // to allow the user to have one global handler to save the data (i.e: to the server)
+			this._trigger("cellSave", null, {
+				rowIndx: rowIndx,
+				colIndx: colIndx,
+				data: this.data
+			}); 
             var $tr = this._get$TR(rowIndx);
             for (var i = 0; i < this.colModel.length; i++) {
 				var i1=i;

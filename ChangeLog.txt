@@ -1,3 +1,14 @@
+Version: 1.0.4
+
+1) Header background css
+2) Nested colModels for grouped columns.
+3) Name of column > saveCell callback changed to column > getEditCellData 
+4) dataIndx introduced to bind colModel > columns with data columns explicitly.
+5) Events: cellSave, cellClick, cellDblClick, cellSelect, cellUnSelect, rowClick, rowSelect, rowUnSelect
+6) Options: column > dataIndx, column > sortable, customData, editModel, hoverMode, selectionModel
+7) Methods: getColIndxFromDataIndx, getCell, getEditCellData, getRow, isEditableCell, refreshCell, refreshColumn, refreshRow, selection
+8) getSelection method removed.
+
 Version: 1.0.3
 
 1) Added beforeTableView event

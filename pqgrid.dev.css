@@ -1,5 +1,5 @@
 /**
- * ParamQuery Grid a.k.a. pqGrid v1.0.5
+ * ParamQuery Grid a.k.a. pqGrid v1.0.6
  * 
  * Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
  * Released under MIT license
@@ -326,7 +326,7 @@ div.pq-pager span,div.pq-pager select{
 .pq-scrollbar-vert{
 	display:block;
 	width:17px;
-	background:#efefef url(images/vert-bg.png);
+	background:#efefef url(images/vert-bg.png);	
 }
 .pq-scrollbar-horiz{
 	display:block;
@@ -335,7 +335,7 @@ div.pq-pager span,div.pq-pager select{
 }
 .pq-scrollbar-vert *{
 	padding:0px;
-	margin:0px;
+	margin:0px;	
 	} 
 .pq-scrollbar-horiz *{
 	padding:0px;
@@ -350,7 +350,7 @@ div.pq-pager span,div.pq-pager select{
 .pq-scrollbar-vert div.top-btn{
 	left:0px;
 	top:0px;
-	background:url(images/sprite.png);
+	background:url(images/sprite.png);	
 }
 .pq-scrollbar-horiz div.left-btn{
 	left:0px;

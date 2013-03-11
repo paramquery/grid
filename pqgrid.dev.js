@@ -1,5 +1,5 @@
 /**
- * ParamQuery Grid a.k.a. pqGrid v1.0.5
+ * ParamQuery Grid a.k.a. pqGrid v1.0.6
  * 
  * Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
  * Released under MIT license
@@ -600,8 +600,11 @@ fnSB._setOptions=function(){
 			$tr=objP.$tr,
 			evt=objP.evt,
 			selectedRows =this.selectedRows,
-			indx=this.indexOf(objP);
-		if(!this.isSelected(objP)){								
+			isSelected = this.isSelected(objP);			
+		if(isSelected==null){
+			return false;
+		}
+		else if(this.isSelected(objP)==false){								
 			var	ret=this._boundRow(objP),				
 				$tr=ret;	
 			selectedRows.push({rowIndx:rowIndx});				
@@ -615,6 +618,7 @@ fnSB._setOptions=function(){
 			});										
 		}
 		else{
+			var indx=this.indexOf(objP);
 			var arr2=this.selectedRows.splice(indx,1);
 			this.selectedRows = this.selectedRows.concat(arr2);
 		}		
@@ -641,9 +645,11 @@ fnSB._setOptions=function(){
 				});								
 			}				
 			this._removeFromData(objP);
-			var indx=this.indexOf(objP);							
-			this.selectedRows.splice(indx,1);
 		}
+		var indx=this.indexOf(objP);
+		if(indx!=-1){
+			this.selectedRows.splice(indx,1);
+		}																																									
 	}
 	_p.indexOf=function(obj){
 		if(this.isDirty){
@@ -665,13 +671,13 @@ fnSB._setOptions=function(){
 		var location=this.options.dataModel.location;
 		var data=(location=="remote")?this.that.data:this.options.dataModel.data,
 			indx=(location=="remote")?objP.rowIndxPage:objP.rowIndx,
-			rowData=data[indx];
-		if(!rowData){
-			return false;
+			rowData=data[indx],
+			len_row=(rowData)?rowData.length:null,
+			objCell=(len_row)?rowData[len_row-1]:null;
+		if(objCell==null){
+			return null;
 		}	
-		var	len_row=rowData.length,
-			objCell=rowData[len_row-1];
-		if (objCell.pqData) {
+		else if (objCell.pqData) {
 			return objCell.selectedRow;
 		}
 		else{
@@ -766,16 +772,19 @@ fnSB._setOptions=function(){
 			this.refresh();
 		}	
 		var location=this.options.dataModel.location;
-		var data=(location=="remote")?this.that.data:this.options.dataModel.data,
-			indx=(location=="remote")?objP.rowIndxPage:objP.rowIndx,						
-			that=this.that,
+		var that=this.that, 
+			data=(location=="remote")?that.data:this.options.dataModel.data,
+			indx=(location=="remote")?objP.rowIndxPage:objP.rowIndx,									
 			dataIndx=(objP.dataIndx==null)?that.colModel[objP.colIndx].dataIndx:objP.dataIndx,
 			rowData=data[indx],
-			len_row=rowData.length,
-			objCell=rowData[len_row-1];
-		if (objCell.pqData) {
+			len_row=(rowData)?rowData.length:null,
+			objCell=(len_row)?rowData[len_row-1]:null;
+		if(objCell==null){
+			return null;
+		}	
+		else if (objCell.pqData) {
 			var selectedDataIndices=objCell.selectedDataIndices;
-			if(selectedDataIndices){
+			if(selectedDataIndices && selectedDataIndices[dataIndx]!=null){
 				return selectedDataIndices[dataIndx];	
 			}			
 		}
@@ -825,8 +834,12 @@ fnSB._setOptions=function(){
 			colIndx=objP.colIndx= (objP.colIndx==null)?that.getColIndxFromDataIndx(objP.dataIndx):objP.colIndx,
 			dataIndx=objP.dataIndx= (objP.dataIndx==null)?that.colModel[colIndx].dataIndx:objP.dataIndx,			
 			evt=objP.evt,
-			selectedCells =this.selectedCells;
-		if(!this.isSelected(objP)){								
+			selectedCells =this.selectedCells,
+			isSelected = this.isSelected(objP);
+		if(isSelected==null){
+			return false;
+		}
+		else if(isSelected==false){								
 			var $td=that.getCell({rowIndxPage:rowIndxPage,colIndx:colIndx});								
 			if($td)$td.addClass("pq-cell-select");
 			selectedCells.push({rowIndx:rowIndx,dataIndx:dataIndx});				
@@ -872,10 +885,12 @@ fnSB._setOptions=function(){
 					$td:$td
 				});								
 			}				
-			this._removeFromData(objP);
-			var indx=this.indexOf(objP);							
-			this.selectedCells.splice(indx,1);
+			this._removeFromData(objP);																																		
 		}
+		var indx=this.indexOf(objP);
+		if(indx!=-1){
+			this.selectedCells.splice(indx,1);
+		}																																											
 	}
 	_pC.indexOf=function(obj){
 		if(this.isDirty){
@@ -917,7 +932,9 @@ fnSB._setOptions=function(){
         draggable: false,
         editable: true,
 		editModel: {clicksToEdit:1,saveKey:''},
-        freezeCols: 0,
+		flexHeight: false,
+		flexWidth: false,
+        freezeCols: 0,		
 		getDataIndicesFromColIndices: true,
         height: 400,
 		hoverMode:'row',
@@ -925,7 +942,7 @@ fnSB._setOptions=function(){
         numberCell: true,
         numberCellWidth: 50,		
         resizable: false,	
-		scrollPace:'fast',
+		scrollModel:{pace:"fast", horizontal:true},
 		selectionModel: {type:'row',mode:'range'},
         sortable: true,
         title: "&nbsp;",
@@ -1205,11 +1222,11 @@ fnSB._setOptions=function(){
 			return that._onMouseWheel(evt);
         })
         var prevVScroll = 0;
-        $("<div class='pq-hvscroll-square'></div>").appendTo(this.$grid_inner);
+        this.$hvscroll = $("<div class='pq-hvscroll-square'></div>").appendTo(this.$grid_inner);
         this.$vscroll = $("<div class='pq-vscroll'></div>").appendTo(this.$grid_inner);
         this.prevVScroll = 0;
         this.$vscroll.pqScrollBar({
-			pace:that.options.scrollPace,
+			pace:that.options.scrollModel.pace,
             direction: "vertical",
             cur_pos: 0,
             scroll: function (evt, obj) {				
@@ -1225,7 +1242,7 @@ fnSB._setOptions=function(){
         this.$hscroll = $("<div class='pq-hscroll'></div>").appendTo(this.$grid_inner);
         this.$hscroll.pqScrollBar({
             direction: "horizontal",
-			pace:that.options.scrollPace,
+			pace:that.options.scrollModel.pace,
             cur_pos: 0,
             scroll: function (evt, obj) {
                 that._bufferObj_calcInitFinalH();
@@ -1712,8 +1729,12 @@ fnSB._setOptions=function(){
         $.measureTime(function () {
             fn.call(that); 
         }, '_generateTables');
-		if (this.sCells.getSelection().length>0) { 
-        }
+		if(this.options.flexHeight){
+			this._setGridHeightFromTable();
+		}				
+		if(this.options.flexWidth){
+			this._setGridWidthFromTable();
+		}						
     }
     fn._refreshTitle = function () {
         this.$title.html(this.options.title);
@@ -1806,8 +1827,10 @@ fnSB._setOptions=function(){
     }
     fn._refreshViewAfterDataSort = function () {
         this._setVScrollHeight();
-        this._generateTables();
-        this._computeOuterWidths(); 
+		this.selectCellRowCallback(function(){
+        	this._generateTables();
+        	this._computeOuterWidths(); 
+		})
         this._refreshHeaderSortIcons();
         this._setRightGridHeight();
         this._setVScrollHeight(); 
@@ -1913,10 +1936,11 @@ fnSB._setOptions=function(){
             }
         } else if (key == "resizable") {
             $.Widget.prototype._setOption.call(this, key, value);
-        } else if (key == "scrollPace") {
-			this.$hscroll.pqScrollBar("option",value);
-			this.$vscroll.pqScrollBar("option",value);
-            $.Widget.prototype._setOption.call(this, key, value);			
+        } else if (key == "scrollModel") {
+			var obj=value;
+			for(var key in obj){
+				this.options.scrollModel[key]=obj[key];	
+			}
         } else if (key == "dataModel") {
             $.Widget.prototype._setOption.call(this, key, value);
             this._refreshSortingDataAndView({});
@@ -2081,8 +2105,12 @@ fnSB._setOptions=function(){
 	            return false;
 	        }
             var td_right = this._calcRightEdgeCol(colIndx);
-            if (td_right > this.$cont[0].offsetWidth - 17) {
-                var diff = this._calcWidthCols(colIndx) - (this.$cont[0].offsetWidth - 17); 
+			var wd_scrollbar=17;
+			if(this.$vscroll.css("visibility")=="hidden" || this.$vscroll.css("display")=="none"){
+				wd_scrollbar=0;
+			}
+            if (td_right > this.$cont[0].offsetWidth - wd_scrollbar) {
+                var diff = this._calcWidthCols(colIndx) - (this.$cont[0].offsetWidth - wd_scrollbar); 
                 var $tds = $td.parent("tr").children("td");
                 var data_length = this.colModel.length;
                 var wd = 0,
@@ -2201,9 +2229,18 @@ fnSB._setOptions=function(){
 					return;
 				}							
 				this.refreshRow(obj);
-			}			
+				var that=this;
+				if(that.options.flexHeight){
+					that._setGridHeightFromTable();
+					that._fixIEFooterIssue();
+				}					
+			}					
         }
     }
+	fn._fixIEFooterIssue=function(){
+		$(".pq-grid-footer").css({position:"absolute"});
+		$(".pq-grid-footer").css({position:"relative"});														
+	}
 	fn.refreshColumn = function(obj){
 		var colIndx=obj.colIndx= (obj.colIndx==null)?this.getColIndxFromDataIndx(obj.dataIndx):obj.colIndx,
 			offset = this.getRowIndxOffset();
@@ -2744,16 +2781,20 @@ fnSB._setOptions=function(){
         return num_hidden;
     }
     fn._setHScrollWidth = function () {
+		if(!this.options.scrollModel.horizontal){
+			this.$hscroll.css("visibility","hidden");
+			this.$hvscroll.css("visibility","hidden");
+			return;
+		}
         var wd = this.$cont[0].offsetWidth;        
         if (this.numberCell) {
             wd -= this.numberCell_outerWidth;
         }
-		var columnOrder=this.options.columnOrder;
         for (var i = 0; i < this.freezeCols; i++) {						
             wd -= this.outerWidths[i];            
         }
         var width_vscroll = 0;
-        if (this.$vscroll.css("display") == "none") {
+        if (this.$vscroll.css("display") == "none" || this.$vscroll.css("visibility") == "hidden") {
             this.$hscroll.css("right", 0);
         } else {
             width_vscroll = 17;
@@ -2766,7 +2807,12 @@ fnSB._setOptions=function(){
     }
     fn._setVScrollHeight = function () {
         var ht = this.$cont.height();
-        this.$vscroll.pqScrollBar("option", "length", (ht - 17));
+        var htSB = 17;
+        if (this.$hscroll.css("visibility") == "hidden" || !this.options.scrollModel.horizontal) {
+			htSB = 0;
+		}
+		this.$vscroll.css("bottom", htSB);
+        this.$vscroll.pqScrollBar("option", "length", (ht - htSB));
         var data_length = (this.data) ? this.data.length : 0;
         if (data_length >= 0) {
             this.$vscroll.pqScrollBar("option", "num_eles", (data_length));
@@ -2778,9 +2824,32 @@ fnSB._setOptions=function(){
     }
     fn._setRightGridHeight = function () {
 		this.$header_o.height(this.$header_left.height()-2);
-        var ht = (this.element.outerHeight() - this.$header_o.outerHeight() - this.$top.outerHeight() - this.$bottom.outerHeight());
+		var ht = (this.element[0].offsetHeight - this.$header_o[0].offsetHeight - this.$top[0].offsetHeight - this.$bottom[0].offsetHeight);
         this.$cont.height(ht + "px");
     }
+	fn._setGridHeightFromTable=function(){
+		if(this.$tbl){
+			var htSB=17;
+			if(this.$hscroll.css("visibility")=="hidden"){
+				htSB=0;
+			}
+			var ht_tbl =this.$tbl[0].offsetHeight + htSB;
+			this.$cont.height(ht_tbl + "px");
+			var ht = (this.$header_o[0].offsetHeight + this.$top[0].offsetHeight + this.$bottom[0].offsetHeight+ ht_tbl);
+			this.element.height(ht);
+			this._setInnerGridHeight();
+			this.$vscroll.css("visibility","hidden");			
+		}		
+	}
+	fn._setGridWidthFromTable=function(){
+		if(this.$tbl){
+			var wdSB=17;
+			if(this.$vscroll.css("visibility")=="hidden"){
+				wdSB=0;
+			}
+			this.element.width((this.$tbl[0].offsetWidth + wdSB) + "px");	
+		}		
+	}
     fn._setRightGridWidth = function () {
     }
     fn._bufferObj_getInit = function () {
@@ -2796,7 +2865,12 @@ fnSB._setOptions=function(){
     fn._bufferObj_calcInitFinal = function () {
         if (this.data == null || this.data.length == 0) {
             this['final'] = this['init'] = null;
-        } else {
+        } 
+		else if(this.options.flexHeight){
+			this.init=0;
+			this['final']=this.data.length-1;
+		}
+		else {
             var cur_pos = parseInt(this.$vscroll.pqScrollBar("option", "cur_pos"));
             this.init = cur_pos;
             this['final'] = this.init + this._bufferObj_minRowsPerGrid();
@@ -2885,7 +2959,11 @@ fnSB._setOptions=function(){
         var $pQuery_drag = $head.find("div.pq-grid-col-resize-handle[pq-grid-col-indx=" + indx + "]");
         var $pQuery_col = $head.find("td.pq-grid-col[pq-grid-col-indx=" + indx + "]");
         var cont_left = $pQuery_col.offset().left + that.minWidth;
-        var cont_right = that.$cont.offset().left + that.$cont[0].offsetWidth - 17; 
+		var wdSB=17;
+		if(this.options.flexHeight || this.$vscroll.css("visibility")=="hidden"){
+			wdSB=0;
+		}
+        var cont_right = that.$cont.offset().left + that.$cont[0].offsetWidth - wdSB + 20; 
         $pQuery_drag.draggable("option", 'containment', [cont_left, 0, cont_right, 0]);
     }
 	fn._getOrderIndx=function(indx){

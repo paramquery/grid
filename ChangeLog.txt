@@ -1,3 +1,7 @@
+Version: 1.0.5
+
+Edit field and dataIndx bug fixes
+
 Version: 1.0.4
 
 1) Header background css

@@ -1,0 +1,33 @@
+{
+  "name": "pqgrid",
+  "title": "ParamQuery Grid",
+  "version": "1.0.6",
+  "author": {
+    "name": "Paramvir Dhindsa",
+    "email": "pdhindsa@paramquery.com",
+    "url": "http://www.paramquery.com/"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://paramquery.com/license"
+    }
+  ],
+  "description": "Feature rich yet lightweight data grid inspired by MS Excel",
+  "homepage": "http://paramquery.com/",
+  "docs": "https://paramquery.com/api",
+  "demo": "http://paramquery.com/demos",  
+  "download": "http://paramquery.com/download",
+  "keywords": [
+    "grid",
+    "excel",
+    "datagrid",
+    "table",
+    "ajax"
+  ],
+  "bugs": "https://github.com/paramquery/grid/issues",
+  "dependencies": {
+    "jquery": "1.9.1",
+    "jqueryui": "1.10.1"
+  }
+}

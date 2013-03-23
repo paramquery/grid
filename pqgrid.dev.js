@@ -3537,12 +3537,12 @@ var cons = {
 // Limit scope pollution from any deprecated API
 (function() {
 
-var matched, browser;
+var uaMatch, matched, browser;
 
 // Use of jQuery.browser is frowned upon.
 // More details: http://api.jquery.com/jQuery.browser
 // jQuery.uaMatch maintained for back-compat
-jQuery.uaMatch = function( ua ) {
+uaMatch = function( ua ) {
 	ua = ua.toLowerCase();
 
 	var match = /(chrome)[ \/]([\w.]+)/.exec( ua ) ||
@@ -3558,7 +3558,7 @@ jQuery.uaMatch = function( ua ) {
 	};
 };
 
-matched = jQuery.uaMatch( navigator.userAgent );
+matched = uaMatch( navigator.userAgent );
 browser = {};
 
 if ( matched.browser ) {

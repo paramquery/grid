@@ -20,10 +20,13 @@
   "download": "http://paramquery.com/download",
   "keywords": [
     "grid",
-    "excel",
+    "excel",    
     "datagrid",
     "table",
-    "ajax"
+    "ajax",
+    "ui",
+    "sortable",
+    "paging"
   ],
   "bugs": "https://github.com/paramquery/grid/issues",
   "dependencies": {

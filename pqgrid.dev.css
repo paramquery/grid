@@ -1,5 +1,5 @@
 /**
- * ParamQuery Grid a.k.a. pqGrid v1.0.6
+ * ParamQuery Grid a.k.a. pqGrid v1.0.7
  * 
  * Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
  * Released under MIT license
@@ -265,16 +265,16 @@ div.pq-hvscroll-square{
 }			
 div.pq-grid tr.pq-grid-row-hover td
 {
-    background-color:#d8e8fa;  
+    background-color:#d8e8fa;
 }     
 div.pq-grid tr.pq-row-select td
 {
-    background-color:steelblue;  
+    background-color:#6699cc;
     color:#fff;
 }
 div.pq-grid tr td.pq-grid-cell-hover
 {
-    background-color:#d8e8fa;  
+    background-color:#d8e8fa;
 } 
 div.pq-cont tr td.pq-grid-number-cell
 {
@@ -283,8 +283,8 @@ div.pq-cont tr td.pq-grid-number-cell
 }   
 div.pq-grid tr td.pq-cell-select
 {
-    background-color:dodgerblue;  
-    color:#fff;
+	background-color:#88bbdd;  
+	color:#fff;
 }    
 .pq-pager{
 	padding:2px 5px 13px;

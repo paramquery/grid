@@ -1,3 +1,11 @@
+Version: 1.0.7
+
+1) Page scroll till bottom.
+2) removal of $.browser
+3) jQuery 1.9 compatibility.
+4) Option: topVisible.
+5) Change adapter namespace to paramquery.
+
 Version: 1.0.6
 
 1) FlexHeight, FlexWidth & ScrollModel > horizontal

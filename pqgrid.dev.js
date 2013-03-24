@@ -1,13 +1,13 @@
 /**
- * ParamQuery Grid a.k.a. pqGrid v1.0.6
+ * ParamQuery Grid a.k.a. pqGrid v1.0.7
  * 
  * Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
  * Released under MIT license
  * http://paramquery.com/license
  * 
  */     	
-(function($){
-	$.adapter={
+(function($){	
+	$.paramquery={
 		xmlToArray:function(data,obj){
 			var itemParent=obj.itemParent;
 			var itemNames=obj.itemNames;
@@ -335,13 +335,14 @@ fnSB._create=function(){
 		},	
 		stop:function(evt){
 			that._updateCurPosAndTrigger(evt);
+			that._refresh();
 		}
 	});
 	function decr_cur_pos(evt){
 		if (that.options.cur_pos > 0) {
 			that.options.cur_pos--;
 			that.updateSliderPos();
-			that._trigger("scroll",evt, {cur_pos: that.options.cur_pos});
+			that.scroll(evt);
 		}				
 	}
 	this.$top_btn = $("div.top-btn,div.left-btn",this.element).click(function(evt){
@@ -363,9 +364,9 @@ fnSB._create=function(){
 	function incr_cur_pos(evt){
 		if (that.options.cur_pos < that.num_eles - 1) {
 			that.options.cur_pos++;
-			that.updateSliderPos();
-			that._trigger("scroll", evt,{cur_pos: that.options.cur_pos});															
 		}
+		that.updateSliderPos();
+		that.scroll(evt);
 	}			
 	this.$bottom_btn = $("div.bottom-btn,div.right-btn",this.element).click(function(evt){
 		if(that.options.disabled)return;
@@ -465,7 +466,7 @@ fnSB._updateCurPosAndTrigger = function(evt,top){
 	cur_pos=Math.round(cur_pos);
 	if(that.options.cur_pos!=cur_pos){
 		that.options.cur_pos=cur_pos;
-		that._trigger("scroll",evt, {cur_pos: that.options.cur_pos});
+		this.scroll(evt);
 	}				
 }
 fnSB._setNormalPace=function(evt){
@@ -485,6 +486,10 @@ fnSB._setNormalPace=function(evt){
 		that.prev_top = top;				
 	},20);				
 }
+fnSB.setNumEles=function(num_eles){
+	this.num_eles= this.options.num_eles=num_eles;
+	this.updateSliderPos();
+}
 fnSB._validateCurPos=function(){
 	if(this.options.cur_pos>=this.num_eles){
 		this.options.cur_pos=this.num_eles-1;
@@ -500,9 +505,9 @@ fnSB.updateSliderPos=function(){
 	else				
 		this.$slider.css("left",17+sT);
 }
-fnSB.scroll=function(){
-	var evt=null;
-	this._trigger("scroll",evt, {cur_pos: this.options.cur_pos});
+fnSB.scroll=function(evt){
+	var thisOptions=this.options;
+	this._trigger("scroll",evt, {cur_pos: thisOptions.cur_pos, num_eles: thisOptions.num_eles});
 }
 fnSB._setOption=function(key,value){
 	if(key=="disabled"){
@@ -629,11 +634,11 @@ fnSB._setOptions=function(){
 		}						
 		var rowIndx=objP.rowIndx,
 		that=this.that,
-		offset=(objP.offset==null)?that.getRowIndxOffset():objP.offset,
+		offset=(objP.offset==null)?that.getRowIndxOffset():objP.offset,		
 		rowIndxPage=objP.rowIndxPage= rowIndx-offset,			
 		evt=objP.evt,		
-		init=(that.init+offset),
-		finall=(that['final']+offset);
+		init=(that.init+offset-that.offsetRow),
+		finall=(that['final']+offset-that.offsetRow);
 		if(this.isSelected(objP)){
 			if(rowIndx >= init && rowIndx <= finall){
 				var $tr=that.getRow({rowIndxPage:rowIndxPage});
@@ -678,7 +683,7 @@ fnSB._setOptions=function(){
 			return null;
 		}	
 		else if (objCell.pqData) {
-			return objCell.selectedRow;
+			return (objCell.selectedRow)?true:false;
 		}
 		else{
 			return false;
@@ -946,6 +951,7 @@ fnSB._setOptions=function(){
 		selectionModel: {type:'row',mode:'range'},
         sortable: true,
         title: "&nbsp;",
+		topVisible: true,
         width: 600,
         wrap: true
     }
@@ -1126,17 +1132,7 @@ fnSB._setOptions=function(){
         var that = this;
         this.$tbl = null; 
 		this._refreshHeader();
-        $(this.colModel).each(function (i, col) {
-            if (col.width != undefined) {
-                var wd = parseInt(col.width)
-                if (wd < that.minWidth){
-					wd = that.minWidth;
-					col.width=wd;
-				} 
-            } else {                
-				col.width= that.minWidth;
-            }
-        });
+		this._refreshWidths();
 		this._computeOuterWidths();
         this.element.empty().addClass('pq-grid').append("<div class='pq-grid-top'>\
 		<div class='pq-grid-title'>&nbsp;</div></div>\
@@ -1158,6 +1154,9 @@ fnSB._setOptions=function(){
         this.$grid_inner = $("div.pq-grid-inner", this.element);
         this.$grid_right = $(".pq-grid-right", this.element);
         this.$header_o = $("div.pq-header-outer", this.$grid_right);
+		if(!this.options.topVisible){
+			this.$top.css("display","none");
+		}
         this.$header = $(".pq-grid-header", this.$grid_right);
 		this.$header_left=$(this.$header[0]);
 		this.$header_right=$(this.$header[1]);
@@ -1230,12 +1229,19 @@ fnSB._setOptions=function(){
             direction: "vertical",
             cur_pos: 0,
             scroll: function (evt, obj) {				
-                that.$cont[0].scrollTop = 0; 
-                if(that.init!=obj.cur_pos){
+                var cur_pos=parseInt(obj.cur_pos);
+                if(that.init!=cur_pos){
+					that.scrollMode=true;
 	                $.measureTime(function () {
 	                    that.selectCellRowCallback(that._generateTables);
 	                }, 'that.selectCellRowCallback(that._generateTables)');
 				}
+				if(evt.originalEvent && evt.originalEvent.type=="drag"){
+					that._setVScrollNumEles();					
+				}
+				else{
+					that._setVScrollNumEles(true);	
+				}				
             }
         });
         var prevHScroll = 0;
@@ -1247,6 +1253,7 @@ fnSB._setOptions=function(){
             scroll: function (evt, obj) {
                 that._bufferObj_calcInitFinalH();
                 that._refreshHideArrHS();
+				that.scrollMode=true;
                 that.selectCellRowCallback(function () {
                     that._createHeader();
                     that._refreshHeaderSortIcons();
@@ -1256,7 +1263,7 @@ fnSB._setOptions=function(){
         })
         this.element.width(this.options.width + "px").height(this.options.height + "px");
 		this.disableSelection();
-        if ($.browser.opera) {
+		if (window.opera) {	
             this.$grid_inner.bind("keypress.pq-grid", {
                 that: this
             }, function (evt) {
@@ -1275,7 +1282,7 @@ fnSB._setOptions=function(){
         if (typeof DM.sortIndx == "number" && DM.sorting == "local" && DM.location == "local") {
 			this._refreshDataIndices();
 			var colIndx=this.getColIndxFromDataIndx(DM.sortIndx);
-            this._sortLocalData(DM.sortIndx, DM.sortDir, this.colModel[colIndx].dataType); 
+            this._sortLocalData(DM.sortIndx, DM.sortDir, this.colModel[colIndx].dataType,DM.data); 
         }
         this._initData(); 
 		this._createSelectedRowsObject();
@@ -1551,6 +1558,7 @@ fnSB._setOptions=function(){
             rPP: DM.rPP,
             rPPOptions: DM.rPPOptions,
             change: function (evt, obj) {
+				var DM = that.options.dataModel;
                 if (obj.curPage != undefined){
 					DM.prevPage = DM.curPage;
 					DM.curPage = obj.curPage;					 
@@ -1559,8 +1567,6 @@ fnSB._setOptions=function(){
                 if (DM.paging == "remote") that.remoteRequest();
                 else {
 					that.$td_edit=null;
-					that.$tr_focus=null;
-					that.$td_focus=null;
                     that._refreshDataFromDataModel();
                     that._refresh();
                 }
@@ -1617,7 +1623,10 @@ fnSB._setOptions=function(){
         this.element.find("div.pq-loading").hide();
     }
     fn._refreshDataFromDataModel = function () {
-        var DM = this.options.dataModel;
+        var thisOptions=this.options,
+			DM = thisOptions.dataModel,
+			GM=thisOptions.groupModel,
+			GMTrue=(GM && GM.grouping=="local")?true:false;
         if (DM.data == null || DM.data.length == 0) {
             if (DM.paging) {
                 DM.curPage = 0;
@@ -1640,9 +1649,41 @@ fnSB._setOptions=function(){
             if (endIndx > DM.data.length) {
                 endIndx = DM.data.length;
             }
-            this.data = DM.data.slice(begIndx, endIndx);
+			if(GMTrue){
+				this._groupArrays();
+				var dataGM=this.dataGM;
+				for(var i=0,len=dataGM.length;i<len;i++){
+					var rowIndx=dataGM[i].rowIndx;
+					if(rowIndx==begIndx){
+						if(dataGM[i-1].rowIndx==null){
+							begIndx=i-1;
+						}
+						else{
+							begIndx=i;
+						}
+					}
+					else if(rowIndx==endIndx){
+						if (dataGM[i + 1].rowIndx == null) {
+							endIndx = i + 1;
+						}
+						else {
+							endIndx=i;
+						}												
+					}
+				}	
+				this.data = this.dataGM.slice(begIndx, endIndx);
+			}
+			else{
+				this.data = DM.data.slice(begIndx, endIndx);	
+			}            
         } else {
-            this.data = DM.data;
+			if(GMTrue){
+				this._groupArrays();
+				this.data = this.dataGM;	
+			}
+			else{
+				this.data = DM.data;	
+			}            
         }
     }
     fn.remoteRequest = function (callback_fn) {
@@ -1716,7 +1757,7 @@ fnSB._setOptions=function(){
         });
     }
 	fn._fixFireFoxContentEditableIssue=function(){
-        if(!$.browser.msie){
+		if(window.postMessage){
 			this.$grid_inner.focus(); 	
 		}							
 	}
@@ -1805,11 +1846,11 @@ fnSB._setOptions=function(){
         this._refreshHeaderSortIcons();
         this._setInnerGridHeight();
         this._setRightGridHeight();
-        this._setVScrollHeight();
         this.selectCellRowCallback(function () {
             that._generateTables();
             that._computeOuterWidths();
         });
+        this._setVScrollHeight();
         this._setHScrollWidth();
         this._refreshPager();
     }
@@ -1826,7 +1867,6 @@ fnSB._setOptions=function(){
         }
     }
     fn._refreshViewAfterDataSort = function () {
-        this._setVScrollHeight();
 		this.selectCellRowCallback(function(){
         	this._generateTables();
         	this._computeOuterWidths(); 
@@ -1887,7 +1927,7 @@ fnSB._setOptions=function(){
             } else {
 				var column=thisColModel[colIndx];
                 var dataType = column.dataType;
-				this._sortLocalData(indx, dir, dataType);
+				this._sortLocalData(indx, dir, dataType,DM.data);
 				this.sRows.setDirty();
 				this.sCells.setDirty();
 				this._refreshDataFromDataModel();
@@ -1943,7 +1983,7 @@ fnSB._setOptions=function(){
 			}
         } else if (key == "dataModel") {
             $.Widget.prototype._setOption.call(this, key, value);
-            this._refreshSortingDataAndView({});
+			this.refreshDataAndView(true);
 			this.refreshRequired=false;
         }
         else if (key == "selectionModel") {
@@ -1955,6 +1995,9 @@ fnSB._setOptions=function(){
         }				
         else if (key == "colModel") {
             $.Widget.prototype._setOption.call(this, key, value);
+			this._refreshHeader();
+			this._refreshWidths();
+			this._refreshDataIndices();
         }		
 		else if(key=="disabled"){
 			if(value==true){
@@ -1965,6 +2008,10 @@ fnSB._setOptions=function(){
 			}
 			this.refreshRequired=false;
 		}
+		else if(key=="customData"){
+			$.Widget.prototype._setOption.call(this, key, value);
+			this.refreshRequired=false;
+		}		
 		else{
 			$.Widget.prototype._setOption.call(this, key, value);
 		}
@@ -2062,16 +2109,19 @@ fnSB._setOptions=function(){
 	}
     fn._bringRowIntoView = function (obj) {
 		var rowIndxPage=obj.rowIndxPage;
-        if (rowIndxPage < this._bufferObj_getInit()) {
-            this.$vscroll.pqScrollBar("option", "cur_pos", rowIndxPage).pqScrollBar("scroll");
+		var init=this.init-this.offsetRow;
+        if (rowIndxPage < init) {
+            this.$vscroll.pqScrollBar("option", "cur_pos", (rowIndxPage+this.offsetRow)).pqScrollBar("scroll");
         }
         var $tr = this.$tbl.find("tr[pq-row-indx=" + rowIndxPage + "]");
         if ($tr[0] == undefined) {
-            this.$vscroll.pqScrollBar("option", "cur_pos", rowIndxPage).pqScrollBar("scroll");
+            this.$vscroll.pqScrollBar("option", "cur_pos", (rowIndxPage+this.offsetRow)).pqScrollBar("scroll");
         } else {
-            var td_bottom = $tr[0].offsetTop + $tr[0].offsetHeight;
-            if (td_bottom > this.$cont[0].offsetHeight - 17) {
-                var diff = td_bottom - (this.$cont[0].offsetHeight - 17); 
+            var td_bottom = $tr[0].offsetTop + $tr[0].offsetHeight,
+				htCont=this.$cont[0].offsetHeight,
+				htSB=this._getScollBarHorizontalHeight();
+            if (td_bottom > htCont - htSB) {
+                var diff = td_bottom - (htCont - htSB); 
                 var $trs = this.$tbl.children().children("tr");
                 var ht = 0,
                     indx = 0;
@@ -2082,10 +2132,16 @@ fnSB._setOptions=function(){
                         return false;
                     }
                 })
-                if (this.init + indx + 1 > rowIndxPage) {
+				indx--;
+				var cur_pos=this.init+indx+1;
+                if (cur_pos > rowIndxPage) {
                     indx = rowIndxPage - 1 - this.init;
-                }
-                this.$vscroll.pqScrollBar("option", "cur_pos", this.init + indx + 1).pqScrollBar("scroll");
+                }				
+				var num_eles=this.$vscroll.pqScrollBar("option","num_eles");
+				if(num_eles<cur_pos+1){
+					num_eles=cur_pos+1;	
+				}
+                this.$vscroll.pqScrollBar("option", {num_eles:num_eles, cur_pos:cur_pos}).pqScrollBar("scroll");
             }
         }
     }
@@ -2104,7 +2160,7 @@ fnSB._setOptions=function(){
 	        if ($td.length == 0) {
 	            return false;
 	        }
-            var td_right = this._calcRightEdgeCol(colIndx);
+            var td_right = this._calcRightEdgeCol(colIndx).width;
 			var wd_scrollbar=17;
 			if(this.$vscroll.css("visibility")=="hidden" || this.$vscroll.css("display")=="none"){
 				wd_scrollbar=0;
@@ -2229,14 +2285,23 @@ fnSB._setOptions=function(){
 					return;
 				}							
 				this.refreshRow(obj);
+				this._refreshTableViewPort();
 				var that=this;
 				if(that.options.flexHeight){
 					that._setGridHeightFromTable();
 					that._fixIEFooterIssue();
-				}					
+				}else{
+					that._bringRowIntoView({rowIndxPage:rowIndxPage});
+				}									
 			}					
         }
     }
+	fn._refreshTableViewPort=function(){		
+		var cont=this.$cont[0];			
+		cont.scrollTop=0;
+		cont.style.marginTop="-1px";
+		cont.scrollLeft=0;		
+	}
 	fn._fixIEFooterIssue=function(){
 		$(".pq-grid-footer").css({position:"absolute"});
 		$(".pq-grid-footer").css({position:"relative"});														
@@ -2298,7 +2363,6 @@ fnSB._setOptions=function(){
         return this.data;
     }
     fn.getViewPortRowsIndx=function(){
-		this._bufferObj_calcInitFinal();
 		return {beginIndx:this.init,endIndx:this['final']};
 	}
 	fn.getRowIndxOffset=function(){
@@ -2312,6 +2376,9 @@ fnSB._setOptions=function(){
         }
 		return offset;		
 	}
+	fn.getRowOffset=function(){
+		return this.offsetRow;		
+	}	
 	fn._cellblurred=function(){
 		this.$div_focus.remove();
 		this.$div_focus=null;
@@ -2584,6 +2651,7 @@ fnSB._setOptions=function(){
             enter: 13,
             pageDown: 34,
             pageUp: 33,
+			spaceBar: 32,
             esc: 27,
             home: 36,
             end: 35
@@ -2707,25 +2775,23 @@ fnSB._setOptions=function(){
             that._setSelection({rowIndx:rowIndx, colIndx:colIndx, evt:evt});
             evt.preventDefault();
             return;
-        } else if (evt.keyCode == keyCodes.pageDown) {
-			rowIndxPage = that.init + 10 ;            
+        } else if (evt.keyCode == keyCodes.pageDown || evt.keyCode == keyCodes.spaceBar) {
+			rowIndxPage = rowIndxPage + 10 ;
             if (rowIndxPage > that.data.length - 1) {
                 rowIndxPage = that.data.length - 1;				
             }
 			var rowIndx = rowIndxPage + offset;
             that.$vscroll.pqScrollBar("option", "cur_pos", rowIndx).pqScrollBar("scroll");
-            var $td = that.$tbl.find("tr[pq-row-indx=" + rowIndx + "]>td[pq-col-indx=" + colIndx + "]");
             that._setSelection({rowIndx:rowIndx, colIndx:colIndx, evt:evt});
             evt.preventDefault();
             return;
         } else if (evt.keyCode == keyCodes.pageUp) {
-            rowIndxPage = that.init - 10;
+			rowIndxPage = rowIndxPage - 10 ;
             if (rowIndxPage < 0) {
                 rowIndxPage = 0;
             }
 			var rowIndx = rowIndxPage + offset;
             that.$vscroll.pqScrollBar("option", "cur_pos", rowIndx).pqScrollBar("scroll");
-            var $td = that.$tbl.find("tr[pq-row-indx=" + rowIndx + "]>td[pq-col-indx=" + colIndx + "]");
             that._setSelection({rowIndx:rowIndx, colIndx:colIndx, evt:evt});
             evt.preventDefault();
             return;
@@ -2805,49 +2871,127 @@ fnSB._setOptions=function(){
         var data_length = this.colModel.length - this.freezeCols - this._calcNumHiddenUnFrozens();
         this.$hscroll.pqScrollBar("option", "num_eles", (data_length));
     }
-    fn._setVScrollHeight = function () {
-        var ht = this.$cont.height();
+	fn._getScollBarHorizontalHeight=function(){
         var htSB = 17;
-        if (this.$hscroll.css("visibility") == "hidden" || !this.options.scrollModel.horizontal) {
+        if (this.$hscroll.css("visibility") == "hidden" || this.options.scrollModel.horizontal==false) {
 			htSB = 0;
 		}
+		return htSB;		
+	}
+	fn._setVScrollNumEles=function(fullRefresh){
+		var that=this,
+			$vscroll=this.$vscroll,
+			options=$vscroll.pqScrollBar("option"),					
+			num_eles=parseInt(options.num_eles),
+			cur_pos=parseInt(options.cur_pos);
+		var htSB=this._getScollBarHorizontalHeight();
+		var GM=this.options.groupModel;
+		var data=(GM && GM.grouping=="local")?this.dataGM:this.data;			
+        var data_length = data ? data.length : 0;
+		var htCont=this.$cont[0].offsetHeight;
+		var htTbl=this.$tbl[0].offsetHeight;						
+		if (htTbl > htCont - htSB) {
+            var $trs = this.$tbl.children().children("tr");
+            var ht = 0,
+                visibleRows = 0;
+            $trs.each(function (i, tr) {
+                ht += tr.offsetHeight;
+                if (ht >= htCont-htSB) {
+                    visibleRows = (i>1)?(i-1):0;
+                    return false;
+                }
+            });	
+			num_eles=data_length-visibleRows+1;
+		}	
+		else{
+			num_eles=this.init+1;			
+		}		
+		if(num_eles<this.init+1){
+			num_eles=this.init+1;
+		}
+		if(fullRefresh){
+			that.$vscroll.pqScrollBar("option","num_eles",num_eles);	
+		}
+		else{
+			that.$vscroll.pqScrollBar("setNumEles",num_eles);	
+		}									
+	}
+    fn._setVScrollHeight = function () {
+        var cont_ht = this.$cont.height();
+		var htSB=this._getScollBarHorizontalHeight();
 		this.$vscroll.css("bottom", htSB);
-        this.$vscroll.pqScrollBar("option", "length", (ht - htSB));
-        var data_length = (this.data) ? this.data.length : 0;
-        if (data_length >= 0) {
-            this.$vscroll.pqScrollBar("option", "num_eles", (data_length));
+		var len=(cont_ht - htSB);
+        this.$vscroll.pqScrollBar("option", "length", len);
+		var GM=this.options.groupModel;
+		var data=(GM && GM.grouping=="local")?this.dataGM:this.data;			
+        var data_length = data ? data.length : 0;
+		var num_eles=0,
+			cur_pos=0;
+        if (data_length >= 0 && this.$tbl) {
+			var htCont=this.$cont[0].offsetHeight;
+			var htTbl=this.$tbl[0].offsetHeight;						
+			if (htTbl > htCont - htSB) {
+                var $trs = this.$tbl.children().children("tr");
+                var ht = 0,
+                    visibleRows = 0;
+                $trs.each(function (i, tr) {
+                    ht += tr.offsetHeight;
+                    if (ht >= htCont-htSB) {
+                        visibleRows = (i>1)?(i-1):0;
+                        return false;
+                    }
+                });		
+				num_eles=data_length-visibleRows+1;		
+			}	
+			else{
+				num_eles=this.init+1;
+			}		
+			if(num_eles<2 && data_length>1){
+				if(htTbl>htCont-htSB){
+					num_eles=2;
+				}
+			}
         }
+		this.$vscroll.pqScrollBar("option", {num_eles: num_eles});
     }
     fn._setInnerGridHeight = function () {
-        var ht = (this.element.outerHeight() - this.$top.outerHeight() -  this.$bottom.outerHeight());
+        var ht = (this.element.outerHeight() - ((this.options.topVisible)?this.$top[0].offsetHeight:0) -  this.$bottom.outerHeight());
         this.$grid_inner.height(ht + "px");
     }
     fn._setRightGridHeight = function () {
 		this.$header_o.height(this.$header_left.height()-2);
-		var ht = (this.element[0].offsetHeight - this.$header_o[0].offsetHeight - this.$top[0].offsetHeight - this.$bottom[0].offsetHeight);
+		var ht = (this.element[0].offsetHeight - this.$header_o[0].offsetHeight - ((this.options.topVisible)?this.$top[0].offsetHeight:0) - this.$bottom[0].offsetHeight);
         this.$cont.height(ht + "px");
     }
 	fn._setGridHeightFromTable=function(){
-		if(this.$tbl){
-			var htSB=17;
-			if(this.$hscroll.css("visibility")=="hidden"){
-				htSB=0;
-			}
-			var ht_tbl =this.$tbl[0].offsetHeight + htSB;
-			this.$cont.height(ht_tbl + "px");
-			var ht = (this.$header_o[0].offsetHeight + this.$top[0].offsetHeight + this.$bottom[0].offsetHeight+ ht_tbl);
-			this.element.height(ht);
-			this._setInnerGridHeight();
-			this.$vscroll.css("visibility","hidden");			
+		var ht_tbl=0;
+		var htSB=17;
+		if(this.$hscroll.css("visibility")=="hidden"){
+			htSB=0;
 		}		
+		if(this.$tbl){		
+			ht_tbl =this.$tbl[0].offsetHeight + htSB;
+		}		
+		else{
+			ht_tbl=htSB+htSB;
+		}
+		this.$cont.height(ht_tbl + "px");
+		var ht = (this.$header_o[0].offsetHeight + this.$top[0].offsetHeight + this.$bottom[0].offsetHeight+ ht_tbl);
+		this.element.height(ht);
+		this._setInnerGridHeight();
+		this.$vscroll.css("visibility","hidden");					
 	}
 	fn._setGridWidthFromTable=function(){
+		var wdSB=17;
+		if(this.$vscroll.css("visibility")=="hidden" || this.$vscroll.css("display")=="none"){
+			wdSB=0;
+		}
 		if(this.$tbl){
-			var wdSB=17;
-			if(this.$vscroll.css("visibility")=="hidden"){
-				wdSB=0;
-			}
 			this.element.width((this.$tbl[0].offsetWidth + wdSB) + "px");	
+		}
+		else{
+			var wd_tbl=this.$header_left.find("table")[0].offsetWidth;
+			this.element.width((wd_tbl) + "px");
 		}		
 	}
     fn._setRightGridWidth = function () {
@@ -2863,19 +3007,30 @@ fnSB._setOptions=function(){
         return Math.ceil(ht / this.rowHeight);
     }
     fn._bufferObj_calcInitFinal = function () {
-        if (this.data == null || this.data.length == 0) {
+		var GM=this.options.groupModel,
+			GMtrue=(GM && GM.grouping=="local")?true:false,
+			data=GMtrue?this.dataGM:this.data;
+        if (data == null || data.length == 0) {
             this['final'] = this['init'] = null;
         } 
 		else if(this.options.flexHeight){
 			this.init=0;
-			this['final']=this.data.length-1;
+			this['final']=data.length-1;
 		}
 		else {
             var cur_pos = parseInt(this.$vscroll.pqScrollBar("option", "cur_pos"));
-            this.init = cur_pos;
+			if(isNaN(cur_pos) || cur_pos<0){
+				this.init = 0;
+			}
+			else{
+				this.init = cur_pos;	
+			}			
+            if (this.init + 1 > data.length) {
+                this.init = data.length - 1;
+            }
             this['final'] = this.init + this._bufferObj_minRowsPerGrid();
-            if (this['final'] + 1 > this.data.length) {
-                this['final'] = this.data.length - 1;
+            if (this['final'] + 1 > data.length) {
+                this['final'] = data.length - 1;
             }
         }
     }
@@ -2906,14 +3061,19 @@ fnSB._setOptions=function(){
         return wd;
     }
     fn._calcRightEdgeCol = function (colIndx) {
-        var wd = 0;
+        var wd = 0,
+			cols=0;
         if (this.numberCell) {
             wd += this.numberCell_outerWidth; 
+            cols++;
         }
         for (var i = 0; i <= colIndx; i++) {
-            if (!this.colModel[i].hidden && this.hidearrHS[i] == false) wd += this.outerWidths[i];
+            if (!this.colModel[i].hidden && this.hidearrHS[i] == false){
+				wd += this.outerWidths[i];
+				cols++;
+			} 
         }
-        return wd;
+        return {width: wd,cols: cols};
     }
     fn._refreshFreezeLine = function () {
         return; 
@@ -3098,6 +3258,20 @@ fnSB._setOptions=function(){
 		this.depth=obj.depth;
 		this.getHeadersCells();
 		this.assignRowSpan();		
+	}
+	fn._refreshWidths=function(){
+		var that=this;
+        $(this.colModel).each(function (i, col) {
+            if (col.width != undefined) {
+                var wd = parseInt(col.width)
+                if (wd < that.minWidth){
+					wd = that.minWidth;
+					col.width=wd;
+				} 
+            } else {                
+				col.width= that.minWidth;
+            }
+        });		
 	}
     fn._createHeader = function () {
         var that = this;
@@ -3290,127 +3464,318 @@ fnSB._setOptions=function(){
 		var colIndx=this.getColIndxFromDataIndx(sortIndx);
 		this.$header.find(".pq-grid-col[pq-grid-col-indx=" + colIndx + "]").addClass("pq-col-sort-" + (DM.sortDir == "up" ? "asc" : "desc"))
     }
+	fn._generateRow=function(rowData ,rowIndx,objCell,thisColModel,noColumns,hidearrHS1,offset,const_cls,buffer){
+        var row_cls = "pq-grid-row",
+			row_str="";
+        if (rowIndx / 2 == parseInt(rowIndx / 2)) row_cls += " pq-grid-oddRow";
+		if(objCell && objCell.pqData && objCell.selectedRow){
+			row_cls += " pq-row-select";
+		}			
+        row_str += "<tr pq-row-indx='" + rowIndx + "' class='" + row_cls + "'>"
+        buffer.push(row_str);					           
+        if (this.numberCell) {
+            buffer.push("<td style='width:" + this.numberCellWidth + "px;' class='pq-grid-number-cell pq-row-selector'>\
+		<div class='pq-td-div'>" + (rowIndx + 1) + "</div></td>") 
+        }
+		var objRender={rowIndx:rowIndx+offset,rowIndxPage:rowIndx,rowData:rowData};
+        for (var col = 0; col < noColumns; col++) {
+			var column=thisColModel[col],
+				dataIndx=column.dataIndx;
+			objRender.column=column;
+			objRender.colIndx=col;					
+			{		
+				var cellSelection=false;								
+				var selectedDataIndices = objCell.selectedDataIndices;
+				if (selectedDataIndices) {						
+					cellSelection = selectedDataIndices[dataIndx];													
+				}
+			}
+            if (column.hidden) { 
+                continue;
+            } 
+			else if (this.hidearrHS[col]) {
+                continue;
+            }
+            var strStyle = "";
+            var cls = const_cls; 
+            if (column.align == "right") {
+                cls += ' pq-align-right';
+            } else if (column.align == "center") {
+                cls += ' pq-align-center';
+            }
+            if (col == this.freezeCols - 1 && this.columnBorders) {
+                cls += " pq-last-freeze-col";
+            }
+			if(column.className){
+				cls = cls+ " "+column.className;
+			}
+			if(cellSelection){
+				cls = cls+ " pq-cell-select";
+			}
+            var str = "<td class='" + cls + "' style='" + strStyle + "' pq-col-indx='" + col + "'>\
+			" + this._renderCell(objRender) + "</td>";
+            buffer.push(str)
+        }
+        for (var k = 0; k < hidearrHS1.length; k++) {
+            var col = hidearrHS1[k];
+			var column = thisColModel[col];
+			objRender.column=column;
+			objRender.colIndx=col;					
+            var strStyle = "";
+            strStyle += "visibility:hidden;";
+            var cls = const_cls; 
+            if (column.align == "right") {
+                cls += ' pq-align-right';
+            } else if (column.align == "center") {
+                cls += ' pq-align-center';
+            }
+            var str = "<td class='" + cls + "' style='" + strStyle + "' pq-col-indx='" + col + "'>\
+			" + this._renderCell(objRender) + "</td>";
+            buffer.push(str)
+        }
+        buffer.push("</tr>");
+		return buffer;								
+	}
+	fn._generateSummaryRow=function(rowData ,rowIndx,objCell,thisColModel,noColumns,hidearrHS1,offset,const_cls,buffer){
+        var row_cls = "pq-summary-row",
+			row_str="";
+        row_str += "<tr pq-row-indx='" + rowIndx + "' class='" + row_cls + "'>"
+        buffer.push(row_str);					           
+        if (this.numberCell) {
+            buffer.push("<td style='width:" + this.numberCellWidth + "px;' class='pq-grid-number-cell pq-row-selector'>\
+		<div class='pq-td-div'></div></td>") 
+        }
+		var objRender={rowIndx:rowIndx+offset,rowIndxPage:rowIndx,rowData:rowData,summaryCell:true};
+        for (var col = 0; col < noColumns; col++) {
+			var column=thisColModel[col],
+				dataIndx=column.dataIndx;
+			objRender.column=column;
+			objRender.colIndx=col;					
+			{		
+				var cellSelection=false;								
+				var selectedDataIndices = objCell.selectedDataIndices;
+				if (selectedDataIndices) {						
+					cellSelection = selectedDataIndices[dataIndx];													
+				}
+			}
+            if (column.hidden) { 
+                continue;
+            } 
+			else if (this.hidearrHS[col]) {
+                continue;
+            }
+            var strStyle = "";
+            var cls = const_cls; 
+            if (column.align == "right") {
+                cls += ' pq-align-right';
+            } else if (column.align == "center") {
+                cls += ' pq-align-center';
+            }
+            if (col == this.freezeCols - 1 && this.columnBorders) {
+                cls += " pq-last-freeze-col";
+            }
+			if(column.className){
+				cls = cls+ " "+column.className;
+			}
+			if(cellSelection){
+				cls = cls+ " pq-cell-select";
+			}
+			var valCell= (rowData[dataIndx]==null)?"":rowData[dataIndx];
+            var str = "<td class='" + cls + "' style='" + strStyle + "' >\
+			<div>" + valCell + "</div></td>";
+            buffer.push(str)
+        }
+        for (var k = 0; k < hidearrHS1.length; k++) {
+            var col = hidearrHS1[k];
+			var column = thisColModel[col],
+				dataIndx=column.dataIndx;;
+			objRender.column=column;
+			objRender.colIndx=col;					
+            var strStyle = "";
+            strStyle += "visibility:hidden;";
+            var cls = const_cls; 
+            if (column.align == "right") {
+                cls += ' pq-align-right';
+            } else if (column.align == "center") {
+                cls += ' pq-align-center';
+            }
+			var valCell= (rowData[dataIndx]==null)?"":rowData[dataIndx];
+            var str = "<td class='" + cls + "' style='" + strStyle + "' >\
+			<div>" + valCell + "</div></td>";
+            buffer.push(str)
+        }
+        buffer.push("</tr>");
+		return buffer;								
+	}
     fn._generateTables = function () {
-        var noColumns = this.colModel.length;
-        var top = 0;
+        var noColumns = this.colModel.length,
+			thisOptions=this.options,
+			SM=thisOptions.scrollModel,
+			cont_ht=this.$cont[0].offsetHeight;;
         this._bufferObj_calcInitFinal();
-        var init = this.init,
-            finall = this['final'],
+		var finall = this['final'],
 			offset=this.getRowIndxOffset();			
-        if (init == null || finall == null) {
+        if (this.init == null || finall == null) {
             this.$cont.empty();
             this.$tbl = null;
             return;
-        }							
+        }		
         this._trigger("beforeTableView", null, {
 			data:this.data,
-            curPos: init,
+            curPos: this.init,
 			finalPos: finall,
 			curPage: this.dataModel.curPage			            
         });					
         var const_cls = "pq-grid-cell ";
         if (this.columnBorders) const_cls += "pq-grid-td-border-right ";
-        if (this.options.wrap == false) const_cls += "pq-wrap-text ";
+        if (thisOptions.wrap == false) const_cls += "pq-wrap-text ";
         var buffer = ["<table style='table-layout:fixed;width:0px;position:absolute;top:0px;' cellpadding=0 cellspacing=0>"];
-		var thisColModel=this.colModel;
-        for (var row = init; row <= finall; row++) {
-			var rowData=this.data[row],
-				objPQData=rowData[rowData.length-1];
-            var row_cls = "pq-grid-row";
-            if (row / 2 == parseInt(row / 2)) row_cls += " pq-grid-oddRow";
-			if(objPQData.pqData && objPQData.selectedRow){
-				row_cls += " pq-row-select";
-			}			
-            var row_str = "<tr pq-row-indx='" + row + "' class='" + row_cls + "'>"
-            buffer.push(row_str);
-            if (this.numberCell) {
-                buffer.push("<td style='width:" + this.numberCellWidth + "px;' class='pq-grid-number-cell pq-row-selector'>\
-			<div class='pq-td-div'>" + (row + 1) + "</div></td>") 
-            }
-			var objRender={rowIndx:row+offset,rowIndxPage:row,rowData:rowData};
-            var hidearrHS1 = [];
-            for (var col = 0; col < noColumns; col++) {
-				var column=thisColModel[col],
-					dataIndx=column.dataIndx;
-				objRender.column=column;
-				objRender.colIndx=col;					
-				{		
-					var cellSelection=false;								
-					var selectedDataIndices = objPQData.selectedDataIndices;
-					if (selectedDataIndices) {						
-						cellSelection = selectedDataIndices[dataIndx];													
-					}
-				}
+		var thisColModel=this.colModel,
+			GM=thisOptions.groupModel;
+		{
+			buffer.push("<tr style='visibility:hidden;'>");
+			var hidearrHS1 = [];
+			if (this.numberCell) {
+				var wd=this.numberCellWidth+1; 
+				buffer.push("<td style='width:" + wd + "px;visibility:hidden;' ></td>");
+			}
+			for (var col = 0; col < noColumns; col++) {
+				var column = thisColModel[col];
                 if (column.hidden) { 
                     continue;
                 } else if (this.hidearrHS[col]) {
                     hidearrHS1.push(col)
                     continue;
-                }
-                var strStyle = "";
-                if (row == init) { 
-					strStyle = "width:" + column.width + "px;";
-                }
-                var cls = const_cls; 
-                if (column.align == "right") {
-                    cls += ' pq-align-right';
-                } else if (column.align == "center") {
-                    cls += ' pq-align-center';
-                }
-                if (col == this.freezeCols - 1 && this.columnBorders) {
-                    cls += " pq-last-freeze-col";
-                }
-				if(column.className){
-					cls = cls+ " "+column.className;
-				}
-				if(cellSelection){
-					cls = cls+ " pq-cell-select";
-				}
-                var str = "<td class='" + cls + "' style='" + strStyle + "' pq-col-indx='" + col + "'>\
-				" + this._renderCell(objRender) + "</td>";
-                buffer.push(str)
-            }
+                }				
+				var wd = this.outerWidths[col]; 
+				buffer.push("<td style='width:" + wd + "px;visibility:hidden;'></td>");
+			}
             for (var k = 0; k < hidearrHS1.length; k++) {
-                var col = hidearrHS1[k];
+				var col = hidearrHS1[k];
 				var column = thisColModel[col];
-				objRender.column=column;
-				objRender.colIndx=col;					
-                var strStyle = "";
-                if (row == init) {
-					strStyle = "width:" + column.width + "px;";
-                }
-                strStyle += "visibility:hidden;";
-                var cls = const_cls; 
-                if (column.align == "right") {
-                    cls += ' pq-align-right';
-                } else if (column.align == "center") {
-                    cls += ' pq-align-center';
-                }
-                var str = "<td class='" + cls + "' style='" + strStyle + "' pq-col-indx='" + col + "'>\
-				" + this._renderCell(objRender) + "</td>";
-                buffer.push(str)
-            }
-            buffer.push("</tr>")
-        }
-        buffer.push("</table>")
-        var str = buffer.join("");
-        if (this.$tbl == undefined) {
-            this.$tbl = $(str);
-            this.$cont.append(this.$tbl)
-        } else {
-			if (this.$td_edit != null) {
-				this.quitEditMode();
+				var wd = this.outerWidths[col]; 
+				buffer.push("<td style='width:" + wd + "px;visibility:hidden;' class='pq-grid-td-border-right'></td>");				
 			}			
-            this.$cont.empty();
-            this.$tbl = $(str);
-            this.$cont.append(this.$tbl)
+			buffer.push("</tr>");
+			buffer.push(str);
+		}	
+		var row=this.init,
+			prependRow=false,
+			prevGroupVal="",
+			htSB=(thisOptions.scrollModel.horizontal)?17:0,
+			GMtrue=(GM && GM.grouping=="local")?true:false,
+			data=GMtrue?this.dataGM:this.data;
+		this.offsetRow=null;
+		do{			
+			var rowObj=data[row],
+				rowData=GMtrue?rowObj.data:rowObj,
+				rowIndx=GMtrue?rowObj.rowIndx:row,
+				objCell=(rowData)?rowData[rowData.length-1]:null,
+				row_str = "";
+			if (this.offsetRow == null && rowIndx!=null) {
+				this.offsetRow=(row-rowIndx);
+			}				
+			if(GM && rowObj.groupTitle){
+				var obj=this._calcRightEdgeCol(this.colModel.length-1);				
+				row_str="<tr class='pq-group-row'><td colspan='"+obj.cols+"' style='width:"+obj.width+"px;'><div>"+rowObj.groupTitle+"</div></td></tr>";
+				buffer.push(row_str);
+			}
+			else if(GM && rowObj.groupSummary){
+				this._generateSummaryRow(rowData, rowIndx,objCell,thisColModel,noColumns,hidearrHS1,offset,const_cls,buffer);
+			}			
+			else{
+				this._generateRow(rowData, rowIndx,objCell,thisColModel,noColumns,hidearrHS1,offset,const_cls,buffer);	
+			}						
+			if(SM.scrollTillLastRow){
+				if(prependRow){
+	        		var str = buffer.join("");
+					buffer=[];
+					this.$tbl.prepend($(str));								
+				}
+				else if(row==this.init){
+	            	this.$cont.empty();
+			        buffer.push("</table>");
+	        		var str = buffer.join("");
+					buffer=[];
+		            this.$tbl = $(str);
+		            this.$cont.append(this.$tbl)								
+				}			
+				else{
+					var that=this;
+					$.measureTime(function(){
+		        		var str = buffer.join("");
+						buffer=[];
+						that.$tbl.append(str);									
+					},'append row '+row);
+				}
+				if (!prependRow) {
+					this["final"] = row;
+				}
+				if(this["final"]==data.length-1){
+					if(this.scrollMode||thisOptions.flexHeight){
+						break;
+					} 
+					if(prependRow){					
+						var tbl_ht=this.$tbl[0].offsetHeight;					
+						if (tbl_ht >= (cont_ht - htSB)) {
+							this.$tbl.find("tr:first").remove();
+							this.init++;
+							row=this.init;						
+							break;
+						}					
+					}
+					if(this.init>0){
+						var tbl_ht=this.$tbl[0].offsetHeight;
+						if(tbl_ht<(cont_ht-22-htSB)){
+							prependRow=true;					
+							this.init--;
+							row=this.init;
+							continue;
+						}					
+					}
+					break;
+				}
+				row++;
+				if(!this.options.flexHeight){				
+					var tbl_ht=this.$tbl[0].offsetHeight;
+					if(tbl_ht>cont_ht){
+						break;
+					}				
+				}				
+			}
+			else{
+				if (row == this["final"]) {
+					break;	
+				}
+				row++;				
+			}
         }
+		while(1==1);
+		this.scrollMode=false;
 		var that=this;
+		if(!SM.scrollTillLastRow){
+			$.measureTime(function(){
+		        buffer.push("</table>")
+		        var str = buffer.join("");
+		        if (that.$tbl == undefined) {
+		            that.$tbl = $(str);
+		            that.$cont.append(that.$tbl)
+		        }else{
+					if (that.$td_edit != null) {
+						that.quitEditMode();
+					}			
+		            that.$cont.empty();
+		            that.$tbl = $(str);
+		            that.$cont.append(that.$tbl)
+		        }							
+			},'append stuff inside _generateTable')
+		}		
 		window.setTimeout(function(){
+			that._refreshTableViewPort();
 	        that._trigger("refresh", null, {
 	            dataModel: that.dataModel,
 	            data: that.data
-	        });													
+	        });															
 		},0);
     }
 	fn._renderCell = function (objP) {	        
@@ -3448,9 +3813,8 @@ fnSB._setOptions=function(){
         }
         return str;
     }
-    fn._sortLocalData = function (dataIndx, dir, dataType) {
+    fn._sortLocalData = function (dataIndx, dir, dataType, data) {
         var m_sort_dir = dir;
-        var data = this.options.dataModel.data; 
         if (data == null || data.length == 0) {
             return;
         }
@@ -3514,7 +3878,7 @@ fnSB._setOptions=function(){
 var cons = {
     log: function (str) {
         try {
-            if ($.browser.msie && typeof str == 'object') throw "";
+			if (document.compatMode && document.all && typeof str == 'object') throw "";
             console.log(str);
         } catch (e) {
             var st = "";

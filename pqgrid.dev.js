@@ -1730,6 +1730,7 @@ fnSB._setOptions=function(){
 							} 
                         }
                     }
+                    if( retObj.infoData ) { DM.infoData = retObj.infoData; }
                     that._refreshDataFromDataModel();
                     if (DM.sorting == "local" && DM.sortIndx != undefined) { 
                         that._refreshSortingDataAndView({sorting:true});

@@ -1,5 +1,5 @@
 /**
- * ParamQuery Grid a.k.a. pqGrid v1.0.7
+ * ParamQuery Grid a.k.a. pqGrid v1.0.8
  * 
  * Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
  * Released under MIT license
@@ -19,7 +19,8 @@ div.pq-grid *{
     font-size:11px;
     margin: 0px;
     padding: 0px;
-	line-height:normal;			
+	line-height:normal;	
+	outline:none;		
 }
 div.pq-grid-top{
 	border-radius:5px 5px 0 0 ;
@@ -134,8 +135,9 @@ div.pq-cont{
 	position:relative;
 	background:#fff;	
 }
-div.pq-cont table{
-	border-spacing:0px;			
+table.pq-grid-table{
+	border-spacing:0px;
+	table-layout:fixed;width:0px;position:absolute;top:0px;	
 }
 table.pq-grid-header-table{
 	table-layout:fixed;width:0px;
@@ -166,9 +168,13 @@ td.pq-grid-col{
 }
 div.pq-grid-col-resize-handle{
 }
+tr.pq-row-hidden{
+	visibility:hidden;
+	height:1px;
+}
 div.pq-grid tr{
 }			
-div.pq-cont tr td{
+td.pq-grid-cell{
 	background:#fff;
 	border-bottom:1px solid #ededed;			
 	overflow:hidden;
@@ -190,7 +196,7 @@ tr td.pq-grid-td-border-right div{
 }						
 div.pq-grid .pq-grid-oddRow{
 }
-div.pq-grid .pq-grid-oddRow td{
+tr.pq-grid-oddRow td{
 	background:#fafafa;
 }
 div.pq-cell-selected-border{
@@ -199,7 +205,7 @@ div.pq-cell-selected-border{
 div.pq-cell-selected-border-edit{
 	background:#fff;
 }
-div.pq-cont tr td.pq-grid-number-cell{
+tr td.pq-grid-number-cell{	
 	background-color:#e4ecf7;
 	border:1px solid #9eb6ce;
 	border-top:0px;
@@ -263,11 +269,11 @@ div.pq-hvscroll-square{
 	bottom:0px;
 	background:#eee;
 }			
-div.pq-grid tr.pq-grid-row-hover td
+tr.pq-grid-row-hover td
 {
     background-color:#d8e8fa;
 }     
-div.pq-grid tr.pq-row-select td
+tr.pq-row-select td
 {
     background-color:#6699cc;
     color:#fff;
@@ -276,7 +282,7 @@ div.pq-grid tr td.pq-grid-cell-hover
 {
     background-color:#d8e8fa;
 } 
-div.pq-cont tr td.pq-grid-number-cell
+tr td.pq-grid-number-cell
 {
     background-color:#e4ecf7;   
     color:#333; 

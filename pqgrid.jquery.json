@@ -1,7 +1,7 @@
 {
   "name": "pqgrid",
   "title": "ParamQuery Grid",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "author": {
     "name": "Paramvir Dhindsa",
     "email": "pdhindsa@paramquery.com",
@@ -25,7 +25,12 @@
     "table",
     "ajax",
     "ui",
-    "sortable",
+    "sort",
+    "summary",
+    "freeze",
+    "group",
+    "search",
+    "crud",
     "paging"
   ],
   "bugs": "https://github.com/paramquery/grid/issues",

@@ -22,11 +22,11 @@ div.pq-grid-header td{
 }
 
 /*background for odd rows*/
-div.pq-grid tr.pq-grid-oddRow td{
+tr.pq-grid-oddRow td{
 	background:snow; /*cornsilk; /*lemonchiffon;*/
 	
 }
-div.pq-cont tr td.pq-grid-number-cell{
+tr td.pq-grid-number-cell{
 	background-color:crimson;/*#e4ecf7;*/	
 	border-color:peachpuff; /*peachpuff;/*#9eb6ce;*/
 	color:lightyellow;
@@ -59,7 +59,7 @@ div.pq-hvscroll-square{
 
 /*hover and selection styles *************************************************************/
 
-div.pq-grid tr.pq-grid-row-hover td
+tr.pq-grid-row-hover td
 {
     background-color:bisque;  
 }     
@@ -75,7 +75,7 @@ div.pq-grid tr td.pq-grid-cell-hover
 } 
     
  /*restore background of number cell*/
-div.pq-cont tr td.pq-grid-number-cell
+tr td.pq-grid-number-cell
 {
     background-color:crimson; /*#f1ddcf; /*seashell; /*bisque;*/
     color:#fff; 

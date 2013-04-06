@@ -1,7 +1,7 @@
 {
   "name": "pqgrid",
   "title": "ParamQuery Grid",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "author": {
     "name": "Paramvir Dhindsa",
     "email": "pdhindsa@paramquery.com",
@@ -31,11 +31,12 @@
     "group",
     "search",
     "crud",
-    "paging"
+    "paging",
+    "ThemeRoller ready"
   ],
   "bugs": "https://github.com/paramquery/grid/issues",
   "dependencies": {
-    "jquery": ">=1.8.3",
+    "jquery": ">=1.7.0",
     "jqueryui": ">=1.9.1"
   }
 }

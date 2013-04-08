@@ -31,8 +31,7 @@
     "group",
     "search",
     "crud",
-    "paging",
-    "ThemeRoller"
+    "paging"
   ],
   "bugs": "https://github.com/paramquery/grid/issues",
   "dependencies": {

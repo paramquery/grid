@@ -13,7 +13,7 @@
       "url": "http://paramquery.com/license"
     }
   ],
-  "description": "Data grid inspired by MS Excel, provides sorting, paging, grouping, rows and cell selections, frozen rows, frozen columns, Add, delete, update, search, can display HTML, JSON, Array, XML, inline editing, virtual rendering, virtual scrolling, cross browser, cross platform, Themeroller ready with 24 ready to use themes and what not!",
+  "description": "Data grid inspired by MS Excel, provides sorting, paging, grouping, rows and cell selections, frozen rows, frozen columns, Add, delete, update, search, can display HTML, JSON, Array, XML, inline editing, virtual rendering, virtual scrolling, cross browser, cross platform, Themeroller ready with 24 ready to use themes.",
   "homepage": "http://paramquery.com/",
   "docs": "http://paramquery.com/api",
   "demo": "http://paramquery.com/demos",  

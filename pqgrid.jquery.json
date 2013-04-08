@@ -32,7 +32,7 @@
     "search",
     "crud",
     "paging",
-    "ThemeRollerReady"
+    "ThemeRoller"
   ],
   "bugs": "https://github.com/paramquery/grid/issues",
   "dependencies": {

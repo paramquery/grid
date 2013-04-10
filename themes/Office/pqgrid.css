@@ -66,9 +66,9 @@ div.pq-grid tr td.pq-grid-cell-hover
 .pq-grid tr td.pq-grid-number-cell
 {
     background:#e4ecf7;
-	border:1px solid #9eb6ce;
+	/*border:1px solid #9eb6ce;
 	border-top:0px;
-	border-left:0px;		   
+	border-left:0px;*/		   
     color:#333; 
 }
 div.pq-grid tr td.pq-cell-select

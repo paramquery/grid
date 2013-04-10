@@ -1,3 +1,7 @@
+Version: 1.1.0
+
+internationalization and localization
+
 Version: 1.0.9
 
 ThemeRoller ready.

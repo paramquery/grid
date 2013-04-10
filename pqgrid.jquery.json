@@ -1,8 +1,13 @@
 {
   "name": "pqgrid",
   "title": "ParamQuery Grid",
-  "version": "1.0.9",
+  "version": "1.1.0",
   "author": {
+    "name": "Paramvir Dhindsa",
+    "email": "pdhindsa@paramquery.com",
+    "url": "http://www.paramquery.com/"
+  },
+  "maintainers": {
     "name": "Paramvir Dhindsa",
     "email": "pdhindsa@paramquery.com",
     "url": "http://www.paramquery.com/"
@@ -26,7 +31,9 @@
     "ajax",
     "ui",
     "sort",
+    "i18n",
     "summary",
+    "themeRoller",
     "freeze",
     "group",
     "search",

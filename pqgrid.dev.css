@@ -1,5 +1,5 @@
 /**
- * ParamQuery Grid a.k.a. pqGrid v1.0.9
+ * ParamQuery Grid a.k.a. pqGrid v1.1.0
  * 
  * Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
  * Released under MIT license
@@ -14,7 +14,7 @@ div.pq-grid{
 }
 div.pq-grid *{
 	font-family: Tahoma;
-    font-size:11px;
+    font-size:11px;	
     margin: 0px;
     padding: 0px;
 	line-height:normal;	
@@ -133,7 +133,9 @@ div.pq-cont{
 }
 table.pq-grid-table{
 	border-spacing:0px;
-	table-layout:fixed;width:0px;position:absolute;top:0px;
+	table-layout:fixed;width:0px;
+	position:relative;
+	top:0px;
 	margin-top:-1px;	
 }
 table.pq-grid-header-table{
@@ -190,7 +192,7 @@ td div.pq-td-div{
 }				
 tr td.pq-grid-td-border-right{	
 	border-right:1px solid #d0d0d0;
-}			
+}
 tr td.pq-grid-td-border-right div{	
 }						
 div.pq-grid .pq-grid-oddRow{
@@ -208,12 +210,13 @@ div.pq-grid-editor-default{
 	background:#fff;padding:2px;
 }
 tr td.pq-grid-number-cell{	
+	border-right:1px solid #9eb6ce;
 	cursor:pointer;				
 }
 .pq-grid td.pq-grid-number-cell{			
 	border-top:0px;
 	border-left:0px;
-} 
+}
 tr td.pq-last-freeze-col{
 	border-right:1px solid steelblue;
 }						
@@ -310,6 +313,9 @@ div.pq-grid tr td.pq-cell-select
 }
 div.pq-pager span,div.pq-pager select{
 	margin-right:5px;
+}
+.pq-pager .pq-pageholder{
+	vertical-align:top;
 }
 .pq-grid button.ui-button-icon-only{
 	height:22px;width:22px;

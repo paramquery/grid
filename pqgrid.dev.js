@@ -1,14 +1,14 @@
 /**
- * ParamQuery Grid a.k.a. pqGrid v1.0.9
+ * ParamQuery Grid a.k.a. pqGrid v1.1.0
  * 
  * Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
  * Released under MIT license
  * http://paramquery.com/license
  * 
  */     	
-(function($){	
-	$.paramquery={
-		xmlToArray:function(data,obj){
+(function($){
+	$.paramquery=($.paramquery==null)?{}:$.paramquery;	
+	$.paramquery.xmlToArray=function(data,obj){
 			var itemParent=obj.itemParent;
 			var itemNames=obj.itemNames;
 			var arr=[];
@@ -22,8 +22,8 @@
 				arr.push(arr2);
 			})
 			return arr;
-		},
-		tableToArray:function(tbl){
+		}		
+	$.paramquery.tableToArray=function(tbl){
 			var $tbl=$(tbl);
 			var colModel=[];
 			var data=[];
@@ -59,8 +59,8 @@
 				data.push(arr2);
 			})
 			return {data:data,colModel:colModel};
-		},
-        formatCurrency:function(val) {
+		}
+	$.paramquery.formatCurrency=function(val) {
             val = Math.round(val * 10) / 10;
             val = val + "";
             if (val.indexOf(".") == -1) {
@@ -80,8 +80,7 @@
 			arr2=arr2.reverse();
 			fp=arr2.join("");
 			return fp+lp;
-        }
-	}
+        }	
 })(jQuery);
 /**
  * ParamQuery Pager a.k.a. pqPager
@@ -94,15 +93,24 @@ fnPG.options={
 	totalRecords:0,
 	msg:"",
 	rPPOptions:[10,20,30,40,50,100],
-	rPP:20,
-	strPage:"Page",
-	strOf:"of",
-	strRpp:"Records per page:"	
+	rPP:20		
 };
+fnPG._regional={
+	strPage:"Page {0} of {1}",
+	strFirstPage:"First Page",
+	strPrevPage:"Previous Page",
+	strNextPage:"Next Page",
+	strLastPage:"Last Page",
+	strRefresh:"Refresh",	
+	strRpp:"Records per page:",
+	strDisplay:"Displaying {0} to {1} of {2} items."	
+}
+$.extend(fnPG.options,fnPG._regional);
 fnPG._create=function(){
-	var that=this;
+	var that=this,
+		thisOptions=this.options;
 	this.element.addClass("pq-pager").css({});
-	this.first = $( "<button type='button' title='First Page'></button>", {
+	this.first = $( "<button type='button' title='"+this.options.strFirstPage+"'></button>", {
 	})
 	.appendTo( this.element )
 	.button({
@@ -118,7 +126,7 @@ fnPG._create=function(){
 			}
 		}					
 	});
-	this.prev=$( "<button type='button' title='Previous Page'></button>")
+	this.prev=$( "<button type='button' title='"+this.options.strPrevPage+"'></button>")
 	.appendTo( this.element )
 	.button({icons:{primary:"pq-page-prev"},text:false}).bind("click",function(evt){
 		if(that.options.currentPage>1){
@@ -131,11 +139,62 @@ fnPG._create=function(){
 		}
 	});
 	$("<span class='pq-separator'></span>").appendTo(this.element);
-	$( "<span>Page </span>", {					
+	this.pagePlaceHolder=$("<span class='pq-pageholder'></span>")
+	.appendTo(this.element);
+	$("<span class='pq-separator'></span>").appendTo(this.element);
+	this.next=$( "<button type='button' title='"+this.options.strNextPage+"'></button>")
+	.appendTo( this.element )
+	.button({icons:{primary:"pq-page-next"},text:false}).bind("click",function(evt){
+		var val=that.options.currentPage+1;
+		if ( that._trigger( "change", evt, {curPage: val} ) !== false ) {			
+			that.option( {currentPage:val} );
+		}				
+	});
+	this.last=$( "<button type='button' title='"+this.options.strLastPage+"'></button>")
+	.appendTo( this.element )
+	.button({icons:{primary:"pq-page-last"},text:false}).bind("click",function(evt){
+		var val=that.options.totalPages;
+		if ( that._trigger( "change", evt, {curPage: val} ) !== false ) {			
+			that.option( {currentPage:val} );
+		}									
+	});
+	$("<span class='pq-separator'></span>").appendTo(this.element);
+	this.$strRpp = $("<span>"+this.options.strRpp+" </span>")
+	.appendTo(this.element)
+	this.$rPP=$("<select></select>")
+	.appendTo(this.element)
+	.change(function(evt){
+		var val=$(this).val();
+		if (that._trigger("change", evt,{rPP: val}) !== false) {
+			that.options.rPP=val;
+		}
 	})
+	$("<span class='pq-separator'></span>").appendTo(this.element);
+	this.$refresh=$("<button type='button' title='"+this.options.strRefresh+"'></button>")
+	.appendTo(this.element)
+	.button({icons:{primary:"pq-refresh"},text:false}).bind("click",function(evt){		
+		if ( that._trigger( "refresh", evt ) !== false ) {			
+		}				
+	});
+	$("<span class='pq-separator'></span>").appendTo(this.element);
+	this.$msg=$("<span class='pq-pager-msg'></span>")
 	.appendTo( this.element )
+	this._refresh();
+}
+fnPG._refreshPage=function(){
+	var that=this;
+	this.pagePlaceHolder.empty();
+	var strPage=this.options.strPage;
+	var arr=strPage.split(" ");
+	var str="";
+	$(arr).each(function(i,ele){
+		str+="<span>"+ele+"</span>";
+	})
+	strPage=str.replace("<span>{0}</span>","<span class='textbox'></span>");
+	strPage=strPage.replace("<span>{1}</span>", "<span class='total'></span>");	
+	var $temp=$( strPage ).appendTo(this.pagePlaceHolder);
 	this.page=$( "<input type='text' tabindex='0' />")
-	.appendTo( this.element )
+		.replaceAll("span.textbox", $temp)
 	.bind("change",function(evt){
 		var $this=$(this)
 		var val=$this.val();
@@ -156,56 +215,20 @@ fnPG._create=function(){
 		else{
 			$this.val(that.options.currentPage);
 			return false;												
-		}		
-	})
-	$( "<span>of </span>", {					
-	})
-	.appendTo( this.element )
-	this.$total=$( "<span class='total'></span>", {					
-	})
-	.appendTo( this.element )
-	$("<span class='pq-separator'></span>").appendTo(this.element);
-	this.next=$( "<button type='button' title='Next Page'></button>")
-	.appendTo( this.element )
-	.button({icons:{primary:"pq-page-next"},text:false}).bind("click",function(evt){
-		var val=that.options.currentPage+1;
-		if ( that._trigger( "change", evt, {curPage: val} ) !== false ) {			
-			that.option( {currentPage:val} );
 		}				
-	});
-	this.last=$( "<button type='button' title='Last Page'></button>")
-	.appendTo( this.element )
-	.button({icons:{primary:"pq-page-last"},text:false}).bind("click",function(evt){
-		var val=that.options.totalPages;
-		if ( that._trigger( "change", evt, {curPage: val} ) !== false ) {			
-			that.option( {currentPage:val} );
-		}									
-	});
-	$("<span class='pq-separator'></span>").appendTo(this.element);
-	$("<span>Records per page: </span>")
-	.appendTo(this.element)
-	this.$rPP=$("<select></select>")
-	.appendTo(this.element)
-	.change(function(evt){
-		var val=$(this).val();
-		if (that._trigger("change", evt,{rPP: val}) !== false) {
-			that.options.rPP=val;
-		}
 	})
-	$("<span class='pq-separator'></span>").appendTo(this.element);
-	this.$refresh=$("<button type='button' title='Refresh'></button>")
-	.appendTo(this.element)
-	.button({icons:{primary:"pq-refresh"},text:false}).bind("click",function(evt){		
-		if ( that._trigger( "refresh", evt ) !== false ) {			
-		}				
-	});
-	$("<span class='pq-separator'></span>").appendTo(this.element);
-	this.$msg=$("<span class='pq-pager-msg'></span>")
-	.appendTo( this.element )
-	this._refresh();
+	this.$total=$temp.filter("span.total");
 }
 fnPG._refresh=function(){
+	this._refreshPage();
 	var sel=(this.$rPP);
+	var thisOptions=this.options;
+	this.$strRpp.text(thisOptions.strRpp);
+	this.first.attr("title",thisOptions.strFirstPage);
+	this.prev.attr("title",thisOptions.strPrevPage);
+	this.next.attr("title",thisOptions.strNextPage);
+	this.last.attr("title",thisOptions.strLastPage);
+	this.$refresh.attr("title",thisOptions.strRefresh);
 	sel.empty();
 	var opts = this.options.rPPOptions;
 	for(var i=0;i<opts.length;i++){
@@ -244,8 +267,11 @@ fnPG._refresh=function(){
 		if(endIndx>totalRecords){
 			endIndx = totalRecords;
 		}
-		this.$msg.html("Displaying "+(begIndx+1)+" to "
-			+(endIndx)+" of "+totalRecords+" items.")		
+		var strDisplay=this.options.strDisplay;
+		strDisplay=strDisplay.replace("{0}",begIndx+1);
+		strDisplay=strDisplay.replace("{1}",endIndx);
+		strDisplay=strDisplay.replace("{2}",totalRecords);
+		this.$msg.html(strDisplay);			
 	}
 	else{
 		this.$msg.html("");
@@ -263,7 +289,18 @@ fnPG._setOptions=function(){
 	$.Widget.prototype._setOptions.apply( this, arguments );
 	this._refresh();				
 }
-	$.widget("paramquery.pqPager",fnPG);	
+	$.widget("paramquery.pqPager",fnPG);
+	$.paramquery.pqPager.regional={};
+	$.paramquery.pqPager.regional['en']=fnPG._regional;
+	$.paramquery.pqPager.setDefaults=function(obj){
+		for(var key in obj){
+			fnPG.options[key]=obj[key];
+		}
+		$.widget("paramquery.pqPager",fnPG);
+		$(".pq-pager").each(function(i,pager){
+			$(pager).pqPager("option",obj);
+		})
+	}		
 })(jQuery);
 /**
  * ParamQuery Scrollbar a.k.a. pqScrollBar
@@ -964,6 +1001,7 @@ fnSB._setOptions=function(){
         columnBorders: true,
 		customData:null,
         dataModel: {
+			cache: false,
             curPage: 0,
             totalPages: 0,
             rPP: 10,
@@ -973,6 +1011,7 @@ fnSB._setOptions=function(){
             method: "GET",
             rPPOptions: [10, 20, 50, 100]
         },
+		direction: "",
         draggable: false,
         editable: true,
 		editModel: {clicksToEdit:1,saveKey:''},
@@ -994,6 +1033,18 @@ fnSB._setOptions=function(){
         width: 600,
         wrap: true
     }
+	fn._regional={
+		strLoading: "Loading",
+		strAdd: "Add",
+		strEdit: "Edit",
+		strDelete: "Delete",
+		strSearch: "Search",
+		strNothingFound: "Nothing found",
+		strSelectedmatches:"Selected {0} of {1} match(es)",
+		strPrevResult: "Previous Result",
+		strNextResult: "Next Result"				
+	}	
+	$.extend(fn.options,fn._regional);	
     fn._destroyResizable = function () {
         if (this.element.data("resizable")) this.element.resizable('destroy');
     }
@@ -1015,7 +1066,7 @@ fnSB._setOptions=function(){
         this.element.empty(); 
         this.element.css('height', "");
         this.element.css('width', "");
-        this.element.removeClass('pq-grid').removeData();
+        this.element.removeClass('pq-grid ui-widget ui-widget-content ui-corner-all').removeData();
     }
 	fn._findCellFromEvtCoords = function (evt) {
         if (this.$tbl == null) {
@@ -1177,7 +1228,7 @@ fnSB._setOptions=function(){
         this.element.empty().addClass('pq-grid ui-widget ui-widget-content ui-corner-all')
 		.append("<div class='pq-grid-top ui-widget-header'>\
 		<div class='pq-grid-title'>&nbsp;</div></div>\
-	<div class='pq-grid-inner' tabindex=0><div class='pq-grid-right'> \
+	<div class='pq-grid-inner' tabindex='0'><div class='pq-grid-right'> \
 		<div class='pq-header-outer ui-widget-header'>\
 			<span class='pq-grid-header ui-state-default'></span><span class='pq-grid-header ui-state-default'></span>\
 		</div>\
@@ -1188,6 +1239,9 @@ fnSB._setOptions=function(){
 	<div class='pq-grid-bottom'>\
 	<div class='pq-grid-footer'>&nbsp;</div>\
 	</div>");
+		if(this.options.direction=="rtl"){
+			this.element.addClass("pq-rtl");
+		}
         this._trigger("render", null, {
             dataModel: this.options.dataModel,
 			colModel: this.colModel       
@@ -1658,9 +1712,10 @@ fnSB._setOptions=function(){
         }
     }
     fn.generateLoading = function () {
-        var $loading = $("<div class='pq-loading'></div>").appendTo(this.element)
-        $("<div class='pq-loading-bg'></div><div class='pq-loading-mask ui-state-highlight'><div>Loading...</div></div>").appendTo($loading)
-        $loading.find("div.pq-loading-bg").css("opacity", 0.2);
+		if(this.$loading)this.$loading.remove();		
+        this.$loading = $("<div class='pq-loading'></div>").appendTo(this.element)
+        $("<div class='pq-loading-bg'></div><div class='pq-loading-mask ui-state-highlight'><div>"+this.options.strLoading+"...</div></div>").appendTo(this.$loading);
+        this.$loading.find("div.pq-loading-bg").css("opacity", 0.2);
     }
     fn.showLoading = function () {
         this.element.find("div.pq-loading").show();
@@ -1754,7 +1809,7 @@ fnSB._setOptions=function(){
             url: url,
             dataType: DM.dataType,
             async: true,
-            cache: false,
+            cache: DM.cache,
             type: DM.method,
             data: dataURL,
             beforeSend: function (jqXHR, settings) {
@@ -1817,7 +1872,7 @@ fnSB._setOptions=function(){
             fn.call(that); 
         }, '_generateTables');
 		if(this.options.flexHeight){
-			this._setGridHeightFromTable();
+			this.setGridHeightFromTable();
 		}				
 		if(this.options.flexWidth){
 			this._setGridWidthFromTable();
@@ -1963,12 +2018,12 @@ fnSB._setOptions=function(){
 			thisColModel=this.colModel,
         	indx = DM.sortIndx,
 			colIndx = this.getColIndxFromDataIndx(indx);
+		if(indx ==null||colIndx==null){			
+			sorting=false;
+		}
         var dir = DM.sortDir;
         var that = this;
         if (sorting == true) {
-			if(indx==null||colIndx==null){
-				return;
-			}
             if (DM.sorting == "remote") {
                 this.remoteRequest(fn);
             } else {
@@ -2059,6 +2114,11 @@ fnSB._setOptions=function(){
 			$.Widget.prototype._setOption.call(this, key, value);
 			this.refreshRequired=false;
 		}		
+		else if(key=="strLoading"){
+			$.Widget.prototype._setOption.call(this, key, value);
+			this.generateLoading();
+			this.refreshRequired=false;
+		}				
 		else{
 			$.Widget.prototype._setOption.call(this, key, value);
 		}
@@ -2335,7 +2395,7 @@ fnSB._setOptions=function(){
 				this._fixTableViewPort();
 				var that=this;
 				if(that.options.flexHeight){
-					that._setGridHeightFromTable();
+					that.setGridHeightFromTable();
 					that._fixIEFooterIssue();
 				}else{
 					that._bringRowIntoView({rowIndxPage:rowIndxPage});
@@ -3007,29 +3067,32 @@ fnSB._setOptions=function(){
 		this.$vscroll.pqScrollBar("option", {num_eles: num_eles});
     }
     fn._setInnerGridHeight = function () {
+		if(this.options.flexHeight)return;
         var ht = (this.element.outerHeight() - ((this.options.topVisible)?this.$top[0].offsetHeight:0) -  this.$bottom.outerHeight());
         this.$grid_inner.height(ht + "px");
     }
-    fn._setRightGridHeight = function () {
+    fn._setRightGridHeight = function () {		
 		this.$header_o.height(this.$header_left.height()-2);
+		if(this.options.flexHeight)return;
+		if(this.$tbl)this.$tbl.css("marginBottom", 0);
 		var ht = (this.element[0].offsetHeight - this.$header_o[0].offsetHeight - ((this.options.topVisible)?this.$top[0].offsetHeight:0) - this.$bottom[0].offsetHeight);
 		var ht_contFixed=0;
 		this.$cont.height((ht-ht_contFixed) + "px");
     }
-	fn._setGridHeightFromTable=function(){
+	fn.setGridHeightFromTable=function(){
 		var htTbl=0;
 		var htSB=this._getScollBarHorizontalHeight();		
 		if(this.$tbl){		
 			htTbl =(this.$tbl[0].offsetHeight-1);
+			this.$tbl.css("marginBottom", htSB);
 		}		
 		else{
 			htTbl=22;
 		}
 		var htCombined=htTbl+htSB;
-		this.$cont[0].style.height=htCombined+ "px";
-		var ht = (this.$header_o[0].offsetHeight-2 + this.$top[0].offsetHeight + this.$bottom[0].offsetHeight+ htCombined);
-		this.element[0].style.height=ht+"px";
-		this._setInnerGridHeight();
+		this.$cont.height("");
+		this.element.height("");
+		this.$grid_inner.height("");
 		this.$vscroll.css("visibility","hidden");					
 	}
 	fn._setGridWidthFromTable=function(){
@@ -3447,6 +3510,7 @@ fnSB._setOptions=function(){
         })
         var lft = 0;
 		var hd_ht=that.$header[0].offsetHeight;
+		var direction=this.options.direction;
 		for(var i=0;i<this.colModel.length;i++){	
 			var colModel=that.colModel[i];
             if (that.hidearrHS[i]) {
@@ -3464,7 +3528,7 @@ fnSB._setOptions=function(){
             var $handle = $("<div pq-grid-col-indx='" + i + "' class='pq-grid-col-resize-handle'>&nbsp;</div>")
 				.appendTo($head);
             var pq_col = that.$header_right.find("td[pq-grid-col-indx=" + i + "]")[0];
-            lft = pq_col.offsetLeft + pq_col.offsetWidth - 10;
+            lft = parseInt(pq_col.offsetLeft) + parseInt((direction=="rtl")?0:(pq_col.offsetWidth - 10));
             $handle.css({
                 left: lft,
                 height: hd_ht 
@@ -3962,7 +4026,18 @@ fnSB._setOptions=function(){
         }
         $.measureTime(innerSort, "innerSort"); 
     }
-    $.widget("paramquery.pqGrid", fn);
+	$.widget("paramquery.pqGrid", fn);
+	$.paramquery.pqGrid.regional={};
+	$.paramquery.pqGrid.regional['en']=fn._regional;	
+	$.paramquery.pqGrid.setDefaults=function(obj){
+		for(var key in obj){
+			fn.options[key]=obj[key];
+		}
+		$.widget("paramquery.pqGrid",fn);
+		$(".pq-grid").each(function(i,grid){
+			$(grid).pqGrid("option",obj);
+		})
+	}		
     $.measureTime = function (fn, nameofFunc) {
         var initTime = (new Date()).getTime();
         fn();

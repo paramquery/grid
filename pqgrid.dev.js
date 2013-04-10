@@ -2870,6 +2870,12 @@ fnSB._setOptions=function(){
 			}			
             evt.preventDefault();
             return;
+        }else if (evt.ctrlKey && evt.keyCode==65){//Ctrl+A Select All
+	       	 for(i=0;i<that.data.length;i++){
+			that.sRows.add({rowIndx:i});
+		}
+		evt.preventDefault();
+		return;	
         } else {
         }
     }

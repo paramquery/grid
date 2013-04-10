@@ -7,11 +7,11 @@
     "email": "pdhindsa@paramquery.com",
     "url": "http://www.paramquery.com/"
   },
-  "maintainers": {
+  "maintainers": [{
     "name": "Paramvir Dhindsa",
     "email": "pdhindsa@paramquery.com",
     "url": "http://www.paramquery.com/"
-  },
+  }],
   "licenses": [
     {
       "type": "MIT",

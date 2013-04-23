@@ -1,13 +1,18 @@
 div.pq-grid{
-	border:1px solid #99bce8;
-	border-radius:5px;
+	/*border:1px solid #99bce8;*/
+	/*border-radius:5px;*/
 	background:url("");/*to remove ui-widget-content background*/	
 	color:#333;
 }
 div.pq-grid-top{
-	border-radius:5px 5px 0 0;
+	/*border-radius:5px 5px 0 0;*/
 	background:#eee;
 	color:#666;
+}
+div.pq-grid-bottom{
+	background:#eee;
+	color:#333;
+	/*border-radius:0 0 5px 5px;*/	
 }
 .pq-grid div.pq-header-outer{	
 	background:#eee;
@@ -76,11 +81,6 @@ div.pq-grid tr td.pq-cell-select
 	background:#88bbdd;      
 	color:#fff;
 }       
-div.pq-grid-bottom{
-	background:#eee;
-	color:#333;
-	border-radius:0 0 5px 5px;	
-}
 .pq-grid div.pq-loading-mask{
 	background:#dae5f3;
 	border:1px solid steelblue;

@@ -1,5 +1,5 @@
 /**
- * ParamQuery Grid a.k.a. pqGrid v1.1.0
+ * ParamQuery Grid a.k.a. pqGrid v1.1.1
  * 
  * Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
  * Released under MIT license
@@ -279,7 +279,6 @@ fnPG._refresh=function(){
 }
 fnPG._destroy=function(){
 	this.element.empty().removeClass("pq-pager").enableSelection();
-	_super();
 }
 fnPG._setOption=function(key,value){
 	if(key=="currentPage"||key=="totalPages")value=parseInt(value);	
@@ -603,6 +602,310 @@ fnSB._setOptions=function(){
 /**
  * ParamQuery Grid a.k.a. pqGrid*/
 (function ($) {
+	var cCreateTable=function(that){
+		this.that=that;
+	}
+	var _pG=cCreateTable.prototype;
+    _pG._generateTables = function (objP) {
+        var that=this.that,
+			thisColModel=that.colModel,
+			noColumns = thisColModel.length,
+			thisOptions=that.options,
+			columnBorders=thisOptions.columnBorders,
+			rowBorders=thisOptions.rowBorders,
+			SM=thisOptions.scrollModel,
+			outerWidths=that.outerWidths;
+			that._bufferObj_calcInitFinal()
+		var row=(objP)?0:that.init,
+			finalRow=(objP)?objP.data.length-1:that["final"],
+			prevGroupVal="",
+			GMtrue=(GM && GM.grouping=="local")?true:false,
+			TVM=thisOptions.treeViewModel,			
+			data=(objP&&objP.data)?objP.data:(GMtrue?that.dataGM:(that.data)),        
+			offset=that.getRowIndxOffset();			
+        if (!objP && (row == null || finalRow == null)) {
+            that.$cont.empty();
+            that.$tbl = null;
+            return;
+        }		
+		if(!objP){				
+	        that._trigger("beforeTableView", null, {
+				data:that.data,
+	            curPos: row,
+				finalPos: finalRow,
+				curPage: that.dataModel.curPage			            
+	        });					
+		}
+        var const_cls = "pq-grid-cell ";
+        if (!thisOptions.wrap || objP) const_cls += "pq-wrap-text ";
+		var tblClass='pq-grid-table ';
+		if (columnBorders) tblClass += "pq-grid-td-border-right ";
+		if (rowBorders) tblClass += "pq-grid-td-border-bottom ";
+        var buffer = ["<table class='"+ tblClass +"' cellpadding=0 cellspacing=0 >"];
+		var GM=thisOptions.groupModel,
+			hidearrHS1 = [];
+		{			
+			buffer.push("<tr class='pq-row-hidden'>");			
+			if (that.numberCell) {
+				var wd=that.numberCellWidth+1; 
+				buffer.push("<td style='width:" + wd + "px;' ></td>");
+			}
+			for (var col = 0; col < noColumns; col++) {
+				var column = thisColModel[col];
+                if (column.hidden) { 
+                    continue;
+                } else if (that.hidearrHS[col]) {
+                    hidearrHS1.push(col)
+                    continue;
+                }								
+				var wd = outerWidths[col]; 
+				buffer.push("<td style='width:" + wd + "px;' pq-top-col-indx="+col+"></td>");
+			}
+            for (var k = 0; k < hidearrHS1.length; k++) {
+				var col = hidearrHS1[k];
+				var column = thisColModel[col];
+				var wd = outerWidths[col]; 
+				buffer.push("<td style='width:" + wd + "px;'></td>");				
+			}			
+			buffer.push("</tr>");
+		}	
+		this.offsetRow=null;
+		do{			
+			var rowObj=data[row],
+				rowData=GMtrue?rowObj.data:rowObj,
+				rowIndx=GMtrue?rowObj.rowIndx:row,
+				hidden=rowData.hidden,				
+				row_str = "";
+			if(hidden){
+				if (row == finalRow) {
+					break;	
+				}				
+				row++;
+				continue;
+			}
+			if (this.offsetRow == null && rowIndx!=null) {
+				this.offsetRow=(row-rowIndx);
+			}				
+			if(GM && rowObj.groupTitle){
+				var obj=that._calcRightEdgeCol(thisColModel.length-1);				
+				row_str="<tr class='pq-group-row'><td colspan='"+obj.cols+"' style='width:"+obj.width+"px;'><div>"+rowObj.groupTitle+"</div></td></tr>";
+				buffer.push(row_str);
+			}
+			else if(GM && rowObj.groupSummary){
+				that._generateSummaryRow(rowData, rowIndx,thisColModel,noColumns,hidearrHS1,offset,const_cls,buffer);
+			}			
+			else{
+				this._generateRow(rowData, rowIndx,thisColModel,noColumns,hidearrHS1,offset,const_cls,buffer,objP);					
+			}						
+			if(SM.scrollTillLastRow){
+			}
+			else{
+				if (row == finalRow) {
+					break;	
+				}
+				row++;				
+			}
+        }
+		while(1==1);
+		that.scrollMode=false;
+		if(!SM.scrollTillLastRow){
+			$.measureTime(function(){
+		        buffer.push("</table>")
+		        var str = buffer.join("");
+				if(objP){
+					objP.$cont.empty();
+					var $tbl=$(str);
+					objP.$cont.append($tbl);
+					if(!that.tables)that.tables=[];
+					var indx=-1;
+					for(var l=0;l<that.tables.length;l++){
+						var cont=that.tables[l].cont;
+						if(cont==objP.$cont[0]){
+							indx=l;
+						}
+					}
+					if(indx==-1){
+						that.tables.push({$tbl:$tbl,cont:objP.$cont[0]});	
+					}
+					else{
+						that.tables[indx].$tbl=$tbl;	
+					}					
+				}
+				else{
+			        if (that.$tbl == undefined) {
+			            that.$tbl = $(str);
+			            that.$cont.append(that.$tbl)
+			        }else{
+						if (that.$td_edit != null) {
+							that.quitEditMode();
+						}			
+			            that.$cont.empty();
+			            that.$tbl = $(str);
+			            that.$cont.append(that.$tbl)
+			        }												
+				}
+			},'append stuff inside _generateTable')
+		}		
+		if(!objP)
+		window.setTimeout(function(){
+			that._fixTableViewPort();
+	        that._trigger("refresh", null, {
+	            dataModel: that.dataModel,
+	            data: that.data,
+				initV:that.init,
+				initH:that.initH
+	        });															
+		},0);
+    }
+	_pG._renderCell = function (objP) {	        
+		var that=this.that,
+			rowIndxPage=objP.rowIndxPage,
+			rowIndx=objP.rowIndx,
+			rowData=objP.rowData,
+			colIndx=objP.colIndx,		
+			$td=objP.$td,
+			column=objP.column,
+			dataIndx=column.dataIndx,
+			wrap=objP.wrap,
+			customData=objP.customData;
+		var dataCell;
+        if (column.render) {            
+            dataCell = column.render({
+                data: that.data,
+				dataModel: that.dataModel,
+				rowData:rowData,
+                rowIndxPage: rowIndxPage,
+				rowIndx:rowIndx,
+                colIndx: colIndx,
+				column: column,
+				dataIndx: dataIndx,
+				customData:customData
+            });
+        }
+		else{
+			dataCell = rowData[dataIndx];
+		}
+        if (dataCell === "" || dataCell == undefined) dataCell = "&nbsp;"; 
+        var cls = "pq-td-div";
+        if (wrap == false) cls += " pq-wrap-text";
+		var strTree="";
+		if(1==2 && dataIndx==expandIndx){
+			var leafClass='';
+			if(isLeaf){
+				leafClass='ui-icon-radio-off';
+			}
+			else if(expanded){
+				leafClass='ui-icon-triangle-1-se pq-tree-expand-icon';
+			}
+			else{
+				leafClass='ui-icon-triangle-1-e pq-tree-expand-icon';
+			}
+			strTree="<div class='pq-tree-icon-container' style='width:"+treeMarginLeft+"px;'>\
+			<div class='ui-icon "+leafClass+" pq-tree-icon' ></div></div>";
+		}
+        var str = "<div class='" + cls + "'>" + strTree + dataCell + "</div>";
+        if ($td != undefined) {
+            $td.html(str);
+        }
+        return str;
+    }	
+	_pG._generateRow=function(rowData ,rowIndx,thisColModel,noColumns,hidearrHS1,offset,const_cls,buffer,objP){
+        var row_cls = "pq-grid-row"; 
+		var that=this.that,
+			thisOptions= that.options,
+			TVM=thisOptions.treeViewModel,
+			columnBorders=thisOptions.columnBorders,
+			wrap=thisOptions.wrap,
+			customData=thisOptions.customData;
+		var objRender;				
+		if(TVM){
+			levelIndx=TVM.levelIndx;
+			leafIndx=TVM.leafIndx;
+			expandIndx=TVM.expandIndx;
+			isLeaf=rowData[leafIndx];level=rowData[levelIndx];
+			treeMarginLeft=(level+1)*18;
+			expanded=this._getRowPQData(rowIndx,"expanded");
+			objRender={rowIndx:rowIndx+offset,rowIndxPage:rowIndx,rowData:rowData,wrap:wrap,customData:customData ,treeMarginLeft:treeMarginLeft,expandIndx:expandIndx,isLeaf:isLeaf,expanded:expanded};			
+		}
+		else{
+			objRender={rowIndx:rowIndx+offset,rowIndxPage:rowIndx,rowData:rowData,wrap:wrap,customData:customData};
+		}	
+        if (thisOptions.oddRowsHighlight && (rowIndx / 2 == parseInt(rowIndx / 2))) row_cls += " pq-grid-oddRow";
+		if(rowData.selectedRow){
+			row_cls += " pq-row-select ui-state-highlight";
+		}			
+        buffer.push("<tr pq-row-indx='" + rowIndx + "' class='" + row_cls + "' >");
+        if (that.numberCell) {
+            buffer.push("<td style='width:" + that.numberCellWidth + "px;' class='pq-grid-number-cell ui-state-default'>\
+		<div class='pq-td-div'>" + ((objP)?"&nbsp;":(rowIndx + 1)) + "</div></td>") 
+        }
+        for (var col = 0; col < noColumns; col++) {
+			var column=thisColModel[col],
+				dataIndx=column.dataIndx;
+			objRender.column=column;
+			objRender.colIndx=col;			
+			var cellSelection=false;					
+			{		
+				var selectedDataIndices = rowData.selectedDataIndices;
+				if (selectedDataIndices) {						
+					cellSelection = selectedDataIndices[dataIndx];													
+				}
+			}
+            if (column.hidden) { 
+                continue;
+            } 
+			else if (that.hidearrHS[col]) {
+                continue;
+            }
+            var strStyle = "";
+            var cls = const_cls; 
+            if (column.align == "right") {
+                cls += ' pq-align-right';
+            } else if (column.align == "center") {
+                cls += ' pq-align-center';
+            }
+            if (col == that.freezeCols - 1 && columnBorders) {
+                cls += " pq-last-freeze-col";
+            }
+			if(column.className){
+				cls = cls+ " "+column.className;
+			}
+			if(cellSelection){
+				cls = cls+ " pq-cell-select ui-state-highlight";
+			}
+			var indxStr="pq-col-indx='" + col + "'";
+			if(objP){
+				indxStr+=" pq-dataIndx='" + dataIndx + "'";
+			}
+            var str = "<td class='" + cls + "' style='" + strStyle + "' " + indxStr + " >\
+			" + this._renderCell(objRender) + "</td>";
+            buffer.push(str)
+        }
+        for (var k = 0; k < hidearrHS1.length; k++) {
+            var col = hidearrHS1[k];
+			var column = thisColModel[col],
+				dataIndx=column.dataIndx;
+			objRender.column=column;
+			objRender.colIndx=col;					
+            var strStyle = "";
+            strStyle += "visibility:hidden;";
+            var cls = const_cls; 
+            if (column.align == "right") {
+                cls += ' pq-align-right';
+            } else if (column.align == "center") {
+                cls += ' pq-align-center';
+            }
+			var indxStr="pq-col-indx='" + col + "'";
+			if(objP){
+				indxStr+=" pq-dataIndx='" + dataIndx + "'";
+			}			
+            var str = "<td class='" + cls + "' style='" + strStyle + "' " + indxStr+">\
+			" + this._renderCell(objRender) + "</td>";
+            buffer.push(str)
+        }
+        buffer.push("</tr>");
+		return buffer;								
+	}
 	var cRows=function(that){
 		this.that=that;		
 		this.options=that.options;
@@ -614,15 +917,8 @@ fnSB._setOptions=function(){
 		var location=this.options.dataModel.location;
 		var data=(location=="remote")?this.that.data:this.options.dataModel.data,
 			indx=(location=="remote")?objP.rowIndxPage:objP.rowIndx,
-			row=data[indx],
-			len_row=row.length,
-			objCell=row[len_row-1];
-		if(objCell.pqData){
-			objCell.selectedRow=true;
-		}
-		else{
-			row[len_row]= {pqData:true,selectedRow:true};
-		}		
+			rowData=data[indx];		
+		rowData.selectedRow=true;
 	}
 	_p.setDirty=function(){
 		if(this.selectedRows.length>0){
@@ -648,13 +944,10 @@ fnSB._setOptions=function(){
 		var data=this.options.dataModel.data;
 		if(!data)return;
 		for(var i=0,len=data.length;i<len;i++){
-			var row=data[i],
-				objC=row[row.length-1];
-			if(objC && objC.pqData){
-				if(objC.selectedRow){
-					this.selectedRows.push({rowIndx:i});	
-				}
-			}							
+			var rowData=data[i];
+			if(rowData.selectedRow){
+				this.selectedRows.push({rowIndx:i});	
+			}										
 		}
 		this.isDirty=false;
 	}	
@@ -716,7 +1009,6 @@ fnSB._setOptions=function(){
 		init=(that.init+offset-that.offsetRow),
 		finall=(that['final']+offset-that.offsetRow);
 		if(this.isSelected(objP)){
-			if(rowIndx >= init && rowIndx <= finall){
 				var $tr=that.getRow({rowIndxPage:rowIndxPage});
 				if($tr)$tr.removeClass("pq-row-select ui-state-highlight");
 				that._trigger("rowUnSelect",evt,{
@@ -724,7 +1016,6 @@ fnSB._setOptions=function(){
 					dataModel:that.dataModel,
 					$tr:$tr
 				});								
-			}				
 			this._removeFromData(objP);
 		}
 		var indx=this.indexOf(objP);
@@ -752,18 +1043,8 @@ fnSB._setOptions=function(){
 		var location=this.options.dataModel.location;
 		var data=(location=="remote")?this.that.data:this.options.dataModel.data,
 			indx=(location=="remote")?objP.rowIndxPage:objP.rowIndx,
-			rowData=data[indx],
-			len_row=(rowData)?rowData.length:null,
-			objCell=(len_row)?rowData[len_row-1]:null;
-		if(objCell==null){
-			return null;
-		}	
-		else if (objCell.pqData) {
-			return (objCell.selectedRow)?true:false;
-		}
-		else{
-			return false;
-		}						
+			rowData=data[indx];
+		return (rowData)?((rowData.selectedRow==null)?false:rowData.selectedRow):null;						
 	}
 	_p.getSelection=function(){
 		if(this.isDirty){
@@ -775,12 +1056,8 @@ fnSB._setOptions=function(){
 		var location=this.options.dataModel.location;
 		var data=(location=="remote")?this.that.data:this.options.dataModel.data,
 			indx=(location=="remote")?objP.rowIndxPage:objP.rowIndx,
-			row=data[indx],
-			len_row=row.length,
-			objCell=row[len_row-1];
-		if(objCell.pqData){
-			objCell.selectedRow=false;	
-		}
+			rowData=data[indx];
+			rowData.selectedRow=false;
 	}				
 	_p._boundRow=function(obj){
 		var rowIndxPage=obj.rowIndxPage,
@@ -803,30 +1080,20 @@ fnSB._setOptions=function(){
 		var location=this.options.dataModel.location;
 		var data=(location=="remote")?this.that.data:this.options.dataModel.data,
 			indx=(location=="remote")?objP.rowIndxPage:objP.rowIndx,
-			row=data[indx],
-			len_row=row.length,
-			objCell=row[len_row-1];
-		if(objCell.pqData){
-			if(!objCell.selectedDataIndices){
-				objCell.selectedDataIndices={};
-			}
-			objCell.selectedDataIndices[objP.dataIndx]=true;
+			rowData=data[indx];
+		if(!rowData.selectedDataIndices){
+			rowData.selectedDataIndices={};
 		}
-		else{
-			row[len_row]= {pqData:true,selectedDataIndices:{}};
-			row[len_row].selectedDataIndices[objP.dataIndx]=true;
-		}		
+		rowData.selectedDataIndices[objP.dataIndx]=true;
 	}
 	_pC._removeFromData=function(objP){
 		var location=this.options.dataModel.location;
 		var data=(location=="remote")?this.that.data:this.options.dataModel.data,
 			indx=(location=="remote")?objP.rowIndxPage:objP.rowIndx,					
-			row=data[indx],
-			len_row=row.length,
-			objCell=row[len_row-1];
-		if(objCell.pqData && objCell.selectedDataIndices){
-			objCell.selectedDataIndices[objP.dataIndx]=false;
-		}
+			rowData=data[indx];
+		if(rowData&&rowData.selectedDataIndices){
+			rowData.selectedDataIndices[objP.dataIndx]=false;	
+		}		
 	}					
 	_pC.setDirty=function(){
 		if(this.selectedCells.length>0){
@@ -857,36 +1124,25 @@ fnSB._setOptions=function(){
 			data=(location=="remote")?that.data:this.options.dataModel.data,
 			indx=(location=="remote")?objP.rowIndxPage:objP.rowIndx,									
 			dataIndx=(objP.dataIndx==null)?that.colModel[objP.colIndx].dataIndx:objP.dataIndx,
-			rowData=data[indx],
-			len_row=(rowData)?rowData.length:null,
-			objCell=(len_row)?rowData[len_row-1]:null;
-		if(objCell==null){
+			rowData=data[indx];
+		if(rowData==null){
 			return null;
-		}	
-		else if (objCell.pqData) {
-			var selectedDataIndices=objCell.selectedDataIndices;
-			if(selectedDataIndices && selectedDataIndices[dataIndx]!=null){
-				return selectedDataIndices[dataIndx];	
-			}			
 		}
-		return false;
+		if(rowData.selectedDataIndices){
+			if(rowData.selectedDataIndices[dataIndx]){
+				return true;	
+			}	
+		}		
+		return false;				
 	}	
 	_pC.refresh=function(){
 		this.selectedCells=[];
 		var data=this.options.dataModel.data;
 		if(!data)return;
 		for(var i=0,len=data.length;i<len;i++){
-			var row=data[i],
-				objC=row[row.length-1];
-			if(objC && objC.pqData){
-				var selectedDataIndices=objC.selectedDataIndices;
-				if(selectedDataIndices){
-					for(var dataIndx in selectedDataIndices){
-						if(selectedDataIndices[dataIndx]){
-							this.selectedCells.push({rowIndx:i,dataIndx:dataIndx});	
-						}												
-					}
-				}
+			var rowData=data[i];
+			if(rowData.selectedIndices && rowData.selectedDataIndices[dataIndx]){
+				this.selectedCells.push({rowIndx:i,dataIndx:dataIndx});
 			}							
 		}
 		this.isDirty=false;
@@ -955,7 +1211,6 @@ fnSB._setOptions=function(){
 			init=(that.init+offset),
 			finall=(that['final']+offset);
 		if(this.isSelected(objP)){
-			if(rowIndx >= init && rowIndx <= finall){
 				var $td=that.getCell({rowIndxPage:rowIndxPage,colIndx:colIndx});
 				if($td)$td.removeClass("pq-cell-select ui-state-highlight");
 				that._trigger("cellUnSelect",evt,{
@@ -965,7 +1220,6 @@ fnSB._setOptions=function(){
 					dataModel:that.dataModel,
 					$td:$td
 				});								
-			}				
 			this._removeFromData(objP);																																		
 		}
 		var indx=this.indexOf(objP);
@@ -997,6 +1251,7 @@ fnSB._setOptions=function(){
 	}		
     var fn = {};
     fn.options = {
+		bottomVisible: true,
         colModel: null,
         columnBorders: true,
 		customData:null,
@@ -1023,13 +1278,17 @@ fnSB._setOptions=function(){
 		hoverMode:'row',
         minWidth: 50,
         numberCell: true,
-        numberCellWidth: 50,		
-        resizable: false,	
+        numberCellWidth: 50,
+		oddRowsHighlight:true,		
+        resizable: false,
+		roundCorners: true,	
+		rowBorders: true,
 		scrollModel:{pace:"fast", horizontal:true},
 		selectionModel: {type:'row',mode:'range'},
         sortable: true,
         title: "&nbsp;",
 		topVisible: true,
+		treeViewModel:null,
         width: 600,
         wrap: true
     }
@@ -1193,20 +1452,8 @@ fnSB._setOptions=function(){
 			}while(row<=finalRowIndx);
 		}									
 	}
-	fn._addSelection=function(obj){
-		var rowIndxPage=obj.rowIndxPage,
-			colIndx=obj.colIndx;
-		var data=this.data;
-		data[rowIndxPage][this.customDataIndx]={selection:{colIndx:colIndx}};	
-	}
-	fn._removeSelection=function(obj){
-		var rowIndxPage=obj.rowIndxPage,
-			colIndx=obj.colIndx,
-			$tr=obj.$tr,
-			data=this.data;
-		data[rowIndxPage][this.customDataIndx]={selection:null};	
-	}	
     fn._create = function () {
+		this.cTable= new cCreateTable(this);
         this.minWidth = this.options.minWidth;
         this.cols = [];
 		this.dataModel = this.options.dataModel;
@@ -1218,15 +1465,14 @@ fnSB._setOptions=function(){
         this.numberCell = this.options.numberCell;
         this.numberCellWidth = this.options.numberCellWidth;
         this.freezeCols = this.options.freezeCols;		
-        this.columnBorders = this.options.columnBorders;
 		this.tables=[];
         var that = this;
         this.$tbl = null; 
 		this._refreshHeader();
 		this._refreshWidths();
 		this._computeOuterWidths();
-        this.element.empty().addClass('pq-grid ui-widget ui-widget-content ui-corner-all')
-		.append("<div class='pq-grid-top ui-widget-header'>\
+        this.element.empty().addClass('pq-grid ui-widget ui-widget-content'+(this.options.roundCorners?' ui-corner-all':''))
+		.append("<div class='pq-grid-top ui-widget-header"+(this.options.roundCorners?" ui-corner-top":"")+"'>\
 		<div class='pq-grid-title'>&nbsp;</div></div>\
 	<div class='pq-grid-inner' tabindex='0'><div class='pq-grid-right'> \
 		<div class='pq-header-outer ui-widget-header'>\
@@ -1236,7 +1482,7 @@ fnSB._setOptions=function(){
 		<div class='pq-cont' ></div>\
 		</div> \
 		</div></div>\
-	<div class='pq-grid-bottom'>\
+	<div class='pq-grid-bottom"+(this.options.roundCorners?" ui-corner-bottom":"")+"'>\
 	<div class='pq-grid-footer'>&nbsp;</div>\
 	</div>");
 		if(this.options.direction=="rtl"){
@@ -1259,23 +1505,31 @@ fnSB._setOptions=function(){
 		this.$header_left=$(this.$header[0]);
 		this.$header_right=$(this.$header[1]);
 		this.$bottom = $("div.pq-grid-bottom", this.element); 
+		if(!this.options.bottomVisible){
+			this.$bottom.css("display","none");
+		}		
         this.$footer = $("div.pq-grid-footer", this.element); 
         this.$cont_o = $("div.pq-cont-right", this.$grid_right);
 		this.$cont_fixed = $("div.pq-cont-fixed", this.$grid_right);
         this.$cont = $("div.pq-cont", this.$grid_right);
 		this.$cont.on("click", function (evt) {
 			return that._onClickCont(evt);
-		});		
+		});				
+		this.$cont.on("click", ".pq-tree-expand-icon", function (evt) {		
+			return that._onClickTreeExpandIcon(evt); 
+        });		
 		this.$cont.on("click", "td.pq-grid-cell", function (evt) {		
 			return that._onClickCell(evt); 
-        }).mousedown(function(evt){
-		});
+        });
 		this.$cont.on("click", "tr.pq-grid-row", function (evt) {
 			return that._onClickRow(evt);
 		});
 		this.$cont.on("dblclick", "td.pq-grid-cell", function (evt) {
 			return that._onDblClickCell(evt);
         });
+		this.$cont.on("dblclick", "tr.pq-grid-row", function (evt) {
+			return that._onDblClickRow(evt);
+		});		
 		this.$cont.on("mouseenter", "td.pq-grid-cell", function (evt) {
 			var $td=$(this);
 	        if(that._trigger("cellMouseEnter", evt, {
@@ -1327,20 +1581,22 @@ fnSB._setOptions=function(){
 			pace:that.options.scrollModel.pace,
             direction: "vertical",
             cur_pos: 0,
-            scroll: function (evt, obj) {				
-                var cur_pos=parseInt(obj.cur_pos);
-                if(that.init!=cur_pos){
+            scroll: function (evt, obj) {
 					that.scrollMode=true;
-	                $.measureTime(function () {
-	                    that.selectCellRowCallback(that._generateTables);
-	                }, 'that.selectCellRowCallback(that._generateTables)');
-				}
-				if(evt.originalEvent && evt.originalEvent.type=="drag"){
-					that._setVScrollNumEles();					
-				}
-				else{
-					that._setVScrollNumEles(true);	
-				}				
+	                    that.selectCellRowCallback(function(){
+							that.cTable._generateTables();							
+						});
+				$.measureTime(function(){
+					var num_eles;
+					if(evt.originalEvent && evt.originalEvent.type=="drag"){
+						num_eles=that._setScrollVNumEles();					
+					}
+					else{
+						num_eles= that._setScrollVNumEles(true);	
+					}	
+					if(num_eles<=1)			
+						that._setScrollHLength();
+				},'scrollBar setNumEles stuff')
             }
         });
         var prevHScroll = 0;
@@ -1356,12 +1612,13 @@ fnSB._setOptions=function(){
                 that.selectCellRowCallback(function () {
                     that._createHeader();
                     that._refreshHeaderSortIcons();
-                    that._generateTables();
+                    that.cTable._generateTables();
 					that._refreshOtherTables();
                 });
             }
         })
-        this.element.width(this.options.width + "px").height(this.options.height + "px");
+        this.element.width(this.options.width).height(this.options.height);
+		this.element.width(this.element.width());
 		this.disableSelection();
 		if (window.opera) {	
             this.$grid_inner.bind("keypress.pq-grid", {
@@ -1415,7 +1672,35 @@ fnSB._setOptions=function(){
 			colIndx=obj.colIndx;
         if(that._trigger("cellDblClick", evt, {
             $td: $td,
-			dataModel: that.options.dataModel
+			dataModel: that.options.dataModel,
+			rowIndxPage: rowIndxPage,
+			rowIndx: rowIndx,
+			colIndx: colIndx
+        })==false){return false;};
+		if(this.isEditableCell({colIndx:colIndx}) && that.options.editModel.clicksToEdit>1){
+			that._setSelection(null);
+			if (that.options.selectionModel.type == 'cell'){
+				that._setSelection({rowIndx:rowIndx,colIndx:colIndx});
+			}
+			else if(that.options.selectionModel.type == 'row'){
+				that._setSelection({rowIndx:rowIndx});
+			}			
+			that._editCell($td);
+		}								            			
+	}
+	fn._onDblClickCell=function(evt){
+		var that=this;
+		var $td=$(evt.currentTarget);
+		var obj=that.getCellIndices($td);
+		var rowIndxPage=obj.rowIndxPage,
+			offset=that.getRowIndxOffset(),
+			rowIndx=rowIndxPage+offset,
+			colIndx=obj.colIndx;
+        if(that._trigger("cellDblClick", evt, {
+            $td: $td,
+			dataModel: that.options.dataModel,
+			rowIndx: rowIndx,
+			colIndx: colIndx
         })==false){return false;};
 		if(this.isEditableCell({colIndx:colIndx}) && that.options.editModel.clicksToEdit>1){
 			that._setSelection(null);
@@ -1445,6 +1730,7 @@ fnSB._setOptions=function(){
 		var objP={rowIndx:rowIndx,evt:evt};
         if(that._trigger("rowClick", evt, {
             $tr: $tr,
+			rowIndxPage: rowIndxPage,
             rowIndx: rowIndx,
 			dataModel: that.options.dataModel
         })==false){return false;};											
@@ -1492,6 +1778,20 @@ fnSB._setOptions=function(){
 			}
 		}		
 	}
+	fn._onDblClickRow=function(evt){
+		var that=this;
+		var $tr=$(evt.currentTarget);
+		var rowIndxPage = parseInt($tr.attr("pq-row-indx")),
+			offset=that.getRowIndxOffset(),
+			rowIndx=rowIndxPage+offset;
+		var objP={rowIndx:rowIndx,evt:evt};
+        if(that._trigger("rowDblClick", evt, {
+            $tr: $tr,
+			rowIndxPage: rowIndxPage,
+            rowIndx: rowIndx,
+			dataModel: that.options.dataModel
+        })==false){return false;};	
+	}
 	fn.isEditableCell=function(obj){
 		var colIndx=obj.colIndx,
 			column=(obj.column==null)?(this.colModel[colIndx]):obj.column,
@@ -1504,6 +1804,17 @@ fnSB._setOptions=function(){
 		}
 		return editable;			
 	}
+	fn._getRowPQData=function(rowIndxPage,key,rowData){
+		var rowData=(rowData==null)?this.data[rowIndxPage]:rowData;
+		return rowData?rowData[key]:null;
+	}	
+	fn._setRowPQData=function(rowIndxPage, objP, rowData){
+		var rowData=(rowData==null)?this.data[rowIndxPage]:rowData;
+		if(!rowData)return;
+		for(var key in objP){
+			rowData[key]=obj[key];
+		}				
+	}		
 	fn._onClickCell=function(evt){
 		var that=this,
 			thisOptions=this.options,
@@ -1519,6 +1830,7 @@ fnSB._setOptions=function(){
 		objP.evt=evt;
         if(that._trigger("cellClick", evt, {
             $td: $td,
+			rowIndxPage: rowIndxPage,
             rowIndx: rowIndx,
 			colIndx: colIndx,
 			dataIndx:dataIndx,
@@ -1534,7 +1846,7 @@ fnSB._setOptions=function(){
 				that._setSelection(objP);
 			}
 			else{
-				that._bringRowIntoView({rowIndxPage:rowIndxPage});
+				that.bringRowIntoView({rowIndxPage:rowIndxPage});
 				$td=that._bringCellIntoView({rowIndxPage:rowIndxPage,colIndx:colIndx});
 			}
 			window.setTimeout(function(){
@@ -1727,7 +2039,9 @@ fnSB._setOptions=function(){
         var thisOptions=this.options,
 			DM = thisOptions.dataModel,
 			GM=thisOptions.groupModel,
-			GMTrue=(GM && GM.grouping=="local")?true:false;
+			GMTrue=(GM && GM.grouping=="local")?true:false,
+			TVM=thisOptions.treeViewModel,
+			TVTrue=(TVM)?true:false;
         if (DM.data == null || DM.data.length == 0) {
             if (DM.paging) {
                 DM.curPage = 0;
@@ -1751,28 +2065,6 @@ fnSB._setOptions=function(){
                 endIndx = DM.data.length;
             }
 			if(GMTrue){
-				this._groupArrays();
-				var dataGM=this.dataGM;
-				for(var i=0,len=dataGM.length;i<len;i++){
-					var rowIndx=dataGM[i].rowIndx;
-					if(rowIndx==begIndx){
-						if(dataGM[i-1].rowIndx==null){
-							begIndx=i-1;
-						}
-						else{
-							begIndx=i;
-						}
-					}
-					else if(rowIndx==endIndx){
-						if (dataGM[i + 1].rowIndx == null) {
-							endIndx = i + 1;
-						}
-						else {
-							endIndx=i;
-						}												
-					}
-				}	
-				this.data = this.dataGM.slice(begIndx, endIndx);
 			}
 			else{
 				this.data = DM.data.slice(begIndx, endIndx);	
@@ -1786,6 +2078,9 @@ fnSB._setOptions=function(){
 				this.data = DM.data;	
 			}            
         }
+		if(TVTrue){
+			this.cTreeView._refreshDataFromDataModel();
+		}		
     }
     fn.remoteRequest = function (callback_fn) {
         if (this.loading) { 
@@ -1940,7 +2235,7 @@ fnSB._setOptions=function(){
 		this._refreshDataIndices();
         this._refreshResizable();
         this._refreshDraggable();
-		this._setHScrollNumEles();
+		this._setScrollHNumEles();		
         this._bufferObj_calcInitFinalH();
         this._refreshHideArrHS();
 		this._computeOuterWidths(true);
@@ -1949,11 +2244,13 @@ fnSB._setOptions=function(){
         this._setInnerGridHeight();
         this._setRightGridHeight();
         this.selectCellRowCallback(function () {
-            that._generateTables();
+            that.cTable._generateTables();
             that._computeOuterWidths();
         });
-        this._setVScrollHeight();
-        this._setHScrollWidth();
+        this._setScrollHLength();
+		this._setScrollVLength();
+		this._setScrollVNumEles(true);
+		this._setScrollHLength();
         this._refreshPager();
     }
     fn._refreshPager = function () {
@@ -1970,13 +2267,14 @@ fnSB._setOptions=function(){
     }
     fn._refreshViewAfterDataSort = function () {
 		this.selectCellRowCallback(function(){
-        	this._generateTables();
+        	this.cTable._generateTables();
         	this._computeOuterWidths(); 
 		})
         this._refreshHeaderSortIcons();
         this._setRightGridHeight();
-        this._setVScrollHeight(); 
-        this._setHScrollWidth(); 
+        this._setScrollVLength(); 
+        this._setScrollVNumEles(true);
+        this._setScrollHLength(); 
         this._refreshPager();
     }
     fn.refreshSortingDataAndView = function () {
@@ -1993,7 +2291,7 @@ fnSB._setOptions=function(){
             DM.data = null;
             this.remoteRequest();
         } else {
-            this._refreshSortingDataAndView({keepSelection:keepSelection});
+            this._refreshSortingDataAndView({keepSelection:keepSelection,sorting:true});
         }
     }
 	fn.getColIndxFromDataIndx=function(dataIndx){
@@ -2061,19 +2359,31 @@ fnSB._setOptions=function(){
     fn._setOption = function (key, value) {
 		this.refreshRequired=true;
         if (key == "height") {
-            this.element.height(value + "px");
+            this.element.height(value);
             $.Widget.prototype._setOption.call(this, key, value);			
         } else if (key == "width") {
-            this.element.width(value + "px");
+            this.element.width(value);
             $.Widget.prototype._setOption.call(this, key, value);			
         } else if (key == "title") {
             $.Widget.prototype._setOption.call(this, key, value);
-            this._refreshTitle();
+            this._refreshTitle();	
+		} else if(key=="roundCorners"){
+			if(value){
+				this.element.addClass("ui-corner-all");
+				this.$top.addClass("ui-corner-top");
+				this.$bottom.addClass("ui-corner-bottom");	
+			}
+			else{
+				this.element.removeClass("ui-corner-all");
+				this.$top.removeClass("ui-corner-top");
+				this.$bottom.removeClass("ui-corner-bottom");					
+			}
+			this.refreshRequired=false;
         } else if (key == "freezeCols") {
             if (!isNaN(value) && value >= 0 && parseInt(value) <= this.colModel.length - 2) {
                 this.options.freezeCols= this.freezeCols = parseInt(value);
                 this._refreshFreezeLine(); 
-                this._setHScrollWidth();
+                this._setScrollHLength();
                 $.Widget.prototype._setOption.call(this, key, value);				
             }
         } else if (key == "resizable") {
@@ -2084,9 +2394,16 @@ fnSB._setOptions=function(){
 				this.options.scrollModel[key]=obj[key];	
 			}
         } else if (key == "dataModel") {
-            $.Widget.prototype._setOption.call(this, key, value);
-			this.refreshDataAndView(true);
-			this.refreshRequired=false;
+			$.Widget.prototype._setOption.call(this, key, value);
+            var paging=value["paging"];
+			if(this.$footer.hasClass('pq-pager')==false && (paging=="local" || paging=="remote")){
+				this._initPager();
+			}
+			else if(this.$footer.hasClass('pq-pager') && (paging!="local" && paging!="remote")){
+				this.$footer.pqPager('destroy');
+				this.$footer.html("&nbsp;");
+			}
+			this.refreshDataAndView();
         }
         else if (key == "selectionModel") {
 			var obj=value;
@@ -2110,6 +2427,14 @@ fnSB._setOptions=function(){
 			}
 			this.refreshRequired=false;
 		}
+		else if(key=="numberCell"){
+			this.numberCell=value;
+			$.Widget.prototype._setOption.call(this, key, value);
+		}
+		else if(key=="numberCellWidth"){
+			this.numberCellWidth=value;
+			$.Widget.prototype._setOption.call(this, key, value);
+		}
 		else if(key=="customData"){
 			$.Widget.prototype._setOption.call(this, key, value);
 			this.refreshRequired=false;
@@ -2118,7 +2443,19 @@ fnSB._setOptions=function(){
 			$.Widget.prototype._setOption.call(this, key, value);
 			this.generateLoading();
 			this.refreshRequired=false;
-		}				
+		}	
+		else if(key=="topVisible"){
+			if(value==true)
+				this.$top.css("display","");
+			else
+				this.$top.css("display","none");			
+		}					
+		else if(key=="bottomVisible"){
+			if(value==true)
+				this.$bottom.css("display","");
+			else
+				this.$bottom.css("display","none");			
+		}					
 		else{
 			$.Widget.prototype._setOption.call(this, key, value);
 		}
@@ -2214,15 +2551,16 @@ fnSB._setOptions=function(){
     fn.scrollY=function(rowIndx){
 		this.$vscroll.pqScrollBar("option", "cur_pos", rowIndx).pqScrollBar("scroll");
 	}
-    fn._bringRowIntoView = function (obj) {
+    fn.bringRowIntoView = function (obj) {
 		var rowIndxPage=obj.rowIndxPage;
 		var init=this.init-this.offsetRow;
-        if (rowIndxPage < init) {
-            this.$vscroll.pqScrollBar("option", "cur_pos", (rowIndxPage+this.offsetRow)).pqScrollBar("scroll");
+		var calcCurPos=this._calcCurPosFromRowIndxPage(rowIndxPage);
+        if (calcCurPos<this.scrollCurPos) {
+			this.$vscroll.pqScrollBar("option", "cur_pos", calcCurPos).pqScrollBar("scroll");
         }
         var $tr = this.$tbl.find("tr[pq-row-indx=" + rowIndxPage + "]");
         if ($tr[0] == undefined) {
-            this.$vscroll.pqScrollBar("option", "cur_pos", (rowIndxPage+this.offsetRow)).pqScrollBar("scroll");
+			this.$vscroll.pqScrollBar("option", "cur_pos", calcCurPos).pqScrollBar("scroll");
         } else {
             var td_bottom = $tr[0].offsetTop + $tr[0].offsetHeight,
 				htCont=this.$cont[0].offsetHeight,
@@ -2239,11 +2577,7 @@ fnSB._setOptions=function(){
                         return false;
                     }
                 })
-				indx--;
-				var cur_pos=this.init+indx+1;
-                if (cur_pos > rowIndxPage) {
-                    indx = rowIndxPage - 1 - this.init;
-                }				
+				var cur_pos=this.scrollCurPos +indx;
 				var num_eles=this.$vscroll.pqScrollBar("option","num_eles");
 				if(num_eles<cur_pos+1){
 					num_eles=cur_pos+1;	
@@ -2337,9 +2671,9 @@ fnSB._setOptions=function(){
             else {
                 DM.curPage = Math.ceil((rowIndx + 1)/ rPP);
                 this.refreshDataAndView(true);
-                $.measureTime(function () {
-                    that.selectCellRowCallback(that._generateTables);
-                }, 'that.selectCellRowCallback(that._generateTables)');
+				that.selectCellRowCallback(function(){
+					that.cTable._generateTables();
+				});
             }
             rowIndxPage = (rowIndx % rPP);
         }		
@@ -2364,7 +2698,7 @@ fnSB._setOptions=function(){
         if (rowIndxPage >= this.data.length || colIndx >= this.colModel.length) {		
             return false;
         }
-        this._bringRowIntoView({rowIndxPage:rowIndxPage});
+        this.bringRowIntoView({rowIndxPage:rowIndxPage});
         if (colIndx == null) {
             return this.selectRow({rowIndx:rowIndx, evt:evt}); 
         }
@@ -2398,7 +2732,7 @@ fnSB._setOptions=function(){
 					that.setGridHeightFromTable();
 					that._fixIEFooterIssue();
 				}else{
-					that._bringRowIntoView({rowIndxPage:rowIndxPage});
+					that.bringRowIntoView({rowIndxPage:rowIndxPage});
 				}									
 			}					
         }
@@ -2413,7 +2747,8 @@ fnSB._setOptions=function(){
 		$(".pq-grid-footer").css({position:"relative"});														
 	}
 	fn.refreshColumn = function(obj){
-		var colIndx=obj.colIndx= (obj.colIndx==null)?this.getColIndxFromDataIndx(obj.dataIndx):obj.colIndx,
+		var customData=this.options.customData,
+			colIndx=obj.colIndx= (obj.colIndx==null)?this.getColIndxFromDataIndx(obj.dataIndx):obj.colIndx,
 			offset = this.getRowIndxOffset();
 		for(var row=this.init;row<=this["final"];row++){
 			var rowIndxPage = obj.rowIndxPage=row;
@@ -2421,35 +2756,56 @@ fnSB._setOptions=function(){
 			var column=obj.column=this.colModel[colIndx];			
 			obj.$td=this.getCell(obj);
 			obj.rowData=this.data[rowIndxPage];
-			this._renderCell(obj);	
+			obj.customData = customData;
+			this.cTable._renderCell(obj);	
 		}		
 	}
 	fn.refreshCell = function(obj){
+		if(!this.data)return;
 		var offset=obj.offset= (obj.offset==null)?this.getRowIndxOffset():obj.offset,
 			rowIndx=obj.rowIndx= (obj.rowIndx==null)?obj.rowIndxPage+offset:obj.rowIndx,
 			rowIndxPage=obj.rowIndxPage= (obj.rowIndxPage==null)?obj.rowIndx-offset:obj.rowIndxPage,			
 			dataIndx=obj.dataIndx,			
 			colIndx=obj.colIndx=(obj.colIndx==null)?this.getColIndxFromDataIndx(dataIndx):obj.colIndx,
 			$td=obj.$td=(obj.$td==null)?this.getCell(obj):obj.$td,			
-			column=obj.column=this.colModel[colIndx];
-			var objRender=obj;
-			objRender.rowData=this.data[rowIndxPage];
-		if ($td && $td.length > 0) this._renderCell(objRender);	
+			column=obj.column=this.colModel[colIndx],
+			rowData=this.data[rowIndxPage];
+			if(!rowData)return;
+			var objRender=obj;			
+			objRender.rowData=rowData;
+			objRender.customData=this.options.customData;
+		if ($td && $td.length > 0) this.cTable._renderCell(objRender);	
 	}
 	fn.refreshRow=function(obj){
-		var offset=obj.offset= (obj.offset==null)?this.getRowIndxOffset():obj.offset,
+		if(!this.data)return;
+		var thisOptions=this.options,
+			offset=obj.offset= (obj.offset==null)?this.getRowIndxOffset():obj.offset,
 			rowIndx=obj.rowIndx= (obj.rowIndx==null)?obj.rowIndxPage+offset:obj.rowIndx,
 			rowIndxPage=obj.rowIndxPage= (obj.rowIndxPage==null)?obj.rowIndx-offset:obj.rowIndxPage,
 			$tr=(obj.$tr==null)?this.getRow(obj):obj.$tr,			
-			thisColModel=this.colModel;
-		var objRender={rowIndx:rowIndx,rowIndxPage:rowIndxPage,rowData:this.data[rowIndxPage]};
+			thisColModel=this.colModel,
+			rowData=this.data[rowIndxPage],
+			TVM=thisOptions.treeViewModel;
+		if(!rowData)return;
+		var levelIndx,leafIndx,expandIndx,
+		isLeaf,level,treeMarginLeft=0,
+		expanded;			
+		if(TVM){
+			var levelIndx=TVM.levelIndx,leafIndx=TVM.leafIndx,expandIndx=TVM.expandIndx,
+			isLeaf=rowData[leafIndx],level=rowData[levelIndx],
+			treeMarginLeft=(level+1)*18,
+			expanded=this._getRowPQData(rowIndx,"expanded");			
+		}
+		var objRender={rowIndx:rowIndx,rowIndxPage:rowIndxPage,rowData:rowData,
+			treeMarginLeft:treeMarginLeft,expandIndx:expandIndx,isLeaf:isLeaf,expanded:expanded,
+			customData:thisOptions.customData};
         for (var colIndx = 0; colIndx < thisColModel.length; colIndx++) {
 			var column=thisColModel[colIndx];		
             var $td = $tr.find("td[pq-col-indx=" + colIndx + "]");
 			objRender.$td=$td;
 			objRender.colIndx=colIndx;
 			objRender.column=column;
-            if ($td && $td.length > 0) this._renderCell(objRender);
+            if ($td && $td.length > 0) this.cTable._renderCell(objRender);
         }		
 	}
     fn.quitEditMode = function (evt) {
@@ -2518,10 +2874,10 @@ fnSB._setOptions=function(){
     }
 	fn.getEditCell=function(){
 		if(this.$td_edit){
-			return $td_edit;
+			return {$td:this.$td_edit, $cell:this.$div_focus};
 		}
 		else{
-			return false;
+			return null;
 		}		
 	}
     fn.editCell = function (obj) {
@@ -2554,7 +2910,7 @@ fnSB._setOptions=function(){
 		if(colIndx!=-1){
 			var rowIndxPage=obj.rowIndxPage;
 			obj.colIndx=colIndx;
-			this._bringRowIntoView(obj);
+			this.bringRowIntoView(obj);
 			var $td=this._bringCellIntoView(obj);
 			if($td && $td.length>0)
 				this._editCell($td);	
@@ -2663,23 +3019,55 @@ fnSB._setOptions=function(){
             colIndx: colIndx
         }
     }
+	fn._incrRowIndx=function(rowIndxPage, noRows){
+		var newRowIndx= rowIndxPage,
+			noRows=(noRows==null)?1:noRows,
+			counter=0;
+		for(var i=rowIndxPage+1,len=this.data.length;i<len;i++){
+			var hidden=this._getRowPQData(i,"hidden");
+			if(!hidden){
+				counter++;
+				newRowIndx=i;
+				if(counter==noRows){
+					return newRowIndx;	
+				}				
+			}
+		}					
+		return newRowIndx;
+	}
+	fn._decrRowIndx=function(rowIndxPage, noRows){
+		var newRowIndx= rowIndxPage,
+			noRows=(noRows==null)?1:noRows,
+			counter=0;
+		for(var i=rowIndxPage-1;i>=0;i--){
+			var hidden=this._getRowPQData(i,"hidden");
+			if(!hidden){
+				counter++;
+				newRowIndx=i;
+				if(counter==noRows){
+					return newRowIndx;	
+				}				
+			}
+		}					
+		return newRowIndx;
+	}
 	fn._incrIndx=function(rowIndxPage,colIndx) {
 		var that=this;
-		if(colIndx==null){				
-			if(rowIndxPage==that.data.length-1){
+		if(colIndx==null){
+			if(rowIndxPage==this._getLastVisibleRowIndxPage(this.data)){
 				return null;
 			}
-			rowIndxPage++;
+			rowIndxPage=this._incrRowIndx(rowIndxPage);
 			return {rowIndxPage:rowIndxPage};				
 		}
 		var column;
 	    do {
 	        colIndx++;
 	        if (colIndx >= that.colModel.length) {
-				if(rowIndxPage==that.data.length-1){
+				if(rowIndxPage==this._getLastVisibleRowIndxPage(this.data)){
 					return null;
 				}
-	            rowIndxPage++;
+				rowIndxPage=this._incrRowIndx(rowIndxPage);
 	            colIndx = 0;
 	        }
 			column=that.colModel[colIndx];								
@@ -2689,20 +3077,20 @@ fnSB._setOptions=function(){
 	fn._decrIndx=function (rowIndxPage,colIndx) {
 		var that=this;
 		if(colIndx==null){				
-			if(rowIndxPage==0){
+			if(rowIndxPage==this._getFirstVisibleRowIndxPage(this.data)){
 				return null;
 			}				
-			rowIndxPage--;
+			rowIndxPage=this._decrRowIndx(rowIndxPage);
 			return {rowIndxPage:rowIndxPage};				
 		}			
 		var column;
 	    do {
 	        colIndx--;
 	        if (colIndx < 0) {
-				if(rowIndxPage==0){
+				if(rowIndxPage==this._getFirstVisibleRowIndxPage(this.data)){
 					return null;				
 				}
-	            rowIndxPage--;
+				rowIndxPage=this._decrRowIndx(rowIndxPage);
 	            colIndx = that.colModel.length -1;
 	        }				
 			column=that.colModel[colIndx];				
@@ -2715,10 +3103,10 @@ fnSB._setOptions=function(){
 	    do {
 	        colIndx++;
 	        if (colIndx >= that.colModel.length) {
-				if(rowIndxPage==that.data.length-1){
+				if(rowIndxPage==this._getLastVisibleRowIndxPage(this.data)){					
 					return null;
 				}
-	            rowIndxPage++;
+				rowIndxPage=this._incrRowIndx(rowIndxPage);
 	            colIndx = 0;
 	        }
 			column=that.colModel[colIndx];								
@@ -2731,15 +3119,26 @@ fnSB._setOptions=function(){
 	    do {
 	        colIndx--;
 	        if (colIndx < 0) {
-				if(rowIndxPage==0){
+				if(rowIndxPage==this._getFirstVisibleRowIndxPage(this.data)){
 					return null;				
 				}
-	            rowIndxPage--;
+				rowIndxPage=this._decrRowIndx(rowIndxPage);
 	            colIndx = that.colModel.length -1;
 	        }				
 			column=that.colModel[colIndx];				
 	    } while (column && (column.hidden || column.editable===false));	
 		return {rowIndxPage:rowIndxPage,colIndx:colIndx};
+	}
+	fn.addColumn=function(column, columnData){
+		var thisOptions=this.options,
+			thisOptionsColModel=thisOptions.colModel,
+			data=thisOptions.dataModel.data;
+		thisOptionsColModel.push(column);
+		this._refreshHeader();	
+		for(var i=0;i<data.length;i++){
+			var rowData=data[i];
+			rowData.push("");
+		}		
 	}
     fn.keyPressDown = function (evt) {
         var that = this,
@@ -2770,6 +3169,17 @@ fnSB._setOptions=function(){
             	colIndx = obj.colIndx,
 				column=this.colModel[colIndx],
 				colSaveKey=(column.editModel)?column.editModel.saveKey:null;				
+			if(that._trigger("cellEditKeydown", evt, {
+				dataModel: this.dataModel,
+				$cell: this.$div_focus,
+				rowIndx: rowIndx,
+				rowIndxPage: rowIndxPage,
+				colIndx: colIndx,
+				$td: $td,
+				column: that.colModel[colIndx]
+			})==false){
+				return false;
+			};
             if (evt.keyCode == keyCodes.tab) { 
 				var obj;
                 if (evt.shiftKey) {
@@ -2777,12 +3187,12 @@ fnSB._setOptions=function(){
                 } else {
                     obj=that._incrEditIndx(rowIndxPage,colIndx);
                 }
+                that.saveEditCell();
 				if(obj==null){
 	                evt.preventDefault();
 	                return false;
-				}
-                that.saveEditCell();
-                that.quitEditMode(evt);
+				}				
+				that.quitEditMode(evt);
 				if (this.options.selectionModel.type == 'row') {
 					if(obj.rowIndxPage != rowIndxPage){
 						that._setSelection(null);
@@ -2803,7 +3213,7 @@ fnSB._setOptions=function(){
 				rowIndxPage=obj.rowIndxPage;
 				colIndx=obj.colIndx;				
                 var $td2=this.getCell( {rowIndxPage:obj.rowIndxPage, colIndx:obj.colIndx} );
-				this._editCell($td2);
+				if($td2 && $td2.length>0)this._editCell($td2);
                 evt.preventDefault();
                 return false;
 			} else if (evt.keyCode == colSaveKey) {
@@ -2857,7 +3267,7 @@ fnSB._setOptions=function(){
             evt.preventDefault();
             return;
         } else if (evt.keyCode == keyCodes.right) {
-            var obj=that._incrIndx(rowIndxPage,colIndx);
+            var obj=that._incrIndx(rowIndxPage,colIndx);			
             if(obj)that._setSelection({rowIndxPage:obj.rowIndxPage, colIndx:obj.colIndx, evt:evt});
             evt.preventDefault();
             return;
@@ -2872,32 +3282,22 @@ fnSB._setOptions=function(){
             evt.preventDefault();
             return;
         } else if (evt.keyCode == keyCodes.up) {
-            rowIndx = (rowIndxPage > 0) ? rowIndx - 1 : rowIndx;
-            that._setSelection({rowIndx:rowIndx, colIndx:colIndx, evt:evt});
+            rowIndxPage=that._decrRowIndx(rowIndxPage);			
+            if(obj)that._setSelection({rowIndxPage:rowIndxPage, colIndx:colIndx, evt:evt});			
             evt.preventDefault();
             return;
         } else if (evt.keyCode == keyCodes.down) {
-            rowIndx = (rowIndxPage < that.data.length - 1) ? (rowIndx + 1) : rowIndx;
-            that._setSelection({rowIndx:rowIndx, colIndx:colIndx, evt:evt});
+            rowIndxPage=that._incrRowIndx(rowIndxPage);			
+            if(obj)that._setSelection({rowIndxPage:rowIndxPage, colIndx:colIndx, evt:evt});			
             evt.preventDefault();
             return;
         } else if (evt.keyCode == keyCodes.pageDown || evt.keyCode == keyCodes.spaceBar) {
-			rowIndxPage = rowIndxPage + 10 ;
-            if (rowIndxPage > that.data.length - 1) {
-                rowIndxPage = that.data.length - 1;				
-            }
-			var rowIndx = rowIndxPage + offset;
-            that.$vscroll.pqScrollBar("option", "cur_pos", rowIndx).pqScrollBar("scroll");
+			var rowIndx = this._incrRowIndx(rowIndxPage,this.pageSize+1)+offset;            
             that._setSelection({rowIndx:rowIndx, colIndx:colIndx, evt:evt});
             evt.preventDefault();
             return;
         } else if (evt.keyCode == keyCodes.pageUp) {
-			rowIndxPage = rowIndxPage - 10 ;
-            if (rowIndxPage < 0) {
-                rowIndxPage = 0;
-            }
-			var rowIndx = rowIndxPage + offset;
-            that.$vscroll.pqScrollBar("option", "cur_pos", rowIndx).pqScrollBar("scroll");
+            var rowIndx = this._decrRowIndx(rowIndxPage,this.pageSize+1)+offset;
             that._setSelection({rowIndx:rowIndx, colIndx:colIndx, evt:evt});
             evt.preventDefault();
             return;
@@ -2952,11 +3352,15 @@ fnSB._setOptions=function(){
         }
         return num_hidden;
     }
-    fn._setHScrollWidth = function () {
+    fn._setScrollHLength = function () {
 		if(!this.options.scrollModel.horizontal){
 			this.$hscroll.css("visibility","hidden");
 			this.$hvscroll.css("visibility","hidden");
 			return;
+		}
+		else{
+			this.$hscroll.css("visibility","");
+			this.$hvscroll.css("visibility","");			
 		}
         var wd = this.$cont[0].offsetWidth;        
         if (this.numberCell) {
@@ -2969,28 +3373,36 @@ fnSB._setOptions=function(){
 				wd -= this.outerWidths[i];	
 			}						                        
         }
-        var width_vscroll = 0;
-        if (this.$vscroll.css("display") == "none" || this.$vscroll.css("visibility") == "hidden") {
-            this.$hscroll.css("right", 0);
+        var wdSB = this._getScollBarVerticalWidth();
+		if(wdSB==0){
+			this.$hscroll.css("right", 0);		
         } else {
-            width_vscroll = 17;
-            this.$hscroll.css("right", "");
-        }
-        wd -= width_vscroll; 
+			this.$hscroll.css("right", "");
+		}		
+        wd -= wdSB; 
         this.$hscroll.pqScrollBar("option", "length", wd);
     }
-	fn._setHScrollNumEles=function(){
+	fn._setScrollHNumEles=function(){
         var data_length = this.colModel.length - this.freezeCols - this._calcNumHiddenUnFrozens();
         this.$hscroll.pqScrollBar("option", "num_eles", (data_length));		
 	}
 	fn._getScollBarHorizontalHeight=function(){
         var htSB = 17;
-        if (this.$hscroll.css("visibility") == "hidden" || this.options.scrollModel.horizontal==false) {
+        if (this.$hscroll.css("visibility") == "hidden" || this.options.scrollModel.horizontal==false 
+			|| this.$hscroll.css("display") == "none") {
 			htSB = 0;
 		}
 		return htSB;		
 	}
-	fn._setVScrollNumEles=function(fullRefresh){
+	fn._getScollBarVerticalWidth=function(){
+        var wdSB = 17;
+        if (this.$vscroll.css("visibility") == "hidden" || this.options.flexHeight 
+			|| this.$vscroll.css("display") == "none") {
+			wdSB = 0;
+		}
+		return wdSB;		
+	}	
+	fn._setScrollVNumEles=function(fullRefresh){
 		var that=this,
 			$vscroll=this.$vscroll,
 			options=$vscroll.pqScrollBar("option"),					
@@ -2999,9 +3411,9 @@ fnSB._setOptions=function(){
 		var htSB=this._getScollBarHorizontalHeight();
 		var GM=this.options.groupModel;
 		var data=(GM && GM.grouping=="local")?this.dataGM:this.data;			
-        var data_length = data ? data.length : 0;
+		var totalVisibleRows = data ? this._getTotalVisibleRows(data) : 0;
 		var htCont=this.$cont[0].offsetHeight;
-		var htTbl=this.$tbl[0].offsetHeight;						
+		var htTbl=(this.$tbl)?this.$tbl[0].offsetHeight:0;						
 		if (htTbl > htCont - htSB) {
             var $trs = this.$tbl.children().children("tr");
             var ht = 0,
@@ -3013,33 +3425,66 @@ fnSB._setOptions=function(){
                     return false;
                 }
             });	
-			num_eles=data_length-visibleRows+1;
+			num_eles=totalVisibleRows-visibleRows+1;
 		}	
-		else{
-			num_eles=this.init+1;			
+		else{			
+			num_eles=cur_pos+1;	
 		}		
-		if(num_eles<this.init+1){
-			num_eles=this.init+1;
-		}
+		if(num_eles<cur_pos+1){
+			num_eles=cur_pos+1;
+		}		
 		if(fullRefresh){
 			that.$vscroll.pqScrollBar("option","num_eles",num_eles);	
 		}
 		else{
 			that.$vscroll.pqScrollBar("setNumEles",num_eles);	
-		}									
+		}	
+		return num_eles;								
 	}
-    fn._setVScrollHeight = function () {
+	fn._getFirstVisibleRowIndxPage=function(data){	
+		for(var i=0,len=data.length;i<len;i++){
+			var hidden=this._getRowPQData(i,"hidden");
+			if(!hidden){
+				return i;	
+			}
+		}			
+	}	
+	fn._getLastVisibleRowIndxPage=function(data){
+		for(var i=data.length-1;i>=0;i--){
+			var hidden=this._getRowPQData(i,"hidden");
+			if(!hidden){
+				return i;	
+			}
+		}
+	}	
+	fn._getTotalVisibleRows=function(data){
+		if(this.options.treeViewModel){
+			var noRows=0;
+			for(var i=0,len=data.length;i<len;i++){
+				var hidden=this._getRowPQData(i,"hidden");
+				if(!hidden){
+					noRows++;	
+				}
+			}
+			return noRows;			
+		}
+		else{
+			return data.length;			
+		}
+	}
+    fn._setScrollVLength = function () {
         var cont_ht = this.$cont.height();
 		var htSB=this._getScollBarHorizontalHeight();
 		this.$vscroll.css("bottom", htSB);
 		var len=(cont_ht - htSB);
         this.$vscroll.pqScrollBar("option", "length", len);
+		return;
 		var GM=this.options.groupModel;
 		var data=(GM && GM.grouping=="local")?this.dataGM:this.data;			
-        var data_length = data ? data.length : 0;
-		var num_eles=0,
-			cur_pos=0;
-        if (data_length >= 0 && this.$tbl) {
+		var totalVisibleRows = data ? this._getTotalVisibleRows(data) : 0;
+		var options=this.$vscroll.pqScrollBar("option"),					
+			cur_pos=parseInt(options.cur_pos);
+        if (totalVisibleRows >= 0 && this.$tbl) {
 			var htCont=this.$cont[0].offsetHeight;
 			var htTbl=this.$tbl[0].offsetHeight;						
 			if (htTbl > htCont - htSB) {
@@ -3052,13 +3497,13 @@ fnSB._setOptions=function(){
                         visibleRows = (i>1)?(i-1):0;
                         return false;
                     }
-                });		
-				num_eles=data_length-visibleRows+1;		
+                });						
+				num_eles=totalVisibleRows-visibleRows+1;		
 			}	
-			else{
-				num_eles=this.init+1;
+			else{				
+				num_eles=cur_pos+1;
 			}		
-			if(num_eles<2 && data_length>1){
+			if(num_eles<2 && totalVisibleRows>1){
 				if(htTbl>htCont-htSB){
 					num_eles=2;
 				}
@@ -3068,14 +3513,20 @@ fnSB._setOptions=function(){
     }
     fn._setInnerGridHeight = function () {
 		if(this.options.flexHeight)return;
-        var ht = (this.element.outerHeight() - ((this.options.topVisible)?this.$top[0].offsetHeight:0) -  this.$bottom.outerHeight());
+        var ht = (this.element.height() - 
+			((this.options.topVisible)?this.$top[0].offsetHeight:0) -  
+			((this.options.bottomVisible)?this.$bottom[0].offsetHeight:0)
+			);
         this.$grid_inner.height(ht + "px");
     }
     fn._setRightGridHeight = function () {		
 		this.$header_o.height(this.$header_left.height()-2);
 		if(this.options.flexHeight)return;
+		this.$vscroll.css("visibility","");
 		if(this.$tbl)this.$tbl.css("marginBottom", 0);
-		var ht = (this.element[0].offsetHeight - this.$header_o[0].offsetHeight - ((this.options.topVisible)?this.$top[0].offsetHeight:0) - this.$bottom[0].offsetHeight);
+		var ht = (this.element.height() - this.$header_o[0].offsetHeight 
+			- ((this.options.topVisible)?this.$top[0].offsetHeight:0) 
+			- ((this.options.bottomVisible)?this.$bottom[0].offsetHeight:0));
 		var ht_contFixed=0;
 		this.$cont.height((ht-ht_contFixed) + "px");
     }
@@ -3120,10 +3571,27 @@ fnSB._setOptions=function(){
         var ht = this.$cont[0].offsetHeight;
         return Math.ceil(ht / this.rowHeight);
     }
+	fn._calcCurPosFromRowIndxPage=function(rowIndxPage){		
+		if(!this.options.treeViewModel){
+			return rowIndxPage;
+		}
+		var cur_pos=0;
+		for (var i = 0,len=this.data.length;i<len; i++) {
+			if(i==rowIndxPage){
+				break;
+			}										
+			var hidden=this._getRowPQData(i,"hidden");
+			if (!hidden) {
+				cur_pos++;
+			}
+		}
+		return cur_pos;		
+	}
     fn._bufferObj_calcInitFinal = function () {
 		var GM=this.options.groupModel,
 			GMtrue=(GM && GM.grouping=="local")?true:false,
-			data=GMtrue?this.dataGM:this.data;
+			data=GMtrue?this.dataGM:this.data,
+			TVM=this.options.treeViewModel;
         if (data == null || data.length == 0) {
             this['final'] = this['init'] = null;
         } 
@@ -3133,16 +3601,47 @@ fnSB._setOptions=function(){
 		}
 		else {
             var cur_pos = parseInt(this.$vscroll.pqScrollBar("option", "cur_pos"));
+			this.scrollCurPos= parseInt(cur_pos);
 			if(isNaN(cur_pos) || cur_pos<0){
 				this.init = 0;
 			}
-			else{
-				this.init = cur_pos;	
+			else if(TVM){
+				var j=0;
+				for (var i = 0; i < data.length; i++) {
+					if(j==cur_pos){
+						break;
+					}										
+					var hidden=this._getRowPQData(i,"hidden");
+					if (!hidden) {
+						j++;
+					}
+				}
+				this.init = i;
+			}
+			else{				
+				this.init = cur_pos;
 			}			
             if (this.init + 1 > data.length) {
                 this.init = data.length - 1;
             }
-            this['final'] = this.init + this._bufferObj_minRowsPerGrid();
+			var noRows=this._bufferObj_minRowsPerGrid();
+			this.pageSize=noRows;			
+			if(TVM){
+				var visibleRows=0;
+				for(var i=this.init;i<data.length;i++){
+					if(noRows==visibleRows){
+						break;
+					}					
+					var hidden=this._getRowPQData(i,"hidden");
+					if(!hidden){
+						visibleRows++;
+					}
+				}
+				this['final'] = i;             				
+			}
+			else{
+				this['final'] = this.init +noRows;	
+			}
             if (this['final'] + 1 > data.length) {
                 this['final'] = data.length - 1;
             }
@@ -3388,11 +3887,13 @@ fnSB._setOptions=function(){
         var that = this;
         var str = "<table class='pq-grid-header-table' cellpadding=0 cellspacing=0>";
         var hidearrHS1 = [];
-		var optColModel=this.options.colModel,
+		var thisOptions=this.options,
+			optColModel=thisOptions.colModel,
 			optColModelLength =optColModel.length,
 			thisColModel=this.colModel,
 			thisColModelLength=thisColModel.length,
 			depth=this.depth,
+			columnBorders=thisOptions.columnBorders,
 			headerCells=this.headerCells;
 		if(depth>=1){
 			str += "<tr>";
@@ -3404,7 +3905,7 @@ fnSB._setOptions=function(){
 				if(column.hidden){
 					continue;
 				}
-				var wd=parseInt(column.width)+((this.columnBorders)?1:0);
+				var wd=parseInt(column.width)+((columnBorders)?1:0);
 				str+="<td style='width:"+ wd +"px;'></td>";
 			}
 			str += "</tr>";
@@ -3581,90 +4082,10 @@ fnSB._setOptions=function(){
 		var addClass="ui-state-active pq-col-sort-" + (DM.sortDir == "up" ? "asc" : "desc")
 		this.$header.find(".pq-grid-col[pq-grid-col-indx=" + colIndx + "]").addClass(addClass)
     }
-	fn._generateRow=function(rowData ,rowIndx,objCell,thisColModel,noColumns,hidearrHS1,offset,const_cls,buffer,objP){
-        var row_cls = "pq-grid-row"; 
-			row_str="";
-        if (rowIndx / 2 == parseInt(rowIndx / 2)) row_cls += " pq-grid-oddRow";
-		if(objCell && objCell.pqData && objCell.selectedRow){
-			row_cls += " pq-row-select ui-state-highlight";
-		}			
-        row_str += "<tr pq-row-indx='" + rowIndx + "' class='" + row_cls + "'>"
-        buffer.push(row_str);					           
-        if (this.numberCell) {
-            buffer.push("<td style='width:" + this.numberCellWidth + "px;' class='pq-grid-number-cell ui-state-default'>\
-		<div class='pq-td-div'>" + ((objP)?"&nbsp;":(rowIndx + 1)) + "</div></td>") 
-        }
-		var objRender={rowIndx:rowIndx+offset,rowIndxPage:rowIndx,rowData:rowData};
-        for (var col = 0; col < noColumns; col++) {
-			var column=thisColModel[col],
-				dataIndx=column.dataIndx;
-			objRender.column=column;
-			objRender.colIndx=col;					
-			{		
-				var cellSelection=false;								
-				var selectedDataIndices = objCell.selectedDataIndices;
-				if (selectedDataIndices) {						
-					cellSelection = selectedDataIndices[dataIndx];													
-				}
-			}
-            if (column.hidden) { 
-                continue;
-            } 
-			else if (this.hidearrHS[col]) {
-                continue;
-            }
-            var strStyle = "";
-            var cls = const_cls; 
-            if (column.align == "right") {
-                cls += ' pq-align-right';
-            } else if (column.align == "center") {
-                cls += ' pq-align-center';
-            }
-            if (col == this.freezeCols - 1 && this.columnBorders) {
-                cls += " pq-last-freeze-col";
-            }
-			if(column.className){
-				cls = cls+ " "+column.className;
-			}
-			if(cellSelection){
-				cls = cls+ " pq-cell-select ui-state-highlight";
-			}
-			var indxStr="pq-col-indx='" + col + "'";
-			if(objP){
-				indxStr+=" pq-dataIndx='" + dataIndx + "'";
-			}
-            var str = "<td class='" + cls + "' style='" + strStyle + "' " + indxStr + " >\
-			" + this._renderCell(objRender) + "</td>";
-            buffer.push(str)
-        }
-        for (var k = 0; k < hidearrHS1.length; k++) {
-            var col = hidearrHS1[k];
-			var column = thisColModel[col],
-				dataIndx=column.dataIndx;
-			objRender.column=column;
-			objRender.colIndx=col;					
-            var strStyle = "";
-            strStyle += "visibility:hidden;";
-            var cls = const_cls; 
-            if (column.align == "right") {
-                cls += ' pq-align-right';
-            } else if (column.align == "center") {
-                cls += ' pq-align-center';
-            }
-			var indxStr="pq-col-indx='" + col + "'";
-			if(objP){
-				indxStr+=" pq-dataIndx='" + dataIndx + "'";
-			}			
-            var str = "<td class='" + cls + "' style='" + strStyle + "' " + indxStr+">\
-			" + this._renderCell(objRender) + "</td>";
-            buffer.push(str)
-        }
-        buffer.push("</tr>");
-		return buffer;								
-	}
-	fn._generateSummaryRow=function(rowData ,rowIndx,objCell,thisColModel,noColumns,hidearrHS1,offset,const_cls,buffer){
+	fn._generateSummaryRow=function(rowData ,rowIndx,thisColModel,noColumns,hidearrHS1,offset,const_cls,buffer){
         var row_cls = "pq-summary-row",
-			row_str="";
+			row_str="",
+			columnBorders=this.options.columBorders;
         row_str += "<tr pq-row-indx='" + rowIndx + "' class='" + row_cls + "'>"
         buffer.push(row_str);					           
         if (this.numberCell) {
@@ -3679,7 +4100,7 @@ fnSB._setOptions=function(){
 			objRender.colIndx=col;					
 			{		
 				var cellSelection=false;								
-				var selectedDataIndices = objCell.selectedDataIndices;
+				var selectedDataIndices = rowData.selectedDataIndices;
 				if (selectedDataIndices) {						
 					cellSelection = selectedDataIndices[dataIndx];													
 				}
@@ -3697,7 +4118,7 @@ fnSB._setOptions=function(){
             } else if (column.align == "center") {
                 cls += ' pq-align-center';
             }
-            if (col == this.freezeCols - 1 && this.columnBorders) {
+            if (col == this.freezeCols - 1 && columnBorders) {
                 cls += " pq-last-freeze-col";
             }
 			if(column.className){
@@ -3734,12 +4155,13 @@ fnSB._setOptions=function(){
 		return buffer;								
 	}
 	fn.createTable = function(objP){
-		this._generateTables(objP);
+		this.cTable._generateTables(objP);
 	}
 	fn._refreshOtherTables=function(){
 		return;
 		var thisColModel=this.colModel,
-			noColumns=thisColModel.length;
+			noColumns=thisColModel.length,
+			columnBorders=this.options.columBorders;
 		for(var i=0;i<this.tables.length;i++){
 			var tblObj=this.tables[i];
 			var $tbl=tblObj.$tbl,
@@ -3766,7 +4188,7 @@ fnSB._setOptions=function(){
 	            } else if (column.align == "center") {
 	                cls += ' pq-align-center';
 	            }
-	            if (col == this.freezeCols - 1 && this.columnBorders) {
+	            if (col == this.freezeCols - 1 && columnBorders) {
 	                cls += " pq-last-freeze-col";
 	            }
 				if(column.className){
@@ -3776,7 +4198,7 @@ fnSB._setOptions=function(){
 					cls = cls+ " pq-cell-select";
 				}
 	            var str = "<td class='" + cls + "' style='" + strStyle + "' pq-col-indx='" + col + "'>\
-				" + this._renderCell(objRender) + "</td>";
+				" + this.cTable._renderCell(objRender) + "</td>";
 	            buffer.push(str)
 	        }
 	        for (var k = 0; k < hidearrHS1.length; k++) {
@@ -3793,187 +4215,15 @@ fnSB._setOptions=function(){
 	                cls += ' pq-align-center';
 	            }
 	            var str = "<td class='" + cls + "' style='" + strStyle + "' pq-col-indx='" + col + "'>\
-				" + this._renderCell(objRender) + "</td>";
+				" + this.cTable._renderCell(objRender) + "</td>";
 	            buffer.push(str)
 	        }
 		}
 	}	
-    fn._generateTables = function (objP) {
-        var noColumns = this.colModel.length,
-			thisOptions=this.options,
-			SM=thisOptions.scrollModel,
-			cont_ht=this.$cont[0].offsetHeight;;
-        this._bufferObj_calcInitFinal();
-		var row=(objP)?0:this.init,
-			finalRow=(objP)?objP.data.length-1:this["final"],
-			prevGroupVal="",
-			GMtrue=(GM && GM.grouping=="local")?true:false,
-			data=(objP&&objP.data)?objP.data:(GMtrue?this.dataGM:this.data),        
-			offset=this.getRowIndxOffset();			
-        if (!objP && (row == null || finalRow == null)) {
-            this.$cont.empty();
-            this.$tbl = null;
-            return;
-        }		
-		if(!objP){				
-	        this._trigger("beforeTableView", null, {
-				data:this.data,
-	            curPos: row,
-				finalPos: finalRow,
-				curPage: this.dataModel.curPage			            
-	        });					
-		}
-        var const_cls = "pq-grid-cell ";
-        if (this.columnBorders) const_cls += "pq-grid-td-border-right ";
-        if (!thisOptions.wrap || objP) const_cls += "pq-wrap-text ";
-        var buffer = ["<table class='pq-grid-table' cellpadding=0 cellspacing=0>"];
-		var thisColModel=this.colModel,
-			GM=thisOptions.groupModel,
-			hidearrHS1 = [];
-		{			
-			buffer.push("<tr class='pq-row-hidden'>");			
-			if (this.numberCell) {
-				var wd=this.numberCellWidth+1; 
-				buffer.push("<td style='width:" + wd + "px;' ></td>");
-			}
-			for (var col = 0; col < noColumns; col++) {
-				var column = thisColModel[col];
-                if (column.hidden) { 
-                    continue;
-                } else if (this.hidearrHS[col]) {
-                    hidearrHS1.push(col)
-                    continue;
-                }				
-				var wd = this.outerWidths[col]; 
-				buffer.push("<td style='width:" + wd + "px;' pq-top-col-indx="+col+"></td>");
-			}
-            for (var k = 0; k < hidearrHS1.length; k++) {
-				var col = hidearrHS1[k];
-				var column = thisColModel[col];
-				var wd = this.outerWidths[col]; 
-				buffer.push("<td style='width:" + wd + "px;'></td>");				
-			}			
-			buffer.push("</tr>");
-		}	
-		this.offsetRow=null;
-		do{			
-			var rowObj=data[row],
-				rowData=GMtrue?rowObj.data:rowObj,
-				rowIndx=GMtrue?rowObj.rowIndx:row,
-				objCell=(rowData)?rowData[rowData.length-1]:null,
-				row_str = "";
-			if (this.offsetRow == null && rowIndx!=null) {
-				this.offsetRow=(row-rowIndx);
-			}				
-			if(GM && rowObj.groupTitle){
-				var obj=this._calcRightEdgeCol(this.colModel.length-1);				
-				row_str="<tr class='pq-group-row'><td colspan='"+obj.cols+"' style='width:"+obj.width+"px;'><div>"+rowObj.groupTitle+"</div></td></tr>";
-				buffer.push(row_str);
-			}
-			else if(GM && rowObj.groupSummary){
-				this._generateSummaryRow(rowData, rowIndx,objCell,thisColModel,noColumns,hidearrHS1,offset,const_cls,buffer);
-			}			
-			else{
-				this._generateRow(rowData, rowIndx,objCell,thisColModel,noColumns,hidearrHS1,offset,const_cls,buffer,objP);					
-			}						
-			if(SM.scrollTillLastRow){
-			}
-			else{
-				if (row == finalRow) {
-					break;	
-				}
-				row++;				
-			}
-        }
-		while(1==1);
-		this.scrollMode=false;
-		var that=this;
-		if(!SM.scrollTillLastRow){
-			$.measureTime(function(){
-		        buffer.push("</table>")
-		        var str = buffer.join("");
-				if(objP){
-					objP.$cont.empty();
-					var $tbl=$(str);
-					objP.$cont.append($tbl);
-					if(!that.tables)that.tables=[];
-					var indx=-1;
-					for(var l=0;l<that.tables.length;l++){
-						var cont=that.tables[l].cont;
-						if(cont==objP.$cont[0]){
-							indx=l;
-						}
-					}
-					if(indx==-1){
-						that.tables.push({$tbl:$tbl,cont:objP.$cont[0]});	
-					}
-					else{
-						that.tables[indx].$tbl=$tbl;	
-					}					
-				}
-				else{
-			        if (that.$tbl == undefined) {
-			            that.$tbl = $(str);
-			            that.$cont.append(that.$tbl)
-			        }else{
-						if (that.$td_edit != null) {
-							that.quitEditMode();
-						}			
-			            that.$cont.empty();
-			            that.$tbl = $(str);
-			            that.$cont.append(that.$tbl)
-			        }												
-				}
-			},'append stuff inside _generateTable')
-		}		
-		if(!objP)
-		window.setTimeout(function(){
-			that._fixTableViewPort();
-	        that._trigger("refresh", null, {
-	            dataModel: that.dataModel,
-	            data: that.data,
-				initV:that.init,
-				initH:that.initH
-	        });															
-		},0);
-    }
-	fn._renderCell = function (objP) {	        
-		var rowIndxPage=objP.rowIndxPage,
-			rowIndx=objP.rowIndx,
-			rowData=objP.rowData,
-			colIndx=objP.colIndx,		
-			$td=objP.$td,
-			column=objP.column,
-			customData=(objP.customData)?objP.customData:this.options.customData;
-		var dataCell;
-		var dataIndx=column.dataIndx;
-        if (column.render) {            
-            dataCell = column.render({
-                data: this.data,
-				dataModel: this.dataModel,
-				rowData:rowData,
-                rowIndxPage: rowIndxPage,
-				rowIndx:rowIndx,
-                colIndx: colIndx,
-				column: column,
-				dataIndx: dataIndx,
-				customData:customData
-            });
-        }
-		else{
-			dataCell = rowData[dataIndx];
-		}
-        if (dataCell == "" || dataCell == undefined) dataCell = "&nbsp;"; 
-        var cls = "pq-td-div";
-        if (this.options.wrap == false) cls += " pq-wrap-text";
-        var str = "<div class='" + cls + "'>" + dataCell + "</div>";
-        if ($td != undefined) {
-            $td.html(str);
-        }
-        return str;
-    }
     fn._sortLocalData = function (dataIndx, dir, dataType, data) {
-        var m_sort_dir = dir;
+        var m_sort_dir = dir,
+			TVM=this.options.treeViewModel,
+			that=this;
         if (data == null || data.length == 0) {
             return;
         }
@@ -4004,14 +4254,14 @@ fnSB._setOptions=function(){
                 var val2 = obj2[dataIndx];
                 val1 = val1 ? val1 : "";
                 val2 = val2 ? val2 : "";
-                if (val1 > val2) {
-                    return 1;
-                } else if (val1 < val2) {
-                    return -1;
-                }
-                return 0;
+	                if (val1 > val2) {
+	                    return 1;
+	                } else if (val1 < val2) {
+	                    return -1;
+	                }
+	                return 0;					
             }
-            if (dataType == "integer") {
+			if (dataType == "integer") {
                 data = data.sort(sort_integer)
             } else if (dataType == "float") {
                 data = data.sort(sort_float)

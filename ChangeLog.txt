@@ -1,3 +1,9 @@
+Version: 1.1.1
+
+Options: bottomVisible, oddRowsHighlight, roundCorners, rowBorders
+Methods: getEditCell
+Events: cellEditKeyDown, cellKeyDown, rowDblClick
+
 Version: 1.1.0
 
 internationalization and localization

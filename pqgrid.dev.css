@@ -1,5 +1,5 @@
 /**
- * ParamQuery Grid a.k.a. pqGrid v1.1.0
+ * ParamQuery Grid a.k.a. pqGrid v1.1.1
  * 
  * Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
  * Released under MIT license
@@ -18,7 +18,9 @@ div.pq-grid *{
     margin: 0px;
     padding: 0px;
 	line-height:normal;	
-	outline:none;		
+}
+div.pq-grid *:focus{
+	outline:1px dotted gray;
 }
 div.pq-grid-top{
 	border-width:0px;
@@ -50,7 +52,7 @@ div.pq-grid-bottom{
 }
 div.pq-grid-footer{
 	border-top:1px solid #fff;
-	padding:2px 5px 5px;
+	padding:2px 5px 2px;
 	overflow:hidden;	
 	position:relative; 
 }	
@@ -177,7 +179,6 @@ tr.pq-row-hidden{
 div.pq-grid tr{
 }			
 td.pq-grid-cell{
-	border-bottom:1px solid #ededed;			
 	overflow:hidden;
 	padding:0px;
 	vertical-align:top;
@@ -190,8 +191,11 @@ td div.pq-td-div{
 	text-overflow:ellipsis;
 	white-space:nowrap;
 }				
-tr td.pq-grid-td-border-right{	
+table.pq-grid-td-border-right td.pq-grid-cell{	
 	border-right:1px solid #d0d0d0;
+}
+table.pq-grid-td-border-bottom td.pq-grid-cell{	
+	border-bottom:1px solid #ededed;
 }
 tr td.pq-grid-td-border-right div{	
 }						
@@ -271,6 +275,12 @@ div.pq-hvscroll-square{
 	right:0px;
 	bottom:0px;
 }			
+.pq-tree-icon-container{
+	position:relative;float:left;height:16px;
+}
+.pq-tree-icon{
+	cursor:pointer;position:absolute;width:18px;height:16px;right:0px;top:-2px;
+}
 tr.pq-grid-row-hover td
 {
 }     

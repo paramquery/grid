@@ -1,5 +1,5 @@
 /**
- * ParamQuery Grid a.k.a. pqGrid v1.1.1
+ * ParamQuery Grid a.k.a. pqGrid v1.1.2
  * 
  * Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
  * Released under MIT license
@@ -169,6 +169,24 @@ div.ui-resizable-handle{
 }
 td.pq-grid-number-col{	
 	border-right:1px solid #cfcfcf;
+}
+.pq-grid .pq-col-drag-helper{
+	border:1px solid steelblue;background:#fff;padding:3px;
+}
+.pq-grid .pq-col-drag-helper .pq-drag-icon{
+	background:url("images/cross.png");
+	height:16px;
+	width:16px;
+	margin-right:5px;	
+	margin-bottom:-3px;
+	display:inline-block;
+}
+.pq-grid .pq-drag-accept .pq-drag-icon{
+	background:url("images/tick.png");
+}
+.pq-grid td.pq-drop-hover{
+	background:#fff;
+	background-image:url("");
 }
 div.pq-grid-col-resize-handle{
 }

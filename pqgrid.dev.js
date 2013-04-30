@@ -1,5 +1,5 @@
 /**
- * ParamQuery Grid a.k.a. pqGrid v1.1.1
+ * ParamQuery Grid a.k.a. pqGrid v1.1.2
  * 
  * Copyright (c) 2012 Paramvir Dhindsa (http://paramquery.com)
  * Released under MIT license
@@ -764,6 +764,10 @@ fnSB._setOptions=function(){
 			rowData=objP.rowData,
 			colIndx=objP.colIndx,		
 			$td=objP.$td,
+			expandIndx=objP.expandIndx,
+			expanded=objP.expanded,
+			treeMarginLeft=objP.treeMarginLeft,
+			isLeaf=objP.isLeaf,
 			column=objP.column,
 			dataIndx=column.dataIndx,
 			wrap=objP.wrap,
@@ -789,7 +793,7 @@ fnSB._setOptions=function(){
         var cls = "pq-td-div";
         if (wrap == false) cls += " pq-wrap-text";
 		var strTree="";
-		if(1==2 && dataIndx==expandIndx){
+		if(dataIndx==expandIndx){
 			var leafClass='';
 			if(isLeaf){
 				leafClass='ui-icon-radio-off';
@@ -824,7 +828,7 @@ fnSB._setOptions=function(){
 			expandIndx=TVM.expandIndx;
 			isLeaf=rowData[leafIndx];level=rowData[levelIndx];
 			treeMarginLeft=(level+1)*18;
-			expanded=this._getRowPQData(rowIndx,"expanded");
+			expanded=that._getRowPQData(rowIndx,"expanded");
 			objRender={rowIndx:rowIndx+offset,rowIndxPage:rowIndx,rowData:rowData,wrap:wrap,customData:customData ,treeMarginLeft:treeMarginLeft,expandIndx:expandIndx,isLeaf:isLeaf,expanded:expanded};			
 		}
 		else{
@@ -1515,8 +1519,8 @@ fnSB._setOptions=function(){
 		this.$cont.on("click", function (evt) {
 			return that._onClickCont(evt);
 		});				
-		this.$cont.on("click", ".pq-tree-expand-icon", function (evt) {		
-			return that._onClickTreeExpandIcon(evt); 
+		this.$cont.on("click", ".pq-tree-expand-icon", function (evt) {
+			return that.cTreeView._onClickTreeExpandIcon(evt); 
         });		
 		this.$cont.on("click", "td.pq-grid-cell", function (evt) {		
 			return that._onClickCell(evt); 
@@ -1812,7 +1816,7 @@ fnSB._setOptions=function(){
 		var rowData=(rowData==null)?this.data[rowIndxPage]:rowData;
 		if(!rowData)return;
 		for(var key in objP){
-			rowData[key]=obj[key];
+			rowData[key]=objP[key];
 		}				
 	}		
 	fn._onClickCell=function(evt){
@@ -2670,10 +2674,8 @@ fnSB._setOptions=function(){
             }
             else {
                 DM.curPage = Math.ceil((rowIndx + 1)/ rPP);
-                this.refreshDataAndView(true);
-				that.selectCellRowCallback(function(){
-					that.cTable._generateTables();
-				});
+				this._refreshDataFromDataModel();				
+                this._refreshViewAfterDataSort();
             }
             rowIndxPage = (rowIndx % rPP);
         }		
@@ -3414,7 +3416,7 @@ fnSB._setOptions=function(){
 		var totalVisibleRows = data ? this._getTotalVisibleRows(data) : 0;
 		var htCont=this.$cont[0].offsetHeight;
 		var htTbl=(this.$tbl)?this.$tbl[0].offsetHeight:0;						
-		if (htTbl > htCont - htSB) {
+		if (htTbl > 0 && htTbl > htCont - htSB) {
             var $trs = this.$tbl.children().children("tr");
             var ht = 0,
                 visibleRows = 0;
@@ -3826,7 +3828,9 @@ fnSB._setOptions=function(){
 					colModel.leftPos=col;
 					arr[row][col]=colModel;
 					childCountSum +=childCount;
-					k++;	
+					if(optColModel[k+1]){
+						k++;	
+					}						
 				}		
 				else{
 					arr[row][col]=arr[row][col-1];

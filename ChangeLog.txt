@@ -1,3 +1,7 @@
+Version: 1.1.2
+
+Grouping bug fix.	
+
 Version: 1.1.1
 
 Options: bottomVisible, oddRowsHighlight, roundCorners, rowBorders

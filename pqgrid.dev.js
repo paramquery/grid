@@ -83,6 +83,16 @@
         }	
 })(jQuery);
 /**
+ * ParamQuery Fill Palette a.k.a. pqFillPalette
+ * Copyright (c) 2013 Brendan Boyd (http://brendanboyd.com)
+ * Released under MIT license
+ * http://paramquery.com/license
+ */
+(function($){
+    var fnFP = {};
+    $.widget("paramquery.pqFillPalette", fnFP);
+})(jQuery);
+/**
  * ParamQuery Pager a.k.a. pqPager
  */     	
 (function($){

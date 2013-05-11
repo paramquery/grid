@@ -892,7 +892,7 @@
             $td.html(str);
         }
         return str;
-    }
+    };
     _pG._generateRow = function(rowData, rowIndx, thisColModel, noColumns, hidearrHS1, offset, const_cls, buffer, objP) {
         var row_cls = "pq-grid-row";
         var that = this.that,
@@ -929,7 +929,7 @@
                 wrap: wrap,
                 customData: customData
             };
-        }
+        };
         if (thisOptions.oddRowsHighlight && (rowIndx / 2 == parseInt(rowIndx / 2))) row_cls += " pq-grid-oddRow";
         if (rowData.selectedRow) {
             row_cls += " pq-row-select ui-state-highlight";

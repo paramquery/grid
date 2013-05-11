@@ -20,7 +20,7 @@ module.exports = function(grunt) {
                 eqeqeq: true,
                 immed: false, // suppress outer closure warning
                 latedef: true,
-                newcap: true,
+                newcap: false,
                 noarg: true,
                 sub: true,
                 undef: true,

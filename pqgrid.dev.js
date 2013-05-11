@@ -5,8 +5,9 @@
  * Released under MIT license
  * http://paramquery.com/license
  * 
- */ (function($) {
-    $.paramquery = ($.paramquery == null) ? {} : $.paramquery;
+ */
+(function($) {
+    $.paramquery = ($.paramquery === null) ? {} : $.paramquery;
     $.paramquery.xmlToArray = function(data, obj) {
         var itemParent = obj.itemParent;
         var itemNames = obj.itemNames;
@@ -93,7 +94,8 @@
 })(jQuery);
 /**
  * ParamQuery Pager a.k.a. pqPager
- */ (function($) {
+ */
+(function($) {
     var fnPG = {};
     fnPG.options = {
         currentPage: 0,
@@ -361,7 +363,8 @@
 })(jQuery);
 /**
  * ParamQuery Scrollbar a.k.a. pqScrollBar
- */ (function($) {
+ */
+(function($) {
     var fnSB = {};
     fnSB.options = {
         length: 200,
@@ -598,7 +601,7 @@
     fnSB._updateCurPosAndTrigger = function(evt, top) {
         var that = this;
         var $slider = that.$slider;
-        if (top == null) {
+        if (top === null) {
             top = (that.direction === "vertical") ? parseInt($slider[0].style.top, 10) : parseInt($slider[0].style.left, 10);
         }
         var scroll_space = that.length - 34 - ((that.direction === "vertical") ? $slider[0].offsetHeight : $slider[0].offsetWidth);
@@ -680,7 +683,8 @@
     $.widget("paramquery.pqScrollBar", fnSB);
 })(jQuery);
 /**
- * ParamQuery Grid a.k.a. pqGrid*/ (function($) {
+ * ParamQuery Grid a.k.a. pqGrid*/
+(function($) {
     var cCreateTable = function(that) {
         this.that = that;
     };
@@ -797,7 +801,9 @@
                     objP.$cont.empty();
                     var $tbl = $(str);
                     objP.$cont.append($tbl);
-                    if (!that.tables) {that.tables = [];}
+                    if (!that.tables) {
+                        that.tables = [];
+                    }
                     var indx = -1;
                     for (var l = 0; l < that.tables.length; l++) {
                         var cont = that.tables[l].cont;
@@ -828,7 +834,7 @@
                 }
             }, 'append stuff inside _generateTable');
         }
-        if (!objP){
+        if (!objP) {
             window.setTimeout(function() {
                 that._fixTableViewPort();
                 that._trigger("refresh", null, {
@@ -871,9 +877,13 @@
         } else {
             dataCell = rowData[dataIndx];
         }
-        if (dataCell === "" || dataCell === undefined) {dataCell = "&nbsp;";}
+        if (dataCell === "" || dataCell === undefined) {
+            dataCell = "&nbsp;";
+        }
         var cls = "pq-td-div";
-        if (wrap === false) {cls += " pq-wrap-text";}
+        if (wrap === false) {
+            cls += " pq-wrap-text";
+        }
         var strTree = "";
         if (dataIndx === expandIndx) {
             var leafClass = '';
@@ -929,19 +939,22 @@
                 wrap: wrap,
                 customData: customData
             };
-        };
-        if (thisOptions.oddRowsHighlight && (rowIndx / 2 == parseInt(rowIndx / 2))) row_cls += " pq-grid-oddRow";
+        }
+        if (thisOptions.oddRowsHighlight && (rowIndx / 2 === parseInt(rowIndx / 2, 10))) {
+            row_cls += " pq-grid-oddRow";
+        }
         if (rowData.selectedRow) {
             row_cls += " pq-row-select ui-state-highlight";
         }
         buffer.push("<tr pq-row-indx='" + rowIndx + "' class='" + row_cls + "' >");
         if (that.numberCell) {
             buffer.push("<td style='width:" + that.numberCellWidth + "px;' class='pq-grid-number-cell ui-state-default'>\
-		<div class='pq-td-div'>" + ((objP) ? "&nbsp;" : (rowIndx + 1)) + "</div></td>")
+		<div class='pq-td-div'>" + ((objP) ? "&nbsp;" : (rowIndx + 1)) + "</div></td>");
         }
-        for (var col = 0; col < noColumns; col++) {
-            var column = thisColModel[col],
-                dataIndx = column.dataIndx;
+        var col, column, dataIndx, strStyle, cls, str, indxStr;
+        for (col = 0; col < noColumns; col++) {
+            column = thisColModel[col];
+            dataIndx = column.dataIndx;
             objRender.column = column;
             objRender.colIndx = col;
             var cellSelection = false; {
@@ -955,14 +968,14 @@
             } else if (that.hidearrHS[col]) {
                 continue;
             }
-            var strStyle = "";
-            var cls = const_cls;
-            if (column.align == "right") {
+            strStyle = "";
+            cls = const_cls;
+            if (column.align === "right") {
                 cls += ' pq-align-right';
-            } else if (column.align == "center") {
+            } else if (column.align === "center") {
                 cls += ' pq-align-center';
             }
-            if (col == that.freezeCols - 1 && columnBorders) {
+            if (col === that.freezeCols - 1 && columnBorders) {
                 cls += " pq-last-freeze-col";
             }
             if (column.className) {
@@ -971,65 +984,65 @@
             if (cellSelection) {
                 cls = cls + " pq-cell-select ui-state-highlight";
             }
-            var indxStr = "pq-col-indx='" + col + "'";
+            indxStr = "pq-col-indx='" + col + "'";
             if (objP) {
                 indxStr += " pq-dataIndx='" + dataIndx + "'";
             }
-            var str = "<td class='" + cls + "' style='" + strStyle + "' " + indxStr + " >\
+            str = "<td class='" + cls + "' style='" + strStyle + "' " + indxStr + " >\
 			" + this._renderCell(objRender) + "</td>";
-            buffer.push(str)
+            buffer.push(str);
         }
         for (var k = 0; k < hidearrHS1.length; k++) {
-            var col = hidearrHS1[k];
-            var column = thisColModel[col],
-                dataIndx = column.dataIndx;
+            col = hidearrHS1[k];
+            column = thisColModel[col];
+            dataIndx = column.dataIndx;
             objRender.column = column;
             objRender.colIndx = col;
-            var strStyle = "";
+            strStyle = "";
             strStyle += "visibility:hidden;";
-            var cls = const_cls;
-            if (column.align == "right") {
+            cls = const_cls;
+            if (column.align === "right") {
                 cls += ' pq-align-right';
-            } else if (column.align == "center") {
+            } else if (column.align === "center") {
                 cls += ' pq-align-center';
             }
-            var indxStr = "pq-col-indx='" + col + "'";
+            indxStr = "pq-col-indx='" + col + "'";
             if (objP) {
                 indxStr += " pq-dataIndx='" + dataIndx + "'";
             }
-            var str = "<td class='" + cls + "' style='" + strStyle + "' " + indxStr + ">\
+            str = "<td class='" + cls + "' style='" + strStyle + "' " + indxStr + ">\
 			" + this._renderCell(objRender) + "</td>";
-            buffer.push(str)
+            buffer.push(str);
         }
         buffer.push("</tr>");
         return buffer;
-    }
+    };
     var cRows = function(that) {
         this.that = that;
         this.options = that.options;
         this.selectedRows = [];
         this.isDirty = false;
-    }
+    };
     var _p = cRows.prototype;
     _p._addToData = function(objP) {
         var location = this.options.dataModel.location;
-        var data = (location == "remote") ? this.that.data : this.options.dataModel.data,
-            indx = (location == "remote") ? objP.rowIndxPage : objP.rowIndx,
+        var data = (location === "remote") ? this.that.data : this.options.dataModel.data,
+            indx = (location === "remote") ? objP.rowIndxPage : objP.rowIndx,
             rowData = data[indx];
         rowData.selectedRow = true;
-    }
+    };
     _p.setDirty = function() {
         if (this.selectedRows.length > 0) {
             this.isDirty = true;
         }
-    }
+    };
     _p.removeAll = function(objP) {
         if (this.isDirty) {
             this.refresh();
         }
         var raiseEvent = objP.raiseEvent,
             that = this.that,
-            offset = (objP.offset == null) ? that.getRowIndxOffset() : obj.offset;
+            offset = (objP.offset === null) ? that.getRowIndxOffset() : obj.offset;
         var selectedRows = this.selectedRows.slice(0);
         for (var i = 0; i < selectedRows.length; i++) {
             var selR = selectedRows[i];
@@ -1039,11 +1052,13 @@
                 offset: offset
             });
         }
-    }
+    };
     _p.refresh = function() {
         this.selectedRows = [];
         var data = this.options.dataModel.data;
-        if (!data) return;
+        if (!data) {
+            return;
+        }
         for (var i = 0, len = data.length; i < len; i++) {
             var rowData = data[i];
             if (rowData.selectedRow) {
@@ -1053,13 +1068,13 @@
             }
         }
         this.isDirty = false;
-    }
+    };
     _p.replace = function(obj) {
         if (this.isDirty) {
             this.refresh();
         }
         var rowIndx = obj.rowIndx,
-            offset = obj.offset = (obj.offset == null) ? this.that.getRowIndxOffset() : obj.offset,
+            offset = obj.offset = (obj.offset === null) ? this.that.getRowIndxOffset() : obj.offset,
             rowIndxPage = obj.rowIndxPage = rowIndx - offset;
         $tr = obj.$tr,
         evt = obj.evt;
@@ -1067,24 +1082,24 @@
             raiseEvent: true
         });
         this.add(obj);
-    }
+    };
     _p.add = function(objP) {
         if (this.isDirty) {
             this.refresh();
         }
         var rowIndx = objP.rowIndx,
             that = this.that,
-            offset = (objP.offset == null) ? that.getRowIndxOffset() : objP.offset,
+            offset = (objP.offset === null) ? that.getRowIndxOffset() : objP.offset,
             rowIndxPage = objP.rowIndxPage = rowIndx - offset,
             $tr = objP.$tr,
             evt = objP.evt,
             selectedRows = this.selectedRows,
             isSelected = this.isSelected(objP);
-        if (isSelected == null) {
+        if (isSelected === null) {
             return false;
-        } else if (this.isSelected(objP) == false) {
-            var ret = this._boundRow(objP),
-                $tr = ret;
+        } else if (this.isSelected(objP) === false) {
+            var ret = this._boundRow(objP);
+            $tr = ret;
             selectedRows.push({
                 rowIndx: rowIndx
             });
@@ -1101,14 +1116,14 @@
             var arr2 = this.selectedRows.splice(indx, 1);
             this.selectedRows = this.selectedRows.concat(arr2);
         }
-    }
+    };
     _p.remove = function(objP) {
         if (this.isDirty) {
             this.refresh();
         }
         var rowIndx = objP.rowIndx,
             that = this.that,
-            offset = (objP.offset == null) ? that.getRowIndxOffset() : objP.offset,
+            offset = (objP.offset === null) ? that.getRowIndxOffset() : objP.offset,
             rowIndxPage = objP.rowIndxPage = rowIndx - offset,
             evt = objP.evt,
             init = (that.init + offset - that.offsetRow),
@@ -1117,7 +1132,9 @@
             var $tr = that.getRow({
                 rowIndxPage: rowIndxPage
             });
-            if ($tr) $tr.removeClass("pq-row-select ui-state-highlight");
+            if ($tr) {
+                $tr.removeClass("pq-row-select ui-state-highlight");
+            }
             that._trigger("rowUnSelect", evt, {
                 rowIndx: rowIndx,
                 dataModel: that.dataModel,
@@ -1126,10 +1143,10 @@
             this._removeFromData(objP);
         }
         var indx = this.indexOf(objP);
-        if (indx != -1) {
+        if (indx !== -1) {
             this.selectedRows.splice(indx, 1);
         }
-    }
+    };
     _p.indexOf = function(obj) {
         if (this.isDirty) {
             this.refresh();
@@ -1137,85 +1154,85 @@
         var rowIndx = obj.rowIndx,
             selectedRows = this.selectedRows;
         for (var i = 0; i < selectedRows.length; i++) {
-            if (selectedRows[i].rowIndx == rowIndx) {
+            if (selectedRows[i].rowIndx === rowIndx) {
                 return i;
             }
         }
         return -1;
-    }
+    };
     _p.isSelected = function(objP) {
         if (this.isDirty) {
             this.refresh();
         }
         var location = this.options.dataModel.location;
-        var data = (location == "remote") ? this.that.data : this.options.dataModel.data,
-            indx = (location == "remote") ? objP.rowIndxPage : objP.rowIndx,
+        var data = (location === "remote") ? this.that.data : this.options.dataModel.data,
+            indx = (location === "remote") ? objP.rowIndxPage : objP.rowIndx,
             rowData = data[indx];
-        return (rowData) ? ((rowData.selectedRow == null) ? false : rowData.selectedRow) : null;
-    }
+        return (rowData) ? ((rowData.selectedRow === null) ? false : rowData.selectedRow) : null;
+    };
     _p.getSelection = function() {
         if (this.isDirty) {
             this.refresh();
         }
         return this.selectedRows;
-    }
+    };
     _p._removeFromData = function(objP) {
         var location = this.options.dataModel.location;
-        var data = (location == "remote") ? this.that.data : this.options.dataModel.data,
-            indx = (location == "remote") ? objP.rowIndxPage : objP.rowIndx,
+        var data = (location === "remote") ? this.that.data : this.options.dataModel.data,
+            indx = (location === "remote") ? objP.rowIndxPage : objP.rowIndx,
             rowData = data[indx];
         rowData.selectedRow = false;
-    }
+    };
     _p._boundRow = function(obj) {
         var rowIndxPage = obj.rowIndxPage,
             rowIndx = obj.rowIndx,
             that = this.that,
-            $tr = (obj.$tr == null) ? that.getRow({
+            $tr = (obj.$tr === null) ? that.getRow({
                 rowIndxPage: rowIndxPage
             }) : obj.$tr;
-        if ($tr == null || $tr.length == 0) {
+        if ($tr === null || $tr.length === 0) {
             return false;
         }
         $tr.addClass("pq-row-select ui-state-highlight");
         return $tr;
-    }
+    };
     var cCells = function(that) {
         this.options = that.options,
         this.that = that,
         this.selectedCells = [];
-    }
+    };
     var _pC = cCells.prototype;
     _pC._addToData = function(objP) {
         var location = this.options.dataModel.location;
-        var data = (location == "remote") ? this.that.data : this.options.dataModel.data,
-            indx = (location == "remote") ? objP.rowIndxPage : objP.rowIndx,
+        var data = (location === "remote") ? this.that.data : this.options.dataModel.data,
+            indx = (location === "remote") ? objP.rowIndxPage : objP.rowIndx,
             rowData = data[indx];
         if (!rowData.selectedDataIndices) {
             rowData.selectedDataIndices = {};
         }
         rowData.selectedDataIndices[objP.dataIndx] = true;
-    }
+    };
     _pC._removeFromData = function(objP) {
         var location = this.options.dataModel.location;
-        var data = (location == "remote") ? this.that.data : this.options.dataModel.data,
-            indx = (location == "remote") ? objP.rowIndxPage : objP.rowIndx,
+        var data = (location === "remote") ? this.that.data : this.options.dataModel.data,
+            indx = (location === "remote") ? objP.rowIndxPage : objP.rowIndx,
             rowData = data[indx];
         if (rowData && rowData.selectedDataIndices) {
             rowData.selectedDataIndices[objP.dataIndx] = false;
         }
-    }
+    };
     _pC.setDirty = function() {
         if (this.selectedCells.length > 0) {
             this.isDirty = true;
         }
-    }
+    };
     _pC.removeAll = function(objP) {
         if (this.isDirty) {
             this.refresh();
         }
         var raiseEvent = objP.raiseEvent,
             that = this.that,
-            offset = (objP.offset == null) ? that.getRowIndxOffset() : obj.offset;
+            offset = (objP.offset === null) ? that.getRowIndxOffset() : obj.offset;
         var selectedCells = this.selectedCells.slice(0);
         for (var i = 0; i < selectedCells.length; i++) {
             var selC = selectedCells[i];
@@ -1227,18 +1244,18 @@
                 dataIndx: dataIndx
             });
         }
-    }
+    };
     _pC.isSelected = function(objP) {
         if (this.isDirty) {
             this.refresh();
         }
         var location = this.options.dataModel.location;
         var that = this.that,
-            data = (location == "remote") ? that.data : this.options.dataModel.data,
-            indx = (location == "remote") ? objP.rowIndxPage : objP.rowIndx,
-            dataIndx = (objP.dataIndx == null) ? that.colModel[objP.colIndx].dataIndx : objP.dataIndx,
+            data = (location === "remote") ? that.data : this.options.dataModel.data,
+            indx = (location === "remote") ? objP.rowIndxPage : objP.rowIndx,
+            dataIndx = (objP.dataIndx === null) ? that.colModel[objP.colIndx].dataIndx : objP.dataIndx,
             rowData = data[indx];
-        if (rowData == null) {
+        if (rowData === null) {
             return null;
         }
         if (rowData.selectedDataIndices) {
@@ -1247,11 +1264,13 @@
             }
         }
         return false;
-    }
+    };
     _pC.refresh = function() {
         this.selectedCells = [];
         var data = this.options.dataModel.data;
-        if (!data) return;
+        if (!data) {
+            return;
+        }
         for (var i = 0, len = data.length; i < len; i++) {
             var rowData = data[i];
             if (rowData.selectedIndices && rowData.selectedDataIndices[dataIndx]) {
@@ -1262,14 +1281,14 @@
             }
         }
         this.isDirty = false;
-    }
+    };
     _pC.replace = function(obj) {
         if (this.isDirty) {
             this.refresh();
         }
         var rowIndx = obj.rowIndx,
             colIndx = obj.colIndx,
-            offset = obj.offset = (obj.offset == null) ? this.that.getRowIndxOffset() : obj.offset,
+            offset = obj.offset = (obj.offset === null) ? this.that.getRowIndxOffset() : obj.offset,
             rowIndxPage = obj.rowIndxPage = rowIndx - offset;
         $td = obj.$td,
         evt = obj.evt;
@@ -1277,28 +1296,30 @@
             raiseEvent: true
         });
         this.add(obj);
-    }
+    };
     _pC.add = function(objP) {
         if (this.isDirty) {
             this.refresh();
         }
         var rowIndx = objP.rowIndx,
             that = this.that,
-            offset = (objP.offset == null) ? that.getRowIndxOffset() : objP.offset,
+            offset = (objP.offset === null) ? that.getRowIndxOffset() : objP.offset,
             rowIndxPage = objP.rowIndxPage = rowIndx - offset,
-            colIndx = objP.colIndx = (objP.colIndx == null) ? that.getColIndxFromDataIndx(objP.dataIndx) : objP.colIndx,
-            dataIndx = objP.dataIndx = (objP.dataIndx == null) ? that.colModel[colIndx].dataIndx : objP.dataIndx,
+            colIndx = objP.colIndx = (objP.colIndx === null) ? that.getColIndxFromDataIndx(objP.dataIndx) : objP.colIndx,
+            dataIndx = objP.dataIndx = (objP.dataIndx === null) ? that.colModel[colIndx].dataIndx : objP.dataIndx,
             evt = objP.evt,
             selectedCells = this.selectedCells,
             isSelected = this.isSelected(objP);
-        if (isSelected == null) {
+        if (isSelected === null) {
             return false;
-        } else if (isSelected == false) {
+        } else if (isSelected === false) {
             var $td = that.getCell({
                 rowIndxPage: rowIndxPage,
                 colIndx: colIndx
             });
-            if ($td) $td.addClass("pq-cell-select ui-state-highlight");
+            if ($td) {
+                $td.addClass("pq-cell-select ui-state-highlight");
+            }
             selectedCells.push({
                 rowIndx: rowIndx,
                 dataIndx: dataIndx
@@ -1318,16 +1339,16 @@
             var arr2 = this.selectedCells.splice(indx, 1);
             this.selectedCells = this.selectedCells.concat(arr2);
         }
-    }
+    };
     _pC.remove = function(objP) {
         if (this.isDirty) {
             this.refresh();
         }
         var rowIndx = objP.rowIndx,
             that = this.that,
-            dataIndx = (objP.dataIndx == null) ? that.colModel[objP.colIndx].dataIndx : objP.dataIndx,
-            colIndx = (objP.colIndx == null) ? that.getColIndxFromDataIndx(dataIndx) : objP.colIndx,
-            offset = (objP.offset == null) ? that.getRowIndxOffset() : objP.offset,
+            dataIndx = (objP.dataIndx === null) ? that.colModel[objP.colIndx].dataIndx : objP.dataIndx,
+            colIndx = (objP.colIndx === null) ? that.getColIndxFromDataIndx(dataIndx) : objP.colIndx,
+            offset = (objP.offset === null) ? that.getRowIndxOffset() : objP.offset,
             rowIndxPage = objP.rowIndxPage = rowIndx - offset,
             evt = objP.evt,
             init = (that.init + offset),
@@ -1337,7 +1358,9 @@
                 rowIndxPage: rowIndxPage,
                 colIndx: colIndx
             });
-            if ($td) $td.removeClass("pq-cell-select ui-state-highlight");
+            if ($td) {
+                $td.removeClass("pq-cell-select ui-state-highlight");
+            }
             that._trigger("cellUnSelect", evt, {
                 rowIndx: rowIndx,
                 colIndx: colIndx,
@@ -1348,32 +1371,32 @@
             this._removeFromData(objP);
         }
         var indx = this.indexOf(objP);
-        if (indx != -1) {
+        if (indx !== -1) {
             this.selectedCells.splice(indx, 1);
         }
-    }
+    };
     _pC.indexOf = function(obj) {
         if (this.isDirty) {
             this.refresh();
         }
         var rowIndx = obj.rowIndx,
             that = this.that,
-            dataIndx = obj.dataIndx = (obj.dataIndx == null) ? that.colModel[obj.colIndx].dataIndx : obj.dataIndx;
+            dataIndx = obj.dataIndx = (obj.dataIndx === null) ? that.colModel[obj.colIndx].dataIndx : obj.dataIndx;
         var selectedCells = this.selectedCells;
         for (var i = 0; i < selectedCells.length; i++) {
             var sCell = selectedCells[i];
-            if (sCell.rowIndx == rowIndx && sCell.dataIndx == dataIndx) {
+            if (sCell.rowIndx === rowIndx && sCell.dataIndx === dataIndx) {
                 return i;
             }
         }
         return -1;
-    }
+    };
     _pC.getSelection = function() {
         if (this.isDirty) {
             this.refresh();
         }
         return this.selectedCells;
-    }
+    };
     var fn = {};
     fn.options = {
         bottomVisible: true,
@@ -1425,7 +1448,7 @@
         treeViewModel: null,
         width: 600,
         wrap: true
-    }
+    };
     fn._regional = {
         strLoading: "Loading",
         strAdd: "Add",
@@ -1436,23 +1459,29 @@
         strSelectedmatches: "Selected {0} of {1} match(es)",
         strPrevResult: "Previous Result",
         strNextResult: "Next Result"
-    }
+    };
     $.extend(fn.options, fn._regional);
     fn._destroyResizable = function() {
-        if (this.element.data("resizable")) this.element.resizable('destroy');
-    }
+        if (this.element.data("resizable")) {
+            this.element.resizable('destroy');
+        }
+    };
     fn._destroyDraggable = function() {
-        if (this.element.data("draggable")) this.element.draggable('destroy');
-    }
+        if (this.element.data("draggable")) {
+            this.element.draggable('destroy');
+        }
+    };
     fn._disable = function() {
-        if (this.$disable == null) this.$disable = $("<div class='pq-grid-disable'></div>").css("opacity", 0.2).appendTo(this.element);
-    }
+        if (this.$disable === null) {
+            this.$disable = $("<div class='pq-grid-disable'></div>").css("opacity", 0.2).appendTo(this.element);
+        }
+    };
     fn._enable = function() {
         if (this.$disable) {
             this.element[0].removeChild(this.$disable[0]);
             this.$disable = null;
         }
-    }
+    };
     fn._destroy = function() {
         this._destroyResizable();
         this._destroyDraggable();
@@ -1460,9 +1489,9 @@
         this.element.css('height', "");
         this.element.css('width', "");
         this.element.removeClass('pq-grid ui-widget ui-widget-content ui-corner-all').removeData();
-    }
+    };
     fn._findCellFromEvtCoords = function(evt) {
-        if (this.$tbl == null) {
+        if (this.$tbl === null) {
             return {
                 $td: null,
                 rowIndxPage: null,
@@ -1483,68 +1512,70 @@
             }
         }
         var $tr = $($trs[indx]);
-        rowIndxPage = parseInt($tr.attr('pq-row-indx'));
+        rowIndxPage = parseInt($tr.attr('pq-row-indx'), 10);
         var $tds = $tr.find("td");
         indx = 0;
-        for (var i = 1; i < $tds.length; i++) {
-            if ($tds[i].offsetLeft > left) {
+        for (var x = 1; x < $tds.length; x++) {
+            if ($tds[x].offsetLeft > left) {
                 break;
             } else {
                 indx++;
             }
         }
         var $td = $($tds[indx]);
-        if ($td[0].nodeName.toUpperCase() != "TD") {
+        if ($td[0].nodeName.toUpperCase() !== "TD") {
             $td = $(evt.target).parent("td");
         }
-        colIndx = parseInt($td.attr('pq-col-indx'))
+        colIndx = parseInt($td.attr('pq-col-indx'), 10);
         return {
             $td: $td,
             rowIndxPage: rowIndxPage,
             colIndx: colIndx
         };
-    }
+    };
     fn._rangeSelectRow = function(initRowIndx, finalRowIndx, evt) {
         var that = this,
             rowSelection = that.sRows.getSelection(),
-            rowSelection2 = rowSelection.slice(0);
+            rowSelection2 = rowSelection.slice(0),
+            row;
         for (var i = 0; i < rowSelection2.length; i++) {
-            var rowS = rowSelection2[i],
-                row = rowS.rowIndx;
+            var rowS = rowSelection2[i];
+            row = rowS.rowIndx;
             if (row < initRowIndx || row > finalRowIndx) {
                 that.sRows.remove({
                     rowIndx: row
                 });
             }
         }
-        for (var row = initRowIndx; row <= finalRowIndx; row++) {
+        for (row = initRowIndx; row <= finalRowIndx; row++) {
             that.sRows.add({
                 rowIndx: rowIndx
             });
         }
-    }
+    };
     fn._rangeSelect = function(initRowIndx, initColIndx, finalRowIndx, finalColIndx, evt) {
         var that = this,
             cellSelection = that.sCells.getSelection(),
             cellSelection2 = cellSelection.slice(0);
+        var col, dataIndx, row;
         for (var i = 0; i < cellSelection2.length; i++) {
-            var cellS = cellSelection2[i],
-                row = cellS.rowIndx,
-                dataIndx = cellS.dataIndx,
-                col = this.getColIndxFromDataIndx(dataIndx);
+            var cellS = cellSelection2[i];
+            row = cellS.rowIndx;
+            dataIndx = cellS.dataIndx;
+            col = this.getColIndxFromDataIndx(dataIndx);
             if (row < initRowIndx || row > finalRowIndx) {
                 that.sCells.remove({
                     rowIndx: row,
                     colIndx: col,
                     dataIndx: dataIndx
                 });
-            } else if (row == initRowIndx && col < initColIndx) {
+            } else if (row === initRowIndx && col < initColIndx) {
                 that.sCells.remove({
                     rowIndx: row,
                     colIndx: col,
                     dataIndx: dataIndx
                 });
-            } else if (row == finalRowIndx && col > finalColIndx) {
+            } else if (row === finalRowIndx && col > finalColIndx) {
                 that.sCells.remove({
                     rowIndx: row,
                     colIndx: col,
@@ -1552,15 +1583,15 @@
                 });
             }
         }
-        for (var col = 0; col < that.colModel.length; col++) {
+        for (col = 0; col < that.colModel.length; col++) {
             var column = that.colModel[col];
             if (column.hidden) {
                 continue;
             }
-            var dataIndx = column.dataIndx;
-            var row = initRowIndx;
+            dataIndx = column.dataIndx;
+            row = initRowIndx;
             do {
-                if (row == initRowIndx && col < initColIndx) {} else if (row == finalRowIndx && col > finalColIndx) {
+                if (row === initRowIndx && col < initColIndx) {} else if (row === finalRowIndx && col > finalColIndx) {
                     break;
                 } else {
                     that.sCells.add({
@@ -1572,16 +1603,17 @@
                 row++;
             } while (row <= finalRowIndx);
         }
-    }
+    };
     fn._blockSelect = function(initRowIndx, initColIndx, finalRowIndx, finalColIndx, evt) {
         var that = this,
             cellSelection = that.sCells.getSelection(),
             cellSelection2 = cellSelection.slice(0);
+        var row, dataIndx, col;
         for (var i = 0; i < cellSelection2.length; i++) {
-            var cellS = cellSelection2[i],
-                row = cellS.rowIndx,
-                dataIndx = cellS.dataIndx,
-                col = this.getColIndxFromDataIndx(dataIndx);
+            var cellS = cellSelection2[i];
+            row = cellS.rowIndx;
+            dataIndx = cellS.dataIndx;
+            col = this.getColIndxFromDataIndx(dataIndx);
             if (col < initColIndx || col > finalColIndx) {
                 that.sCells.remove({
                     rowIndx: row,
@@ -1596,13 +1628,13 @@
                 });
             }
         }
-        for (var col = initColIndx; col <= finalColIndx; col++) {
+        for (col = initColIndx; col <= finalColIndx; col++) {
             var column = that.colModel[col];
-            var dataIndx = column.dataIndx;
+            dataIndx = column.dataIndx;
             if (column.hidden) {
                 continue;
             }
-            var row = initRowIndx;
+            row = initRowIndx;
             do {
                 that.sCells.add({
                     rowIndx: row,
@@ -1612,7 +1644,7 @@
                 row++;
             } while (row <= finalRowIndx);
         }
-    }
+    };
     fn._create = function() {
         this.cTable = new cCreateTable(this);
         this.minWidth = this.options.minWidth;
@@ -1646,7 +1678,7 @@
 	<div class='pq-grid-bottom" + (this.options.roundCorners ? " ui-corner-bottom" : "") + "'>\
 	<div class='pq-grid-footer'>&nbsp;</div>\
 	</div>");
-        if (this.options.direction == "rtl") {
+        if (this.options.direction === "rtl") {
             this.element.addClass("pq-rtl");
         }
         this._trigger("render", null, {
@@ -1696,10 +1728,10 @@
             if (that._trigger("cellMouseEnter", evt, {
                 $td: $td,
                 dataModel: that.options.dataModel
-            }) == false) {
+            }) === false) {
                 return false;
-            };
-            if (that.options.hoverMode == 'cell') {
+            }
+            if (that.options.hoverMode === 'cell') {
                 that.highlightCell($td);
             }
         });
@@ -1708,10 +1740,10 @@
             if (that._trigger("rowMouseEnter", evt, {
                 $tr: $tr,
                 dataModel: that.options.dataModel
-            }) == false) {
+            }) === false) {
                 return false;
-            };
-            if (that.options.hoverMode == 'row') {
+            }
+            if (that.options.hoverMode === 'row') {
                 that.highlightRow($tr);
             }
         });
@@ -1720,10 +1752,10 @@
             if (that._trigger("cellMouseLeave", evt, {
                 $td: $td,
                 dataModel: that.options.dataModel
-            }) == false) {
+            }) === false) {
                 return false;
-            };
-            if (that.options.hoverMode == 'cell') {
+            }
+            if (that.options.hoverMode === 'cell') {
                 that.unHighlightCell($td);
             }
         });
@@ -1732,16 +1764,16 @@
             if (that._trigger("rowMouseLeave", evt, {
                 $tr: $tr,
                 dataModel: that.options.dataModel
-            }) == false) {
+            }) === false) {
                 return false;
-            };
-            if (that.options.hoverMode == 'row') {
+            }
+            if (that.options.hoverMode === 'row') {
                 that.unHighlightRow($tr);
             }
         });
         this.$cont.bind('mousewheel DOMMouseScroll', function(evt) {
             return that._onMouseWheel(evt);
-        })
+        });
         var prevVScroll = 0;
         this.$hvscroll = $("<div class='pq-hvscroll-square ui-widget-content'></div>").appendTo(this.$grid_inner);
         this.$vscroll = $("<div class='pq-vscroll'></div>").appendTo(this.$grid_inner);
@@ -1757,14 +1789,15 @@
                 });
                 $.measureTime(function() {
                     var num_eles;
-                    if (evt.originalEvent && evt.originalEvent.type == "drag") {
+                    if (evt.originalEvent && evt.originalEvent.type === "drag") {
                         num_eles = that._setScrollVNumEles();
                     } else {
                         num_eles = that._setScrollVNumEles(true);
                     }
-                    if (num_eles <= 1)
+                    if (num_eles <= 1) {
                         that._setScrollHLength();
-                }, 'scrollBar setNumEles stuff')
+                    }
+                }, 'scrollBar setNumEles stuff');
             }
         });
         var prevHScroll = 0;
@@ -1784,7 +1817,7 @@
                     that._refreshOtherTables();
                 });
             }
-        })
+        });
         this.element.width(this.options.width).height(this.options.height);
         this.element.width(this.element.width());
         this.disableSelection();
@@ -1793,18 +1826,18 @@
                 that: this
             }, function(evt) {
                 that.keyPressDown(evt);
-            })
+            });
         } else {
             this.$grid_inner.bind("keydown.pq-grid", {
                 that: this
             }, function(evt) {
                 that.keyPressDown(evt);
-            })
+            });
         }
         this._refreshOptions();
         this._refreshTitle();
         var DM = this.options.dataModel;
-        if (typeof DM.sortIndx == "number" && DM.sorting == "local" && DM.location == "local") {
+        if (typeof DM.sortIndx === "number" && DM.sorting === "local" && DM.location === "local") {
             this._refreshDataIndices();
             var colIndx = this.getColIndxFromDataIndx(DM.sortIndx);
             this._sortLocalData(DM.sortIndx, DM.sortDir, this.colModel[colIndx].dataType, DM.data);
@@ -1813,23 +1846,23 @@
         this._createSelectedRowsObject();
         this._createSelectedCellsObject();
         this._refresh();
-    }
+    };
     fn._onMouseWheel = function(evt) {
         var that = this;
         var num = 0;
-        var evt = evt.originalEvent;
-        if (evt.wheelDelta) {
-            num = evt.wheelDelta / 120;
-        } else if (evt.detail) {
-            num = evt.detail * -1 / 3;
+        var originalEvent = evt.originalEvent;
+        if (originalEvent.wheelDelta) {
+            num = originalEvent.wheelDelta / 120;
+        } else if (originalEvent.detail) {
+            num = originalEvent.detail * -1 / 3;
         }
-        var cur_pos = parseInt(that.$vscroll.pqScrollBar('option', 'cur_pos'));
+        var cur_pos = parseInt(that.$vscroll.pqScrollBar('option', 'cur_pos'), 10);
         var new_pos = cur_pos - num;
         if (new_pos >= 0) {
             that.$vscroll.pqScrollBar('option', 'cur_pos', cur_pos - num).pqScrollBar('scroll');
         }
         return false;
-    }
+    };
     fn._onDblClickCell = function(evt) {
         var that = this;
         var $td = $(evt.currentTarget);
@@ -1844,26 +1877,26 @@
             rowIndxPage: rowIndxPage,
             rowIndx: rowIndx,
             colIndx: colIndx
-        }) == false) {
+        }) === false) {
             return false;
-        };
+        }
         if (this.isEditableCell({
             colIndx: colIndx
         }) && that.options.editModel.clicksToEdit > 1) {
             that._setSelection(null);
-            if (that.options.selectionModel.type == 'cell') {
+            if (that.options.selectionModel.type === 'cell') {
                 that._setSelection({
                     rowIndx: rowIndx,
                     colIndx: colIndx
                 });
-            } else if (that.options.selectionModel.type == 'row') {
+            } else if (that.options.selectionModel.type === 'row') {
                 that._setSelection({
                     rowIndx: rowIndx
                 });
             }
             that._editCell($td);
         }
-    }
+    };
     fn._onDblClickCell = function(evt) {
         var that = this;
         var $td = $(evt.currentTarget);
@@ -1877,26 +1910,26 @@
             dataModel: that.options.dataModel,
             rowIndx: rowIndx,
             colIndx: colIndx
-        }) == false) {
+        }) === false) {
             return false;
-        };
+        }
         if (this.isEditableCell({
             colIndx: colIndx
         }) && that.options.editModel.clicksToEdit > 1) {
             that._setSelection(null);
-            if (that.options.selectionModel.type == 'cell') {
+            if (that.options.selectionModel.type === 'cell') {
                 that._setSelection({
                     rowIndx: rowIndx,
                     colIndx: colIndx
                 });
-            } else if (that.options.selectionModel.type == 'row') {
+            } else if (that.options.selectionModel.type === 'row') {
                 that._setSelection({
                     rowIndx: rowIndx
                 });
             }
             that._editCell($td);
         }
-    }
+    };
     fn._onClickCont = function(evt) {
         var that = this;
         if (that.$td_edit) {
@@ -1904,11 +1937,11 @@
                 that.quitEditMode(evt);
             }
         }
-    }
+    };
     fn._onClickRow = function(evt) {
         var that = this;
         var $tr = $(evt.currentTarget);
-        var rowIndxPage = parseInt($tr.attr("pq-row-indx")),
+        var rowIndxPage = parseInt($tr.attr("pq-row-indx"), 10),
             offset = that.getRowIndxOffset(),
             rowIndx = rowIndxPage + offset;
         var objP = {
@@ -1920,20 +1953,20 @@
             rowIndxPage: rowIndxPage,
             rowIndx: rowIndx,
             dataModel: that.options.dataModel
-        }) == false) {
+        }) === false) {
             return false;
-        };
+        }
         var selectionModel = that.options.selectionModel;
-        if (selectionModel.type == 'row') {
+        if (selectionModel.type === 'row') {
             var rowSelection = that.sRows.getSelection();
             if (rowSelection.length > 0) {
-                if (evt.ctrlKey && selectionModel.mode != 'single') {
-                    if (that.sRows.indexOf(objP) != -1) {
+                if (evt.ctrlKey && selectionModel.mode !== 'single') {
+                    if (that.sRows.indexOf(objP) !== -1) {
                         that.sRows.remove(objP);
                     } else {
                         that._setSelection(objP);
                     }
-                } else if (evt.shiftKey && selectionModel.mode != 'single') {
+                } else if (evt.shiftKey && selectionModel.mode !== 'single') {
                     var rowS = rowSelection[rowSelection.length - 1],
                         rowIndx1 = rowS.rowIndx,
                         initRowIndx = rowIndx1,
@@ -1943,9 +1976,10 @@
                         finalRowIndx = rowIndx1;
                     }
                     var rowSelection2 = rowSelection.slice(0);
+                    var row;
                     for (var i = 0; i < rowSelection2.length; i++) {
-                        var rSel = rowSelection2[i],
-                            row = rSel.rowIndx;
+                        var rSel = rowSelection2[i];
+                        row = rSel.rowIndx;
                         if (row < initRowIndx || row > finalRowIndx) {
                             that.sRows.remove({
                                 rowIndx: row,
@@ -1953,7 +1987,7 @@
                             });
                         }
                     }
-                    for (var row = initRowIndx; row <= finalRowIndx; row++) {
+                    for (row = initRowIndx; row <= finalRowIndx; row++) {
                         that.sRows.add({
                             rowIndx: row,
                             evt: evt
@@ -1970,11 +2004,11 @@
                 that._setSelection(objP);
             }
         }
-    }
+    };
     fn._onDblClickRow = function(evt) {
         var that = this;
         var $tr = $(evt.currentTarget);
-        var rowIndxPage = parseInt($tr.attr("pq-row-indx")),
+        var rowIndxPage = parseInt($tr.attr("pq-row-indx"), 10),
             offset = that.getRowIndxOffset(),
             rowIndx = rowIndxPage + offset;
         var objP = {
@@ -1986,37 +2020,39 @@
             rowIndxPage: rowIndxPage,
             rowIndx: rowIndx,
             dataModel: that.options.dataModel
-        }) == false) {
+        }) === false) {
             return false;
-        };
-    }
+        }
+    };
     fn.isEditableCell = function(obj) {
         var colIndx = obj.colIndx,
-            column = (obj.column == null) ? (this.colModel[colIndx]) : obj.column,
+            column = (obj.column === null) ? (this.colModel[colIndx]) : obj.column,
             editable = true;
-        if (this.options.editable == false) {
+        if (this.options.editable === false) {
             editable = false;
         }
-        if (column.editable == false) {
+        if (column.editable === false) {
             editable = false;
         }
         return editable;
-    }
+    };
     fn._getRowPQData = function(rowIndxPage, key, rowData) {
-        var rowData = (rowData == null) ? this.data[rowIndxPage] : rowData;
-        return rowData ? rowData[key] : null;
-    }
+        var rowDataCoalesce = (rowData === null) ? this.data[rowIndxPage] : rowData;
+        return rowDataCoalesce ? rowDataCoalesce[key] : null;
+    };
     fn._setRowPQData = function(rowIndxPage, objP, rowData) {
-        var rowData = (rowData == null) ? this.data[rowIndxPage] : rowData;
-        if (!rowData) return;
-        for (var key in objP) {
-            rowData[key] = objP[key];
+        var rowDataCoalesce = (rowData === null) ? this.data[rowIndxPage] : rowData;
+        if (!rowDataCoalesce) {
+            return;
         }
-    }
+        for (var key in objP) {
+            rowDataCoalesce[key] = objP[key];
+        }
+    };
     fn._onClickCell = function(evt) {
         var that = this,
             thisOptions = this.options,
-            selectionModel = thisOptions.selectionModel;;
+            selectionModel = thisOptions.selectionModel;
         var $td = $(evt.currentTarget);
         var objP = that.getCellIndices($td);
         var rowIndxPage = objP.rowIndxPage,
@@ -2034,17 +2070,17 @@
             dataIndx: dataIndx,
             column: column,
             dataModel: that.options.dataModel
-        }) == false) {
+        }) === false) {
             return false;
-        };
+        }
         if (that.$td_edit) {
             that.quitEditMode(evt);
         }
         if (this.isEditableCell({
             column: column
-        }) && thisOptions.editModel.clicksToEdit == '1') {
+        }) && thisOptions.editModel.clicksToEdit === '1') {
             that._setSelection(null);
-            if (selectionModel.type == 'cell') {
+            if (selectionModel.type === 'cell') {
                 that._setSelection(objP);
             } else {
                 that.bringRowIntoView({
@@ -2057,19 +2093,19 @@
             }
             window.setTimeout(function() {
                 that.editCell(objP);
-            }, 0)
+            }, 0);
             return;
         }
-        if (selectionModel.type == 'cell') {
+        if (selectionModel.type === 'cell') {
             var cellSelection = that.sCells.getSelection();
             if (cellSelection.length > 0) {
-                if (evt.ctrlKey && selectionModel.mode != 'single') {
+                if (evt.ctrlKey && selectionModel.mode !== 'single') {
                     if (that.sCells.isSelected(objP)) {
                         that.sCells.remove(objP);
                     } else {
                         that._setSelection(objP);
                     }
-                } else if (evt.shiftKey && selectionModel.mode != 'single') {
+                } else if (evt.shiftKey && selectionModel.mode !== 'single') {
                     var cellS = cellSelection[cellSelection.length - 1],
                         rowIndx1 = cellS.rowIndx,
                         colIndx1 = that.getColIndxFromDataIndx(cellS.dataIndx),
@@ -2081,17 +2117,17 @@
                         initRowIndx = rowIndx;
                         finalRowIndx = rowIndx1;
                     }
-                    if (that.options.selectionModel.mode == 'range') {
+                    if (that.options.selectionModel.mode === 'range') {
                         if (rowIndx1 > rowIndx) {
                             initColIndx = colIndx;
                             finalColIndx = colIndx1;
                         }
-                        if (rowIndx == rowIndx1 && colIndx < colIndx1) {
+                        if (rowIndx === rowIndx1 && colIndx < colIndx1) {
                             initColIndx = colIndx;
                             finalColIndx = colIndx1;
                         }
                         that._rangeSelect(initRowIndx, initColIndx, finalRowIndx, finalColIndx, evt);
-                    } else if (that.options.selectionModel.mode == 'block') {
+                    } else if (that.options.selectionModel.mode === 'block') {
                         if (colIndx1 > colIndx) {
                             initColIndx = colIndx;
                             finalColIndx = colIndx1;
@@ -2109,54 +2145,52 @@
                 that._setSelection(objP);
             }
         }
-    }
+    };
     fn.highlightCell = function($td) {
         $td.addClass("pq-grid-cell-hover ui-state-hover");
-    }
+    };
     fn.unHighlightCell = function($td) {
         $td.removeClass("pq-grid-cell-hover ui-state-hover");
-    }
+    };
     fn.highlightRow = function($tr) {
         $tr.addClass("pq-grid-row-hover ui-state-hover");
-    }
+    };
     fn.unHighlightRow = function($tr) {
         $tr.removeClass("pq-grid-row-hover ui-state-hover");
-    }
+    };
     fn._createSelectedRowsObject = function() {
         this.sRows = new cRows(this);
-    }
+    };
     fn._createSelectedCellsObject = function() {
         this.sCells = new cCells(this);
-    }
+    };
     fn._getCreateEventData = function() {
         return {
             dataModel: this.options.dataModel,
             data: this.data,
             colModel: this.options.colModel
         };
-    }
+    };
     fn._refreshOptions = function() {
         this._refreshDataOptions();
-    }
-    fn._refreshDataOptions = function() {}
+    };
+    fn._refreshDataOptions = function() {};
     fn.enableSelection = function() {
         this.$grid_inner.enableSelection();
-    }
+    };
     fn.disableSelection = function() {
         this.$grid_inner.disableSelection();
-    }
+    };
     fn._isEditCell = function(evt) {
         var $targ = $(evt.target);
         var $div = $targ.closest("div.pq-cell-selected-border-edit");
-        if ($div && $div.length > 0) {
-            return true;
-        }
-        return false;
-    }
+        return $div && $div.length > 0;
+
+    };
     fn._findCellFromEvt = function(evt) {
         var $targ = $(evt.target);
         var $td = $targ.closest(".pq-grid-cell");
-        if ($td == null || $td.length == 0) {
+        if ($td === null || $td.length === 0) {
             return {
                 rowIndxPage: null,
                 colIndx: null,
@@ -2167,7 +2201,7 @@
             obj.$td = $td;
             return obj;
         }
-    }
+    };
     fn._initPager = function() {
         var DM = this.options.dataModel;
         var that = this;
@@ -2176,13 +2210,16 @@
             rPPOptions: DM.rPPOptions,
             change: function(evt, obj) {
                 var DM = that.options.dataModel;
-                if (obj.curPage != undefined) {
+                if (obj.curPage !== undefined) {
                     DM.prevPage = DM.curPage;
                     DM.curPage = obj.curPage;
                 }
-                if (obj.rPP != undefined) DM.rPP = obj.rPP;
-                if (DM.paging == "remote") that.remoteRequest();
-                else {
+                if (obj.rPP !== undefined) {
+                    DM.rPP = obj.rPP;
+                }
+                if (DM.paging === "remote") {
+                    that.remoteRequest();
+                } else {
                     that.$td_edit = null;
                     that._refreshDataFromDataModel();
                     that._refresh();
@@ -2195,22 +2232,22 @@
         if (DM.paging) {
             this.$footer.pqPager(obj2);
         } else {}
-    }
+    };
     fn._initData = function() {
         var that = this;
         var dataModel = this.options.dataModel;
-        if (dataModel == undefined) {
+        if (dataModel === undefined) {
             throw ("dataModel not found.");
         }
         this._initPager();
-        if (dataModel.location == "remote") {
+        if (dataModel.location === "remote") {
             var that = this;
             this.generateLoading();
             this.remoteRequest();
         } else {
             this._refreshDataFromDataModel();
         }
-    }
+    };
     fn._refreshHideArrHS = function() {
         var that = this;
         for (var i = 0; i < that.colModel.length; i++) {
@@ -2225,27 +2262,27 @@
                 that.hidearrHS[i] = true;
             }
         } else {}
-    }
+    };
     fn.generateLoading = function() {
         if (this.$loading) this.$loading.remove();
         this.$loading = $("<div class='pq-loading'></div>").appendTo(this.element)
         $("<div class='pq-loading-bg'></div><div class='pq-loading-mask ui-state-highlight'><div>" + this.options.strLoading + "...</div></div>").appendTo(this.$loading);
         this.$loading.find("div.pq-loading-bg").css("opacity", 0.2);
-    }
+    };
     fn.showLoading = function() {
         this.element.find("div.pq-loading").show();
-    }
+    };
     fn.hideLoading = function() {
         this.element.find("div.pq-loading").hide();
-    }
+    };
     fn._refreshDataFromDataModel = function() {
         var thisOptions = this.options,
             DM = thisOptions.dataModel,
             GM = thisOptions.groupModel,
-            GMTrue = (GM && GM.grouping == "local") ? true : false,
+            GMTrue = (GM && GM.grouping === "local") ? true : false,
             TVM = thisOptions.treeViewModel,
             TVTrue = (TVM) ? true : false;
-        if (DM.data == null || DM.data.length == 0) {
+        if (DM.data === null || DM.data.length === 0) {
             if (DM.paging) {
                 DM.curPage = 0;
                 DM.totalPages = 0;
@@ -2253,7 +2290,7 @@
             }
             return;
         }
-        if (DM.paging && DM.paging == 'local') {
+        if (DM.paging && DM.paging === 'local') {
             DM.totalRecords = DM.data.length;
             DM.totalPages = Math.ceil(DM.data.length / DM.rPP);
             if (DM.curPage > DM.totalPages) {
@@ -2281,7 +2318,7 @@
         if (TVTrue) {
             this.cTreeView._refreshDataFromDataModel();
         }
-    }
+    };
     fn.remoteRequest = function(callback_fn) {
         if (this.loading) {
             this.xhr.abort();
@@ -2290,10 +2327,14 @@
         var url = "";
         var dataURL = "";
         var DM = this.options.dataModel;
-        if (typeof DM.getUrl == "function") {
+        if (typeof DM.getUrl === "function") {
             var objURL = DM.getUrl();
-            if (objURL && objURL.url) url = objURL.url;
-            if (objURL && objURL.data) dataURL = objURL.data;
+            if (objURL && objURL.url) {
+                url = objURL.url;
+            }
+            if (objURL && objURL.data) {
+                dataURL = objURL.data;
+            }
         }
         if (!url) {
             return;
@@ -2308,18 +2349,20 @@
             type: DM.method,
             data: dataURL,
             beforeSend: function(jqXHR, settings) {
-                if (typeof DM.beforeSend == "function") {
+                if (typeof DM.beforeSend === "function") {
                     return DM.beforeSend(jqXHR, settings);
                 }
             },
             success: function(responseObj, textStatus, jqXHR) {
                 var dataLoaded = false;
-                if (typeof DM.getData == "function") {
+                if (typeof DM.getData === "function") {
                     var retObj = DM.getData(responseObj, textStatus, jqXHR);
                     DM.data = retObj.data;
                     if (DM.paging) {
-                        if (DM.paging == "remote") {
-                            if (retObj.curPage) DM.curPage = retObj.curPage;
+                        if (DM.paging === "remote") {
+                            if (retObj.curPage) {
+                                DM.curPage = retObj.curPage;
+                            }
                             if (retObj.totalRecords) {
                                 DM.totalRecords = retObj.totalRecords;
                                 DM.totalPages = Math.ceil(DM.totalRecords / DM.rPP);
@@ -2327,7 +2370,7 @@
                         }
                     }
                     that._refreshDataFromDataModel();
-                    if (DM.sorting == "local" && DM.sortIndx != undefined) {
+                    if (DM.sorting === "local" && DM.sortIndx !== undefined) {
                         that._refreshSortingDataAndView({
                             sorting: true
                         });
@@ -2343,22 +2386,24 @@
                     dataModel: that.options.dataModel,
                     data: that.data
                 });
-                if (typeof callback_fn == "function") callback_fn();
+                if (typeof callback_fn === "function") {
+                    callback_fn();
+                }
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 that.hideLoading();
                 that.loading = false;
-                if (typeof DM.error == "function") {
+                if (typeof DM.error === "function") {
                     DM.error(jqXHR, textStatus, errorThrown);
                 }
             }
         });
-    }
+    };
     fn._fixFireFoxContentEditableIssue = function() {
         if (window.postMessage) {
             this.$grid_inner.focus();
         }
-    }
+    };
     fn.selectCellRowCallback = function(fn) {
         var rowIndx, colIndx;
         if (this.$td_edit) {
@@ -2374,10 +2419,10 @@
         if (this.options.flexWidth) {
             this._setGridWidthFromTable();
         }
-    }
+    };
     fn._refreshTitle = function() {
         this.$title.html(this.options.title);
-    }
+    };
     fn._refreshDraggable = function() {
         if (this.options.draggable) {
             this.$title.addClass('draggable');
@@ -2388,7 +2433,7 @@
         } else {
             this._destroyDraggable();
         }
-    }
+    };
     fn._refreshResizable = function() {
         var that = this;
         if (this.options.resizable) {
@@ -2413,22 +2458,22 @@
         } else {
             this._destroyResizable();
         }
-    }
+    };
     fn.refresh = function() {
         this._refresh();
-    }
+    };
     fn._refreshDataIndices = function() {
-        if (this.options.getDataIndicesFromColIndices == false) {
+        if (this.options.getDataIndicesFromColIndices === false) {
             return;
         }
         var thisColModel = this.colModel;
         for (var i = 0; i < thisColModel.length; i++) {
             var column = thisColModel[i];
-            if (column.dataIndx == null) {
+            if (column.dataIndx === null) {
                 column.dataIndx = i;
             }
         }
-    }
+    };
     fn._refresh = function() {
         var that = this;
         this._refreshDataIndices();
@@ -2451,7 +2496,7 @@
         this._setScrollVNumEles(true);
         this._setScrollHLength();
         this._refreshPager();
-    }
+    };
     fn._refreshPager = function() {
         var DM = this.options.dataModel;
         if (DM.paging) {
@@ -2463,7 +2508,7 @@
                 rPPOptions: DM.rPPOptions
             });
         }
-    }
+    };
     fn._refreshViewAfterDataSort = function() {
         this.selectCellRowCallback(function() {
             this.cTable._generateTables();
@@ -2475,18 +2520,18 @@
         this._setScrollVNumEles(true);
         this._setScrollHLength();
         this._refreshPager();
-    }
+    };
     fn.refreshSortingDataAndView = function() {
         this._refreshSortingDataAndView({
             sorting: true
         });
-    }
+    };
     fn.refreshDataAndView = function(keepSelection) {
         this.data = null;
         this.sRows.setDirty();
         this.sCells.setDirty();
         var DM = this.options.dataModel;
-        if (DM.location == "remote") {
+        if (DM.location === "remote") {
             DM.data = null;
             this.remoteRequest();
         } else {
@@ -2495,15 +2540,15 @@
                 sorting: true
             });
         }
-    }
+    };
     fn.getColIndxFromDataIndx = function(dataIndx) {
         var thisColModel = this.colModel;
         for (var i = 0; i < thisColModel.length; i++) {
-            if (thisColModel[i].dataIndx == dataIndx) {
+            if (thisColModel[i].dataIndx === dataIndx) {
                 return i;
             }
         }
-    }
+    };
     fn._refreshSortingDataAndView = function(obj) {
         var sorting = obj.sorting,
             fn = obj.fn,
@@ -2520,13 +2565,13 @@
             thisColModel = this.colModel,
             indx = DM.sortIndx,
             colIndx = this.getColIndxFromDataIndx(indx);
-        if (indx == null || colIndx == null) {
+        if (indx === null || colIndx === null) {
             sorting = false;
         }
         var dir = DM.sortDir;
         var that = this;
-        if (sorting == true) {
-            if (DM.sorting == "remote") {
+        if (sorting === true) {
+            if (DM.sorting === "remote") {
                 this.remoteRequest(fn);
             } else {
                 var column = thisColModel[colIndx];
@@ -2536,18 +2581,22 @@
                 this.sCells.setDirty();
                 this._refreshDataFromDataModel();
                 that._refreshViewAfterDataSort();
-                if (typeof fn == "function") fn();
+                if (typeof fn === "function") {
+                    fn();
+                }
             }
-        } else if (DM.location == "remote") {
+        } else if (DM.location === "remote") {
             this.remoteRequest(fn);
         } else {
-            if (this.data == null) {
+            if (this.data === null) {
                 this._refreshDataFromDataModel();
             }
             that._refreshViewAfterDataSort();
-            if (typeof fn == "function") fn();
+            if (typeof fn === "function") {
+                fn();
+            }
         }
-    }
+    };
     fn._computeOuterWidths = function(basedOnWidthsOnly) {
         var options = this.options,
             columnBorders = options.columnBorders,
@@ -2559,19 +2608,19 @@
         }
         this.numberCell_outerWidth = this.numberCellWidth + 1;
         return;
-    }
+    };
     fn._setOption = function(key, value) {
         this.refreshRequired = true;
-        if (key == "height") {
+        if (key === "height") {
             this.element.height(value);
             $.Widget.prototype._setOption.call(this, key, value);
-        } else if (key == "width") {
+        } else if (key === "width") {
             this.element.width(value);
             $.Widget.prototype._setOption.call(this, key, value);
-        } else if (key == "title") {
+        } else if (key === "title") {
             $.Widget.prototype._setOption.call(this, key, value);
             this._refreshTitle();
-        } else if (key == "roundCorners") {
+        } else if (key === "roundCorners") {
             if (value) {
                 this.element.addClass("ui-corner-all");
                 this.$top.addClass("ui-corner-top");
@@ -2582,82 +2631,82 @@
                 this.$bottom.removeClass("ui-corner-bottom");
             }
             this.refreshRequired = false;
-        } else if (key == "freezeCols") {
+        } else if (key === "freezeCols") {
             if (!isNaN(value) && value >= 0 && parseInt(value) <= this.colModel.length - 2) {
                 this.options.freezeCols = this.freezeCols = parseInt(value);
                 this._refreshFreezeLine();
                 this._setScrollHLength();
                 $.Widget.prototype._setOption.call(this, key, value);
             }
-        } else if (key == "resizable") {
+        } else if (key === "resizable") {
             $.Widget.prototype._setOption.call(this, key, value);
-        } else if (key == "scrollModel") {
+        } else if (key === "scrollModel") {
             var obj = value;
             for (var key in obj) {
                 this.options.scrollModel[key] = obj[key];
             }
-        } else if (key == "dataModel") {
+        } else if (key === "dataModel") {
             $.Widget.prototype._setOption.call(this, key, value);
             var paging = value["paging"];
-            if (this.$footer.hasClass('pq-pager') == false && (paging == "local" || paging == "remote")) {
+            if (this.$footer.hasClass('pq-pager') === false && (paging === "local" || paging === "remote")) {
                 this._initPager();
-            } else if (this.$footer.hasClass('pq-pager') && (paging != "local" && paging != "remote")) {
+            } else if (this.$footer.hasClass('pq-pager') && (paging !== "local" && paging !== "remote")) {
                 this.$footer.pqPager('destroy');
                 this.$footer.html("&nbsp;");
             }
             this.refreshDataAndView();
-        } else if (key == "selectionModel") {
+        } else if (key === "selectionModel") {
             var obj = value;
             for (var key in obj) {
                 this.options.selectionModel[key] = obj[key];
             }
             this.refreshRequired = false;
-        } else if (key == "colModel") {
+        } else if (key === "colModel") {
             $.Widget.prototype._setOption.call(this, key, value);
             this._refreshHeader();
             this._refreshWidths();
             this._refreshDataIndices();
-        } else if (key == "disabled") {
-            if (value == true) {
+        } else if (key === "disabled") {
+            if (value === true) {
                 this._disable();
             } else {
                 this._enable();
             }
             this.refreshRequired = false;
-        } else if (key == "numberCell") {
+        } else if (key === "numberCell") {
             this.numberCell = value;
             $.Widget.prototype._setOption.call(this, key, value);
-        } else if (key == "numberCellWidth") {
+        } else if (key === "numberCellWidth") {
             this.numberCellWidth = value;
             $.Widget.prototype._setOption.call(this, key, value);
-        } else if (key == "customData") {
+        } else if (key === "customData") {
             $.Widget.prototype._setOption.call(this, key, value);
             this.refreshRequired = false;
-        } else if (key == "strLoading") {
+        } else if (key === "strLoading") {
             $.Widget.prototype._setOption.call(this, key, value);
             this.generateLoading();
             this.refreshRequired = false;
-        } else if (key == "topVisible") {
-            if (value == true)
+        } else if (key === "topVisible") {
+            if (value === true)
                 this.$top.css("display", "");
             else
                 this.$top.css("display", "none");
-        } else if (key == "bottomVisible") {
-            if (value == true)
+        } else if (key === "bottomVisible") {
+            if (value === true)
                 this.$bottom.css("display", "");
             else
                 this.$bottom.css("display", "none");
         } else {
             $.Widget.prototype._setOption.call(this, key, value);
         }
-    }
+    };
     fn._setOptions = function() {
         $.Widget.prototype._setOptions.apply(this, arguments);
         if (this.refreshRequired) {
             this._refresh();
         }
         this.refreshRequired = true;
-    }
+    };
     fn._generateCellRowOutline = function(obj) {
         var $td = obj.$td,
             $tr = obj.$tr,
@@ -2680,17 +2729,17 @@
             var top = $td[0].offsetTop + $table[0].offsetTop;
             that._generateCellHighlighter(offsetParent, lft, top, wd, ht);
         }
-    }
+    };
     fn._removeCellRowOutline = function() {
         if (this.$div_focus) {
             this._fixFireFoxContentEditableIssue();
             this.$div_focus.remove();
             this.$div_focus = null;
         }
-    }
+    };
     fn._generateCellHighlighter = function(offsetParent, lft, top, wd, ht) {
-        if (this.$div_focus && this.$div_focus[0].offsetParent == offsetParent) {
-            if (this.$td_edit != null) {
+        if (this.$div_focus && this.$div_focus[0].offsetParent === offsetParent) {
+            if (this.$td_edit !== null) {
                 this._fixFireFoxContentEditableIssue();
                 this.$div_focus.empty().removeClass('pq-cell-selected-border-edit');
                 this.$td_edit = null;
@@ -2702,7 +2751,9 @@
                 width: wd
             });
         } else {
-            if (this.$div_focus) this.$div_focus.remove();
+            if (this.$div_focus) {
+                this.$div_focus.remove();
+            }
             this.$div_focus = $("<div class='pq-cell-selected-border'></div>")
                 .appendTo(offsetParent);
             this.$div_focus.css({
@@ -2712,34 +2763,36 @@
                 width: wd
             });
         }
-    }
+    };
     fn._selectRow = function(rowIndx, evt) {
         this.selectRow(rowIndx, evt)
-    }
+    };
     fn._findfirstUnhiddenColIndx = function() {
         for (var i = 0; i < this.colModel.length; i++) {
             if (!this.colModel[i].hidden) {
                 return i
             }
         }
-    }
+    };
     fn.selectRow = function(obj) {
         var rowIndx = obj.rowIndx,
             evt = obj.evt,
             offset = obj.offset;
-        if (evt && (evt.type == "keydown" || evt.type == "keypress")) {
-            if (this.sRows.replace(obj) == false) {
+        if (evt && (evt.type === "keydown" || evt.type === "keypress")) {
+            if (this.sRows.replace(obj) === false) {
                 return false;
             }
-        } else if (this.sRows.add(obj) == false) {
+        } else if (this.sRows.add(obj) === false) {
             return false;
         }
-        if (evt != null) this._setGridFocus();
+        if (evt !== null) {
+            this._setGridFocus();
+        }
         return true;
-    }
+    };
     fn.scrollY = function(rowIndx) {
         this.$vscroll.pqScrollBar("option", "cur_pos", rowIndx).pqScrollBar("scroll");
-    }
+    };
     fn.bringRowIntoView = function(obj) {
         var rowIndxPage = obj.rowIndxPage;
         var init = this.init - this.offsetRow;
@@ -2748,7 +2801,7 @@
             this.$vscroll.pqScrollBar("option", "cur_pos", calcCurPos).pqScrollBar("scroll");
         }
         var $tr = this.$tbl.find("tr[pq-row-indx=" + rowIndxPage + "]");
-        if ($tr[0] == undefined) {
+        if ($tr[0] === undefined) {
             this.$vscroll.pqScrollBar("option", "cur_pos", calcCurPos).pqScrollBar("scroll");
         } else {
             var td_bottom = $tr[0].offsetTop + $tr[0].offsetHeight,
@@ -2777,7 +2830,7 @@
                 }).pqScrollBar("scroll");
             }
         }
-    }
+    };
     fn._bringCellIntoView = function(obj) {
         var rowIndxPage = obj.rowIndxPage,
             colIndx = obj.colIndx,
@@ -2790,12 +2843,12 @@
             tdneedsRefresh = true;
         } else {
             var $td = this.$tbl.find("tr[pq-row-indx=" + rowIndxPage + "]>td[pq-col-indx=" + colIndx + "]");
-            if ($td.length == 0) {
+            if ($td.length === 0) {
                 return false;
             }
             var td_right = this._calcRightEdgeCol(colIndx).width;
             var wd_scrollbar = 17;
-            if (this.$vscroll.css("visibility") == "hidden" || this.$vscroll.css("display") == "none") {
+            if (this.$vscroll.css("visibility") === "hidden" || this.$vscroll.css("display") === "none") {
                 wd_scrollbar = 0;
             }
             if (td_right > this.$cont[0].offsetWidth - wd_scrollbar) {
@@ -2808,7 +2861,7 @@
                     if (!this.colModel[i].hidden) {
                         wd += this.outerWidths[i];
                     }
-                    if (i == colIndx) {
+                    if (i === colIndx) {
                         initH = i - this.freezeCols - this._calcNumHiddenUnFrozens(i);
                         break;
                     } else if (wd >= diff) {
@@ -2826,21 +2879,21 @@
         } else {
             return $td;
         }
-    }
+    };
     fn.selection = function(obj) {
         var rowIndx = obj.rowIndx,
             colIndx = obj.colIndx,
             method = obj.method,
             type = obj.type;
-        if (type == 'row') {
+        if (type === 'row') {
             return this['sRows'][method](obj);
-        } else if (type == 'cell') {
+        } else if (type === 'cell') {
             return this['sCells'][method](obj);
         }
         return;
-    }
+    };
     fn.setSelection = function(obj) {
-        if (obj == null || obj.rowIndx == null) {
+        if (obj === null || obj.rowIndx === null) {
             this.sRows.removeAll({
                 raiseEvent: true
             });
@@ -2851,12 +2904,12 @@
         }
         this._bringPageIntoView(obj);
         return this._setSelection(obj);
-    }
+    };
     fn._bringPageIntoView = function(obj) {
         var rowIndx = obj.rowIndx,
             that = this;
         var DM = this.options.dataModel;
-        if (DM.paging == "local" && rowIndx >= 0) {
+        if (DM.paging === "local" && rowIndx >= 0) {
             var curPage = DM.curPage;
             var rPP = DM.rPP;
             var begIndx = (curPage - 1) * rPP;
@@ -2868,9 +2921,9 @@
             }
             rowIndxPage = (rowIndx % rPP);
         }
-    }
+    };
     fn._setSelection = function(obj) {
-        if (obj == null) {
+        if (obj === null) {
             this.sRows.removeAll({
                 raiseEvent: true
             });
@@ -2879,15 +2932,15 @@
             });
             return false;
         }
-        var offset = obj.offset = (obj.offset == null) ? this.getRowIndxOffset() : obj.offset,
-            rowIndx = obj.rowIndx = (obj.rowIndx == null) ? obj.rowIndxPage + offset : obj.rowIndx,
-            rowIndxPage = obj.rowIndxPage = (obj.rowIndxPage == null) ? obj.rowIndx - offset : obj.rowIndxPage,
+        var offset = obj.offset = (obj.offset === null) ? this.getRowIndxOffset() : obj.offset,
+            rowIndx = obj.rowIndx = (obj.rowIndx === null) ? obj.rowIndxPage + offset : obj.rowIndx,
+            rowIndxPage = obj.rowIndxPage = (obj.rowIndxPage === null) ? obj.rowIndx - offset : obj.rowIndxPage,
             colIndx = obj.colIndx,
             evt = obj.evt;
         if (rowIndxPage < 0 || colIndx < 0) {
             return false;
         }
-        if (this.data == null || this.data.length == 0) {
+        if (this.data === null || this.data.length === 0) {
             return false;
         }
         if (rowIndxPage >= this.data.length || colIndx >= this.colModel.length) {
@@ -2896,7 +2949,7 @@
         this.bringRowIntoView({
             rowIndxPage: rowIndxPage
         });
-        if (colIndx == null) {
+        if (colIndx === null) {
             return this.selectRow({
                 rowIndx: rowIndx,
                 evt: evt
@@ -2911,9 +2964,11 @@
             colIndx: colIndx,
             evt: evt
         });
-    }
+    };
     fn.saveEditCell = function() {
-        if (this.$td_edit == null) return;
+        if (this.$td_edit === null) {
+            return;
+        }
         var $td = this.$td_edit,
             obj = this.getCellIndices($td),
             offset = this.getRowIndxOffset(),
@@ -2924,12 +2979,12 @@
             column = obj.column = thisColModel[colIndx],
             dataIndx = obj.dataIndx = column.dataIndx,
             prevVal = this.data[rowIndxPage][dataIndx];
-        if (rowIndxPage != null) {
+        if (rowIndxPage !== null) {
             var dataCell = this._getEditCellData(obj);
-            if (dataCell != prevVal) {
+            if (dataCell !== prevVal) {
                 this.data[rowIndxPage][dataIndx] = dataCell;
                 obj.data = this.data;
-                if (this._trigger("cellSave", null, obj) == false) {
+                if (this._trigger("cellSave", null, obj) === false) {
                     return;
                 }
                 this.refreshRow(obj);
@@ -2945,12 +3000,12 @@
                 }
             }
         }
-    }
+    };
     fn._fixTableViewPort = function() {
         var cont = this.$cont[0];
         cont.scrollTop = 0;
         cont.scrollLeft = 0;
-    }
+    };
     fn._fixIEFooterIssue = function() {
         $(".pq-grid-footer").css({
             position: "absolute"
@@ -2958,10 +3013,10 @@
         $(".pq-grid-footer").css({
             position: "relative"
         });
-    }
+    };
     fn.refreshColumn = function(obj) {
         var customData = this.options.customData,
-            colIndx = obj.colIndx = (obj.colIndx == null) ? this.getColIndxFromDataIndx(obj.dataIndx) : obj.colIndx,
+            colIndx = obj.colIndx = (obj.colIndx === null) ? this.getColIndxFromDataIndx(obj.dataIndx) : obj.colIndx,
             offset = this.getRowIndxOffset();
         for (var row = this.init; row <= this["final"]; row++) {
             var rowIndxPage = obj.rowIndxPage = row;
@@ -2972,34 +3027,44 @@
             obj.customData = customData;
             this.cTable._renderCell(obj);
         }
-    }
+    };
     fn.refreshCell = function(obj) {
-        if (!this.data) return;
-        var offset = obj.offset = (obj.offset == null) ? this.getRowIndxOffset() : obj.offset,
-            rowIndx = obj.rowIndx = (obj.rowIndx == null) ? obj.rowIndxPage + offset : obj.rowIndx,
-            rowIndxPage = obj.rowIndxPage = (obj.rowIndxPage == null) ? obj.rowIndx - offset : obj.rowIndxPage,
+        if (!this.data) {
+            return;
+        }
+        var offset = obj.offset = (obj.offset === null) ? this.getRowIndxOffset() : obj.offset,
+            rowIndx = obj.rowIndx = (obj.rowIndx === null) ? obj.rowIndxPage + offset : obj.rowIndx,
+            rowIndxPage = obj.rowIndxPage = (obj.rowIndxPage === null) ? obj.rowIndx - offset : obj.rowIndxPage,
             dataIndx = obj.dataIndx,
-            colIndx = obj.colIndx = (obj.colIndx == null) ? this.getColIndxFromDataIndx(dataIndx) : obj.colIndx,
-            $td = obj.$td = (obj.$td == null) ? this.getCell(obj) : obj.$td,
+            colIndx = obj.colIndx = (obj.colIndx === null) ? this.getColIndxFromDataIndx(dataIndx) : obj.colIndx,
+            $td = obj.$td = (obj.$td === null) ? this.getCell(obj) : obj.$td,
             column = obj.column = this.colModel[colIndx],
             rowData = this.data[rowIndxPage];
-        if (!rowData) return;
+        if (!rowData) {
+            return;
+        }
         var objRender = obj;
         objRender.rowData = rowData;
         objRender.customData = this.options.customData;
-        if ($td && $td.length > 0) this.cTable._renderCell(objRender);
-    }
+        if ($td && $td.length > 0) {
+            this.cTable._renderCell(objRender);
+        }
+    };
     fn.refreshRow = function(obj) {
-        if (!this.data) return;
+        if (!this.data) {
+            return;
+        }
         var thisOptions = this.options,
-            offset = obj.offset = (obj.offset == null) ? this.getRowIndxOffset() : obj.offset,
-            rowIndx = obj.rowIndx = (obj.rowIndx == null) ? obj.rowIndxPage + offset : obj.rowIndx,
-            rowIndxPage = obj.rowIndxPage = (obj.rowIndxPage == null) ? obj.rowIndx - offset : obj.rowIndxPage,
-            $tr = (obj.$tr == null) ? this.getRow(obj) : obj.$tr,
+            offset = obj.offset = (obj.offset === null) ? this.getRowIndxOffset() : obj.offset,
+            rowIndx = obj.rowIndx = (obj.rowIndx === null) ? obj.rowIndxPage + offset : obj.rowIndx,
+            rowIndxPage = obj.rowIndxPage = (obj.rowIndxPage === null) ? obj.rowIndx - offset : obj.rowIndxPage,
+            $tr = (obj.$tr === null) ? this.getRow(obj) : obj.$tr,
             thisColModel = this.colModel,
             rowData = this.data[rowIndxPage],
             TVM = thisOptions.treeViewModel;
-        if (!rowData) return;
+        if (!rowData) {
+            return;
+        }
         var levelIndx, leafIndx, expandIndx,
             isLeaf, level, treeMarginLeft = 0,
             expanded;
@@ -3028,9 +3093,11 @@
             objRender.$td = $td;
             objRender.colIndx = colIndx;
             objRender.column = column;
-            if ($td && $td.length > 0) this.cTable._renderCell(objRender);
+            if ($td && $td.length > 0) {
+                this.cTable._renderCell(objRender);
+            }
         }
-    }
+    };
     fn.quitEditMode = function(evt) {
         if (this.$td_edit) {
             var $td = this.$td_edit;
@@ -3043,60 +3110,62 @@
             this._removeCellRowOutline();
             this.$td_edit = null;
         }
-    }
+    };
     fn.getData = function() {
         return this.data;
-    }
+    };
     fn.getViewPortRowsIndx = function() {
         return {
             beginIndx: this.init,
             endIndx: this['final']
         };
-    }
+    };
     fn.getRowIndxOffset = function() {
         var DM = this.options.dataModel,
             paging = DM.paging,
             offset = 0;
-        if (paging == "local" || paging == "remote") {
+        if (paging === "local" || paging === "remote") {
             var curPage = DM.curPage;
             var rPP = DM.rPP;
             offset = (rPP * (curPage - 1));
         }
         return offset;
-    }
+    };
     fn.getRowOffset = function() {
         return this.offsetRow;
-    }
+    };
     fn._cellblurred = function() {
         this.$div_focus.remove();
         this.$div_focus = null;
         this.$td_focus = null;
         this.$tr_focus = null;
-    }
+    };
     fn.selectCell = function(obj) {
         var rowIndx = obj.rowIndx,
             colIndx = obj.colIndx,
             evt = obj.evt;
-        if (evt && (evt.type == "keydown" || evt.type == "keypress")) {
-            if (this.sCells.replace(obj) == false) {
+        if (evt && (evt.type === "keydown" || evt.type === "keypress")) {
+            if (this.sCells.replace(obj) === false) {
                 return false;
             }
         } else {
-            if (this.sCells.add(obj) == false) {
+            if (this.sCells.add(obj) === false) {
                 return false;
             }
         }
-        if (evt != null) this._setGridFocus();
+        if (evt !== null) {
+            this._setGridFocus();
+        }
         return true;
-    }
+    };
     fn._setGridFocus = function() {
         var that = this;
         window.setTimeout(function() {
-            if (that.$td_edit == null) {
+            if (that.$td_edit === null) {
                 that.$grid_inner.focus();
             }
         }, 0)
-    }
+    };
     fn.getEditCell = function() {
         if (this.$td_edit) {
             return {
@@ -3106,17 +3175,17 @@
         } else {
             return null;
         }
-    }
+    };
     fn.editCell = function(obj) {
         var $td = this.getCell(obj);
-        if ($td != null && $td.length == 1) {
-            if (this.$td_edit && this.$td_edit[0] != $td[0]) {
+        if ($td !== null && $td.length === 1) {
+            if (this.$td_edit && this.$td_edit[0] !== $td[0]) {
                 this.quitEditMode();
             }
             this._editCell($td);
             return $td;
         }
-    }
+    };
     fn.getFirstEditableColIndx = function() {
         if (!this.options.editable) {
             return -1;
@@ -3124,16 +3193,16 @@
         var colModel = this.colModel;
         for (var i = 0; i < colModel.length; i++) {
             var column = colModel[i];
-            if (column.editable == false) {
+            if (column.editable === false) {
                 continue;
             }
             return i;
         }
         return -1;
-    }
+    };
     fn._editFirstCellInRow = function(obj) {
         var colIndx = this.getFirstEditableColIndx();
-        if (colIndx != -1) {
+        if (colIndx !== -1) {
             var rowIndxPage = obj.rowIndxPage;
             obj.colIndx = colIndx;
             this.bringRowIntoView(obj);
@@ -3141,7 +3210,7 @@
             if ($td && $td.length > 0)
                 this._editCell($td);
         }
-    }
+    };
     fn._editCell = function($td) {
         var that = this;
         var obj = that.getCellIndices($td);
@@ -3151,7 +3220,7 @@
             colIndx = obj.colIndx,
             column = this.colModel[colIndx],
             dataIndx = column.dataIndx;
-        if (this.$td_edit && this.$td_edit[0] == $td[0]) {
+        if (this.$td_edit && this.$td_edit[0] === $td[0]) {
             return false;
         }
         this.$td_edit = $td;
@@ -3161,9 +3230,9 @@
             $td: $td
         });
         var $cell = this.$div_focus.addClass('pq-cell-selected-border-edit');
-        if (column.align == "right") {
+        if (column.align === "right") {
             $cell.css("text-align", "right");
-        } else if (column.align == "center") {
+        } else if (column.align === "center") {
             $cell.css("text-align", "center");
         } else {
             $cell.css("text-align", "left");
@@ -3184,25 +3253,29 @@
         }
         var that = this;
         window.setTimeout(function() {
-            if (that.$td_edit != null) {
+            if (that.$td_edit !== null) {
                 var $cell = that.$div_focus;
                 $cell.children().focus();
             }
         }, 0)
-    }
+    };
     fn.getRow = function(obj) {
         var rowIndxPage = obj.rowIndxPage;
         var $tr;
-        if (this.$tbl != undefined) $tr = this.$tbl.find("tr[pq-row-indx=" + rowIndxPage + "]");
+        if (this.$tbl !== undefined) {
+            $tr = this.$tbl.find("tr[pq-row-indx=" + rowIndxPage + "]");
+        }
         return $tr;
-    }
+    };
     fn.getCell = function(obj) {
-        var rowIndxPage = (obj.rowIndxPage == null) ? (obj.rowIndx - this.getRowIndxOffset()) : obj.rowIndxPage,
+        var rowIndxPage = (obj.rowIndxPage === null) ? (obj.rowIndx - this.getRowIndxOffset()) : obj.rowIndxPage,
             colIndx = obj.colIndx;
         var $td;
-        if (this.$tbl != undefined) $td = this.$tbl.find("tr[pq-row-indx=" + rowIndxPage + "]>td[pq-col-indx=" + colIndx + "]");
+        if (this.$tbl !== undefined) {
+            $td = this.$tbl.find("tr[pq-row-indx=" + rowIndxPage + "]>td[pq-col-indx=" + colIndx + "]");
+        }
         return $td;
-    }
+    };
     fn.getEditCellData = function() {
         if (this.$td_edit) {
             var obj = this.getCellIndices(this.$td_edit);
@@ -3210,11 +3283,11 @@
         } else {
             return null;
         }
-    }
+    };
     fn._getEditCellData = function(obj) {
         var colIndx = obj.colIndx,
             rowIndxPage = obj.rowIndxPage,
-            rowIndx = (obj.rowIndx != null) ? obj.rowIndx : rowIndxPage + this.getRowIndxOffset(),
+            rowIndx = (obj.rowIndx !== null) ? obj.rowIndx : rowIndxPage + this.getRowIndxOffset(),
             column = (obj.column) ? obj.column : this.colModel[colIndx],
             $cell = (obj.$cell) ? obj.$cell : this.$div_focus;
         if (column.getEditCellData) {
@@ -3231,9 +3304,9 @@
             var dataCell = $cell.children().html();
         }
         return dataCell;
-    }
+    };
     fn.getCellIndices = function($td) {
-        if ($td == null || $td.length == 0) return {
+        if ($td === null || $td.length === 0) return {
                 rowIndxPage: null,
                 colIndx: null
         };
@@ -3245,43 +3318,43 @@
             rowIndxPage: rowIndxPage,
             colIndx: colIndx
         }
-    }
+    };
     fn._incrRowIndx = function(rowIndxPage, noRows) {
         var newRowIndx = rowIndxPage,
-            noRows = (noRows == null) ? 1 : noRows,
+            noRows = (noRows === null) ? 1 : noRows,
             counter = 0;
         for (var i = rowIndxPage + 1, len = this.data.length; i < len; i++) {
             var hidden = this._getRowPQData(i, "hidden");
             if (!hidden) {
                 counter++;
                 newRowIndx = i;
-                if (counter == noRows) {
+                if (counter === noRows) {
                     return newRowIndx;
                 }
             }
         }
         return newRowIndx;
-    }
+    };
     fn._decrRowIndx = function(rowIndxPage, noRows) {
         var newRowIndx = rowIndxPage,
-            noRows = (noRows == null) ? 1 : noRows,
+            noRows = (noRows === null) ? 1 : noRows,
             counter = 0;
         for (var i = rowIndxPage - 1; i >= 0; i--) {
             var hidden = this._getRowPQData(i, "hidden");
             if (!hidden) {
                 counter++;
                 newRowIndx = i;
-                if (counter == noRows) {
+                if (counter === noRows) {
                     return newRowIndx;
                 }
             }
         }
         return newRowIndx;
-    }
+    };
     fn._incrIndx = function(rowIndxPage, colIndx) {
         var that = this;
-        if (colIndx == null) {
-            if (rowIndxPage == this._getLastVisibleRowIndxPage(this.data)) {
+        if (colIndx === null) {
+            if (rowIndxPage === this._getLastVisibleRowIndxPage(this.data)) {
                 return null;
             }
             rowIndxPage = this._incrRowIndx(rowIndxPage);
@@ -3293,7 +3366,7 @@
         do {
             colIndx++;
             if (colIndx >= that.colModel.length) {
-                if (rowIndxPage == this._getLastVisibleRowIndxPage(this.data)) {
+                if (rowIndxPage === this._getLastVisibleRowIndxPage(this.data)) {
                     return null;
                 }
                 rowIndxPage = this._incrRowIndx(rowIndxPage);
@@ -3305,11 +3378,11 @@
             rowIndxPage: rowIndxPage,
             colIndx: colIndx
         };
-    }
+    };
     fn._decrIndx = function(rowIndxPage, colIndx) {
         var that = this;
-        if (colIndx == null) {
-            if (rowIndxPage == this._getFirstVisibleRowIndxPage(this.data)) {
+        if (colIndx === null) {
+            if (rowIndxPage === this._getFirstVisibleRowIndxPage(this.data)) {
                 return null;
             }
             rowIndxPage = this._decrRowIndx(rowIndxPage);
@@ -3321,7 +3394,7 @@
         do {
             colIndx--;
             if (colIndx < 0) {
-                if (rowIndxPage == this._getFirstVisibleRowIndxPage(this.data)) {
+                if (rowIndxPage === this._getFirstVisibleRowIndxPage(this.data)) {
                     return null;
                 }
                 rowIndxPage = this._decrRowIndx(rowIndxPage);
@@ -3333,14 +3406,14 @@
             rowIndxPage: rowIndxPage,
             colIndx: colIndx
         };
-    }
+    };
     fn._incrEditIndx = function(rowIndxPage, colIndx) {
         var that = this;
         var column;
         do {
             colIndx++;
             if (colIndx >= that.colModel.length) {
-                if (rowIndxPage == this._getLastVisibleRowIndxPage(this.data)) {
+                if (rowIndxPage === this._getLastVisibleRowIndxPage(this.data)) {
                     return null;
                 }
                 rowIndxPage = this._incrRowIndx(rowIndxPage);
@@ -3352,14 +3425,14 @@
             rowIndxPage: rowIndxPage,
             colIndx: colIndx
         };
-    }
+    };
     fn._decrEditIndx = function(rowIndxPage, colIndx) {
         var that = this;
         var column;
         do {
             colIndx--;
             if (colIndx < 0) {
-                if (rowIndxPage == this._getFirstVisibleRowIndxPage(this.data)) {
+                if (rowIndxPage === this._getFirstVisibleRowIndxPage(this.data)) {
                     return null;
                 }
                 rowIndxPage = this._decrRowIndx(rowIndxPage);
@@ -3371,7 +3444,7 @@
             rowIndxPage: rowIndxPage,
             colIndx: colIndx
         };
-    }
+    };
     fn.addColumn = function(column, columnData) {
         var thisOptions = this.options,
             thisOptionsColModel = thisOptions.colModel,
@@ -3382,7 +3455,7 @@
             var rowData = data[i];
             rowData.push("");
         }
-    }
+    };
     fn.keyPressDown = function(evt) {
         var that = this,
             selectedCells = this.sCells.getSelection(),
@@ -3420,10 +3493,10 @@
                 colIndx: colIndx,
                 $td: $td,
                 column: that.colModel[colIndx]
-            }) == false) {
+            }) === false) {
                 return false;
             };
-            if (evt.keyCode == keyCodes.tab) {
+            if (evt.keyCode === keyCodes.tab) {
                 var obj;
                 if (evt.shiftKey) {
                     obj = that._decrEditIndx(rowIndxPage, colIndx);
@@ -3431,13 +3504,13 @@
                     obj = that._incrEditIndx(rowIndxPage, colIndx);
                 }
                 that.saveEditCell();
-                if (obj == null) {
+                if (obj === null) {
                     evt.preventDefault();
                     return false;
                 }
                 that.quitEditMode(evt);
-                if (this.options.selectionModel.type == 'row') {
-                    if (obj.rowIndxPage != rowIndxPage) {
+                if (this.options.selectionModel.type === 'row') {
+                    if (obj.rowIndxPage !== rowIndxPage) {
                         that._setSelection(null);
                         that._setSelection({
                             rowIndxPage: obj.rowIndxPage
@@ -3448,7 +3521,7 @@
                         colIndx: obj.colIndx
                     });
                 } else
-                if ((obj.rowIndxPage != rowIndxPage || obj.colIndx != colIndx) && this.options.selectionModel.type == 'cell') {
+                if ((obj.rowIndxPage !== rowIndxPage || obj.colIndx !== colIndx) && this.options.selectionModel.type === 'cell') {
                     that._setSelection(null);
                     that._setSelection({
                         rowIndxPage: obj.rowIndxPage,
@@ -3461,36 +3534,38 @@
                     rowIndxPage: obj.rowIndxPage,
                     colIndx: obj.colIndx
                 });
-                if ($td2 && $td2.length > 0) this._editCell($td2);
+                if ($td2 && $td2.length > 0) {
+                    this._editCell($td2);
+                }
                 evt.preventDefault();
                 return false;
-            } else if (evt.keyCode == colSaveKey) {
+            } else if (evt.keyCode === colSaveKey) {
                 that.saveEditCell();
                 that.quitEditMode(evt);
-            } else if (colSaveKey == null && evt.keyCode == this.options.editModel.saveKey) {
+            } else if (colSaveKey === null && evt.keyCode === this.options.editModel.saveKey) {
                 that.saveEditCell();
                 that.quitEditMode(evt);
-            } else if (evt.keyCode == keyCodes.esc) {
+            } else if (evt.keyCode === keyCodes.esc) {
                 that.quitEditMode(evt);
                 evt.preventDefault();
                 return false;
-            } else if (evt.keyCode == keyCodes.pageUp || evt.keyCode == keyCodes.pageDown) {
+            } else if (evt.keyCode === keyCodes.pageUp || evt.keyCode === keyCodes.pageDown) {
                 evt.preventDefault();
                 return false;
             }
             return;
-        } else if (selectedRows.length > 0 && selectionModel.type == 'row') {
+        } else if (selectedRows.length > 0 && selectionModel.type === 'row') {
             var obj = selectedRows[selectedRows.length - 1],
                 rowIndx = obj.rowIndx,
                 rowIndxPage = rowIndx - offset;
         } else {
-            if (selectedCells.length > 0 && selectionModel.type == 'cell') {
+            if (selectedCells.length > 0 && selectionModel.type === 'cell') {
                 var obj = selectedCells[selectedCells.length - 1],
                     rowIndx = obj.rowIndx,
                     rowIndxPage = rowIndx - offset,
                     dataIndx = obj.dataIndx,
                     colIndx = this.getColIndxFromDataIndx(dataIndx);
-                if (rowIndx == null || colIndx == null)
+                if (rowIndx === null || colIndx === null)
                     return;
                 that._trigger("cellKeydown", evt, {
                     dataModel: this.dataModel,
@@ -3506,7 +3581,7 @@
                 return;
             }
         }
-        if (evt.keyCode == keyCodes.left) {
+        if (evt.keyCode === keyCodes.left) {
             var obj = that._decrIndx(rowIndxPage, colIndx);
             if (obj) that._setSelection({
                     rowIndxPage: obj.rowIndxPage,
@@ -3515,7 +3590,7 @@
                 });
             evt.preventDefault();
             return;
-        } else if (evt.keyCode == keyCodes.right) {
+        } else if (evt.keyCode === keyCodes.right) {
             var obj = that._incrIndx(rowIndxPage, colIndx);
             if (obj) that._setSelection({
                     rowIndxPage: obj.rowIndxPage,
@@ -3524,7 +3599,7 @@
                 });
             evt.preventDefault();
             return;
-        } else if (evt.keyCode == keyCodes.tab) {
+        } else if (evt.keyCode === keyCodes.tab) {
             var obj;
             if (evt.shiftKey) {
                 obj = that._decrIndx(rowIndxPage, colIndx);
@@ -3538,7 +3613,7 @@
                 });
             evt.preventDefault();
             return;
-        } else if (evt.keyCode == keyCodes.up) {
+        } else if (evt.keyCode === keyCodes.up) {
             rowIndxPage = that._decrRowIndx(rowIndxPage);
             if (obj) that._setSelection({
                     rowIndxPage: rowIndxPage,
@@ -3547,7 +3622,7 @@
                 });
             evt.preventDefault();
             return;
-        } else if (evt.keyCode == keyCodes.down) {
+        } else if (evt.keyCode === keyCodes.down) {
             rowIndxPage = that._incrRowIndx(rowIndxPage);
             if (obj) that._setSelection({
                     rowIndxPage: rowIndxPage,
@@ -3556,7 +3631,7 @@
                 });
             evt.preventDefault();
             return;
-        } else if (evt.keyCode == keyCodes.pageDown || evt.keyCode == keyCodes.spaceBar) {
+        } else if (evt.keyCode === keyCodes.pageDown || evt.keyCode === keyCodes.spaceBar) {
             var rowIndx = this._incrRowIndx(rowIndxPage, this.pageSize + 1) + offset;
             that._setSelection({
                 rowIndx: rowIndx,
@@ -3565,7 +3640,7 @@
             });
             evt.preventDefault();
             return;
-        } else if (evt.keyCode == keyCodes.pageUp) {
+        } else if (evt.keyCode === keyCodes.pageUp) {
             var rowIndx = this._decrRowIndx(rowIndxPage, this.pageSize + 1) + offset;
             that._setSelection({
                 rowIndx: rowIndx,
@@ -3574,7 +3649,7 @@
             });
             evt.preventDefault();
             return;
-        } else if (evt.keyCode == keyCodes.home) {
+        } else if (evt.keyCode === keyCodes.home) {
             rowIndx = 0 + offset;
             that._setSelection({
                 rowIndx: rowIndx,
@@ -3583,7 +3658,7 @@
             });
             evt.preventDefault();
             return;
-        } else if (evt.keyCode == keyCodes.end) {
+        } else if (evt.keyCode === keyCodes.end) {
             rowIndx = that.data.length - 1 + offset;
             that._setSelection({
                 rowIndx: rowIndx,
@@ -3592,8 +3667,8 @@
             });
             evt.preventDefault();
             return;
-        } else if (evt.keyCode == keyCodes.enter) {
-            if (this.options.selectionModel.type == 'row') {
+        } else if (evt.keyCode === keyCodes.enter) {
+            if (this.options.selectionModel.type === 'row') {
                 var $tr, $td;
                 if (selectedRows.length > 0) {
                     that._editFirstCellInRow({
@@ -3618,7 +3693,7 @@
             evt.preventDefault();
             return;
         } else {}
-    }
+    };
     fn._calcNumHiddenFrozens = function() {
         var num_hidden = 0;
         for (var i = 0; i < this.freezeCols; i++) {
@@ -3627,17 +3702,17 @@
             }
         }
         return num_hidden;
-    }
+    };
     fn._calcNumHiddenUnFrozens = function(colIndx) {
         var num_hidden = 0;
-        var len = (colIndx != null) ? colIndx : this.colModel.length;
+        var len = (colIndx !== null) ? colIndx : this.colModel.length;
         for (var i = this.freezeCols; i < len; i++) {
             if (this.colModel[i].hidden) {
                 num_hidden++;
             }
         }
         return num_hidden;
-    }
+    };
     fn._setScrollHLength = function() {
         if (!this.options.scrollModel.horizontal) {
             this.$hscroll.css("visibility", "hidden");
@@ -3659,32 +3734,32 @@
             }
         }
         var wdSB = this._getScollBarVerticalWidth();
-        if (wdSB == 0) {
+        if (wdSB === 0) {
             this.$hscroll.css("right", 0);
         } else {
             this.$hscroll.css("right", "");
         }
         wd -= wdSB;
         this.$hscroll.pqScrollBar("option", "length", wd);
-    }
+    };
     fn._setScrollHNumEles = function() {
         var data_length = this.colModel.length - this.freezeCols - this._calcNumHiddenUnFrozens();
         this.$hscroll.pqScrollBar("option", "num_eles", (data_length));
-    }
+    };
     fn._getScollBarHorizontalHeight = function() {
         var htSB = 17;
-        if (this.$hscroll.css("visibility") == "hidden" || this.options.scrollModel.horizontal == false || this.$hscroll.css("display") == "none") {
+        if (this.$hscroll.css("visibility") === "hidden" || this.options.scrollModel.horizontal === false || this.$hscroll.css("display") === "none") {
             htSB = 0;
         }
         return htSB;
-    }
+    };
     fn._getScollBarVerticalWidth = function() {
         var wdSB = 17;
-        if (this.$vscroll.css("visibility") == "hidden" || this.options.flexHeight || this.$vscroll.css("display") == "none") {
+        if (this.$vscroll.css("visibility") === "hidden" || this.options.flexHeight || this.$vscroll.css("display") === "none") {
             wdSB = 0;
         }
         return wdSB;
-    }
+    };
     fn._setScrollVNumEles = function(fullRefresh) {
         var that = this,
             $vscroll = this.$vscroll,
@@ -3693,7 +3768,7 @@
             cur_pos = parseInt(options.cur_pos);
         var htSB = this._getScollBarHorizontalHeight();
         var GM = this.options.groupModel;
-        var data = (GM && GM.grouping == "local") ? this.dataGM : this.data;
+        var data = (GM && GM.grouping === "local") ? this.dataGM : this.data;
         var totalVisibleRows = data ? this._getTotalVisibleRows(data) : 0;
         var htCont = this.$cont[0].offsetHeight;
         var htTbl = (this.$tbl) ? this.$tbl[0].offsetHeight : 0;
@@ -3721,7 +3796,7 @@
             that.$vscroll.pqScrollBar("setNumEles", num_eles);
         }
         return num_eles;
-    }
+    };
     fn._getFirstVisibleRowIndxPage = function(data) {
         for (var i = 0, len = data.length; i < len; i++) {
             var hidden = this._getRowPQData(i, "hidden");
@@ -3729,7 +3804,7 @@
                 return i;
             }
         }
-    }
+    };
     fn._getLastVisibleRowIndxPage = function(data) {
         for (var i = data.length - 1; i >= 0; i--) {
             var hidden = this._getRowPQData(i, "hidden");
@@ -3737,7 +3812,7 @@
                 return i;
             }
         }
-    }
+    };
     fn._getTotalVisibleRows = function(data) {
         if (this.options.treeViewModel) {
             var noRows = 0;
@@ -3751,7 +3826,7 @@
         } else {
             return data.length;
         }
-    }
+    };
     fn._setScrollVLength = function() {
         var cont_ht = this.$cont.height();
         var htSB = this._getScollBarHorizontalHeight();
@@ -3760,7 +3835,7 @@
         this.$vscroll.pqScrollBar("option", "length", len);
         return;
         var GM = this.options.groupModel;
-        var data = (GM && GM.grouping == "local") ? this.dataGM : this.data;
+        var data = (GM && GM.grouping === "local") ? this.dataGM : this.data;
         var totalVisibleRows = data ? this._getTotalVisibleRows(data) : 0;
         var options = this.$vscroll.pqScrollBar("option"),
             cur_pos = parseInt(options.cur_pos);
@@ -3791,23 +3866,29 @@
         this.$vscroll.pqScrollBar("option", {
             num_eles: num_eles
         });
-    }
+    };
     fn._setInnerGridHeight = function() {
-        if (this.options.flexHeight) return;
+        if (this.options.flexHeight) {
+            return;
+        }
         var ht = (this.element.height() -
             ((this.options.topVisible) ? this.$top[0].offsetHeight : 0) -
             ((this.options.bottomVisible) ? this.$bottom[0].offsetHeight : 0));
         this.$grid_inner.height(ht + "px");
-    }
+    };
     fn._setRightGridHeight = function() {
         this.$header_o.height(this.$header_left.height() - 2);
-        if (this.options.flexHeight) return;
+        if (this.options.flexHeight) {
+            return;
+        }
         this.$vscroll.css("visibility", "");
-        if (this.$tbl) this.$tbl.css("marginBottom", 0);
+        if (this.$tbl) {
+            this.$tbl.css("marginBottom", 0);
+        }
         var ht = (this.element.height() - this.$header_o[0].offsetHeight - ((this.options.topVisible) ? this.$top[0].offsetHeight : 0) - ((this.options.bottomVisible) ? this.$bottom[0].offsetHeight : 0));
         var ht_contFixed = 0;
         this.$cont.height((ht - ht_contFixed) + "px");
-    }
+    };
     fn.setGridHeightFromTable = function() {
         var htTbl = 0;
         var htSB = this._getScollBarHorizontalHeight();
@@ -3822,10 +3903,10 @@
         this.element.height("");
         this.$grid_inner.height("");
         this.$vscroll.css("visibility", "hidden");
-    }
+    };
     fn._setGridWidthFromTable = function() {
         var wdSB = 17;
-        if (this.$vscroll.css("visibility") == "hidden" || this.$vscroll.css("display") == "none") {
+        if (this.$vscroll.css("visibility") === "hidden" || this.$vscroll.css("display") === "none") {
             wdSB = 0;
         }
         if (this.$tbl) {
@@ -3834,25 +3915,25 @@
             var wd_tbl = this.$header_left.find("table")[0].offsetWidth;
             this.element.width((wd_tbl) + "px");
         }
-    }
-    fn._setRightGridWidth = function() {}
+    };
+    fn._setRightGridWidth = function() {};
     fn._bufferObj_getInit = function() {
         return this.init;
-    }
+    };
     fn._bufferObj_getFinal = function() {
         return this["final"];
-    }
+    };
     fn._bufferObj_minRowsPerGrid = function() {
         var ht = this.$cont[0].offsetHeight;
         return Math.ceil(ht / this.rowHeight);
-    }
+    };
     fn._calcCurPosFromRowIndxPage = function(rowIndxPage) {
         if (!this.options.treeViewModel) {
             return rowIndxPage;
         }
         var cur_pos = 0;
         for (var i = 0, len = this.data.length; i < len; i++) {
-            if (i == rowIndxPage) {
+            if (i === rowIndxPage) {
                 break;
             }
             var hidden = this._getRowPQData(i, "hidden");
@@ -3861,13 +3942,13 @@
             }
         }
         return cur_pos;
-    }
+    };
     fn._bufferObj_calcInitFinal = function() {
         var GM = this.options.groupModel,
-            GMtrue = (GM && GM.grouping == "local") ? true : false,
+            GMtrue = (GM && GM.grouping === "local") ? true : false,
             data = GMtrue ? this.dataGM : this.data,
             TVM = this.options.treeViewModel;
-        if (data == null || data.length == 0) {
+        if (data === null || data.length === 0) {
             this['final'] = this['init'] = null;
         } else if (this.options.flexHeight) {
             this.init = 0;
@@ -3880,7 +3961,7 @@
             } else if (TVM) {
                 var j = 0;
                 for (var i = 0; i < data.length; i++) {
-                    if (j == cur_pos) {
+                    if (j === cur_pos) {
                         break;
                     }
                     var hidden = this._getRowPQData(i, "hidden");
@@ -3900,7 +3981,7 @@
             if (TVM) {
                 var visibleRows = 0;
                 for (var i = this.init; i < data.length; i++) {
-                    if (noRows == visibleRows) {
+                    if (noRows === visibleRows) {
                         break;
                     }
                     var hidden = this._getRowPQData(i, "hidden");
@@ -3916,7 +3997,7 @@
                 this['final'] = data.length - 1;
             }
         }
-    }
+    };
     fn._bufferObj_calcInitFinalH = function() {
         var cur_pos = parseInt(this.$hscroll.pqScrollBar("option", "cur_pos"));
         var initH = 0;
@@ -3925,7 +4006,7 @@
         for (var i = this.freezeCols, len = thisColModel.length; i < len; i++) {
             if (thisColModel[i].hidden) {
                 initH++;
-            } else if (indx == cur_pos) {
+            } else if (indx === cur_pos) {
                 break;
             } else {
                 initH++;
@@ -3933,17 +4014,19 @@
             }
         }
         this.initH = initH;
-    }
+    };
     fn._calcWidthCols = function(colIndx) {
         var wd = 0;
         if (this.numberCell) {
             wd += this.numberCell_outerWidth;
         }
         for (var i = 0; i <= colIndx; i++) {
-            if (!this.colModel[i].hidden) wd += this.outerWidths[i];
+            if (!this.colModel[i].hidden) {
+                wd += this.outerWidths[i];
+            }
         }
         return wd;
-    }
+    };
     fn._calcRightEdgeCol = function(colIndx) {
         var wd = 0,
             cols = 0;
@@ -3952,7 +4035,7 @@
             cols++;
         }
         for (var i = 0; i <= colIndx; i++) {
-            if (!this.colModel[i].hidden && this.hidearrHS[i] == false) {
+            if (!this.colModel[i].hidden && this.hidearrHS[i] === false) {
                 wd += this.outerWidths[i];
                 cols++;
             }
@@ -3961,10 +4044,12 @@
             width: wd,
             cols: cols
         };
-    }
+    };
     fn._refreshFreezeLine = function() {
         return;
-        if (this.$freezeLine) this.$freezeLine.remove();
+        if (this.$freezeLine) {
+            this.$freezeLine.remove();
+        }
         this.$freezeLine = $("<div style='position:absolute;width:1px;z-index:100;'></div>").appendTo(this.$grid_inner);
         var ht = this.$grid_inner.outerHeight();
         var ele = $("td[pq-grid-col-indx=" + this.freezeCols + "]", this.$header)[0];
@@ -3974,7 +4059,7 @@
             top: "0",
             left: lft
         });
-    }
+    };
     fn._getDragHelper = function(evt) {
         var $target = $(evt.currentTarget);
         this.$cl = $("<div class='pq-grid-drag-bar'></div>").appendTo(this.$grid_inner);
@@ -3992,7 +4077,7 @@
         this.$cl.css({
             left: lft
         });
-    }
+    };
     fn._setDragLimits = function(indx) {
         var that = this;
         var $head = that.$header_left;
@@ -4003,34 +4088,36 @@
         var $pQuery_col = $head.find("td.pq-grid-col[pq-grid-col-indx=" + indx + "]");
         var cont_left = $pQuery_col.offset().left + that.minWidth;
         var wdSB = 17;
-        if (this.options.flexHeight || this.$vscroll.css("visibility") == "hidden") {
+        if (this.options.flexHeight || this.$vscroll.css("visibility") === "hidden") {
             wdSB = 0;
         }
         var cont_right = that.$cont.offset().left + that.$cont[0].offsetWidth - wdSB + 20;
         $pQuery_drag.draggable("option", 'containment', [cont_left, 0, cont_right, 0]);
-    }
+    };
     fn._getOrderIndx = function(indx) {
         var columnOrder = this.options.columnOrder;
-        if (columnOrder != null) {
+        if (columnOrder !== null) {
             return columnOrder[indx];
         } else {
             return indx;
         }
-    }
+    };
     fn.nestedCols = function(colMarr, _depth, _hidden) {
         var len = colMarr.length;
         var arr = [];
-        if (_depth == null) _depth = 1;
+        if (_depth === null) {
+            _depth = 1;
+        }
         var new_depth = _depth,
             colSpan = 0,
             width = 0,
             childCount = 0;
         for (var i = 0; i < len; i++) {
             var colM = colMarr[i];
-            if (_hidden == true) {
+            if (_hidden === true) {
                 colM.hidden = _hidden;
             }
-            if (colM.colModel != null) {
+            if (colM.colModel !== null) {
                 var obj = this.nestedCols(colM.colModel, _depth + 1, colM.hidden);
                 arr = arr.concat(obj.colModel);
                 if (obj.colSpan > 0) {
@@ -4064,7 +4151,7 @@
             width: width,
             childCount: childCount
         };
-    }
+    };
     fn.getHeadersCells = function() {
         var optColModel = this.options.colModel,
             thisColModelLength = this.colModel.length,
@@ -4077,12 +4164,12 @@
                 childCountSum = 0;
             for (var col = 0; col < thisColModelLength; col++) {
                 var colModel;
-                if (row == 0) {
+                if (row === 0) {
                     colModel = optColModel[k];
                 } else {
                     var parentColModel = arr[row - 1][col];
                     var children = parentColModel.colModel;
-                    if (children == null) {
+                    if (children === null) {
                         colModel = parentColModel;
                     } else {
                         var diff = (col - parentColModel.leftPos);
@@ -4100,7 +4187,7 @@
                     }
                 }
                 var childCount = (colModel.childCount) ? colModel.childCount : 1;
-                if (col == childCountSum) {
+                if (col === childCountSum) {
                     colModel.leftPos = col;
                     arr[row][col] = colModel;
                     childCountSum += childCount;
@@ -4114,7 +4201,7 @@
         }
         this.headerCells = arr;
         return arr;
-    }
+    };
     fn.assignRowSpan = function() {
         var optColModel = this.options.colModel,
             thisColModelLength = this.colModel.length,
@@ -4123,15 +4210,15 @@
         for (var col = 0; col < thisColModelLength; col++) {
             for (var row = 0; row < depth; row++) {
                 var colModel = headerCells[row][col];
-                if (col > 0 && colModel == headerCells[row][col - 1]) {
+                if (col > 0 && colModel === headerCells[row][col - 1]) {
                     continue;
-                } else if (row > 0 && colModel == headerCells[row - 1][col]) {
+                } else if (row > 0 && colModel === headerCells[row - 1][col]) {
                     continue;
                 }
                 var rowSpan = 1;
                 for (var row2 = row + 1; row2 < depth; row2++) {
                     var colModel2 = headerCells[row2][col];
-                    if (colModel == colModel2) {
+                    if (colModel === colModel2) {
                         rowSpan++;
                     }
                 }
@@ -4139,18 +4226,18 @@
             }
         }
         return headerCells;
-    }
+    };
     fn._refreshHeader = function() {
         var obj = this.nestedCols(this.options.colModel);
         this.colModel = obj.colModel;
         this.depth = obj.depth;
         this.getHeadersCells();
         this.assignRowSpan();
-    }
+    };
     fn._refreshWidths = function() {
         var that = this;
         $(this.colModel).each(function(i, col) {
-            if (col.width != undefined) {
+            if (col.width !== undefined) {
                 var wd = parseInt(col.width)
                 if (wd < that.minWidth) {
                     wd = that.minWidth;
@@ -4160,7 +4247,7 @@
                 col.width = that.minWidth;
             }
         });
-    }
+    };
     fn._createHeader = function() {
         var that = this;
         var str = "<table class='pq-grid-header-table' cellpadding=0 cellspacing=0>";
@@ -4190,34 +4277,34 @@
         }
         for (var row = 0; row < depth; row++) {
             str += "<tr>";
-            if (row == 0 && this.numberCell) {
+            if (row === 0 && this.numberCell) {
                 str += "<td class='pq-grid-number-col' rowspan='" + depth + "'>\
 				<div class='pq-grid-header-table-div'>&nbsp;</div></td>";
             }
             for (var col = 0; col < thisColModelLength; col++) {
                 var column = headerCells[row][col];
                 var colSpan = column.colSpan;
-                if (row > 0 && column == headerCells[row - 1][col]) {
+                if (row > 0 && column === headerCells[row - 1][col]) {
                     continue;
-                } else if (col > 0 && column == headerCells[row][col - 1]) {
+                } else if (col > 0 && column === headerCells[row][col - 1]) {
                     continue;
                 }
                 if (column.hidden) {
                     continue;
                 }
                 var cls = "pq-grid-col";
-                if (column.align == "right") {
+                if (column.align === "right") {
                     cls += ' pq-align-right';
                 } else
-                if (column.align == "center") {
+                if (column.align === "center") {
                     cls += ' pq-align-center';
                 }
-                if (col == that.freezeCols - 1 && depth == 1) {
+                if (col === that.freezeCols - 1 && depth === 1) {
                     cls += " pq-last-freeze-col";
                 }
                 var colIndx = "",
                     dataIndx = "";
-                if (column.colModel == null) {
+                if (column.colModel === null) {
                     colIndx = "pq-grid-col-indx='" + col + "'";
                 }
                 str += "<td " + colIndx + " " + dataIndx + " class='" + cls + "' rowspan=" + column.rowSpan + " colspan=" + colSpan + ">\
@@ -4245,7 +4332,7 @@
                 continue;
             }
             var oW = this.outerWidths[i];
-            if (oW == null) {
+            if (oW === null) {
                 throw ("Assert: unknown width");
             }
             lft += oW;
@@ -4258,11 +4345,11 @@
                 return;
             }
             var colIndx = $(this).attr("pq-grid-col-indx");
-            if (colIndx == null) {
+            if (colIndx === null) {
                 return;
             }
             var column = that.colModel[colIndx];
-            if (column.sortable == false) {
+            if (column.sortable === false) {
                 return;
             }
             var dataIndx = column.dataIndx;
@@ -4270,13 +4357,13 @@
                 dataModel: that.dataModel,
                 data: that.data,
                 sortIndx: dataIndx
-            }) == false) {
+            }) === false) {
                 return;
             }
             var dir = "up";
             var DM = that.options.dataModel;
-            if (DM.sortIndx == dataIndx) {
-                dir = (DM.sortDir == "up") ? "down" : "up";
+            if (DM.sortIndx === dataIndx) {
+                dir = (DM.sortDir === "up") ? "down" : "up";
             }
             DM.sortIndx = dataIndx;
             DM.sortDir = dir;
@@ -4301,7 +4388,7 @@
             } else if (colModel.hidden) {
                 continue;
             }
-            if (colModel.resizable != undefined && colModel.resizable == false) {
+            if (colModel.resizable !== undefined && colModel.resizable === false) {
                 continue;
             }
             var $head = that.$header_left;
@@ -4311,7 +4398,7 @@
             var $handle = $("<div pq-grid-col-indx='" + i + "' class='pq-grid-col-resize-handle'>&nbsp;</div>")
                 .appendTo($head);
             var pq_col = that.$header_right.find("td[pq-grid-col-indx=" + i + "]")[0];
-            lft = parseInt(pq_col.offsetLeft) + parseInt((direction == "rtl") ? 0 : (pq_col.offsetWidth - 10));
+            lft = parseInt(pq_col.offsetLeft) + parseInt((direction === "rtl") ? 0 : (pq_col.offsetWidth - 10));
             $handle.css({
                 left: lft,
                 height: hd_ht
@@ -4353,17 +4440,19 @@
                 }
             }
         });
-    }
+    };
     fn._refreshHeaderSortIcons = function() {
         var DM = this.options.dataModel;
-        if (DM.sortIndx == undefined) return;
+        if (DM.sortIndx === undefined) {
+            return;
+        }
         var $pQuery_cols = this.$header.find(".pq-grid-col");
         $pQuery_cols.removeClass("pq-col-sort-asc pq-col-sort-desc ui-state-active");
         var sortIndx = DM.sortIndx;
         var colIndx = this.getColIndxFromDataIndx(sortIndx);
-        var addClass = "ui-state-active pq-col-sort-" + (DM.sortDir == "up" ? "asc" : "desc")
+        var addClass = "ui-state-active pq-col-sort-" + (DM.sortDir === "up" ? "asc" : "desc")
         this.$header.find(".pq-grid-col[pq-grid-col-indx=" + colIndx + "]").addClass(addClass)
-    }
+    };
     fn._generateSummaryRow = function(rowData, rowIndx, thisColModel, noColumns, hidearrHS1, offset, const_cls, buffer) {
         var row_cls = "pq-summary-row",
             row_str = "",
@@ -4398,12 +4487,12 @@
             }
             var strStyle = "";
             var cls = const_cls;
-            if (column.align == "right") {
+            if (column.align === "right") {
                 cls += ' pq-align-right';
-            } else if (column.align == "center") {
+            } else if (column.align === "center") {
                 cls += ' pq-align-center';
             }
-            if (col == this.freezeCols - 1 && columnBorders) {
+            if (col === this.freezeCols - 1 && columnBorders) {
                 cls += " pq-last-freeze-col";
             }
             if (column.className) {
@@ -4412,7 +4501,7 @@
             if (cellSelection) {
                 cls = cls + " pq-cell-select";
             }
-            var valCell = (rowData[dataIndx] == null) ? "" : rowData[dataIndx];
+            var valCell = (rowData[dataIndx] === null) ? "" : rowData[dataIndx];
             var str = "<td class='" + cls + "' style='" + strStyle + "' >\
 			<div>" + valCell + "</div></td>";
             buffer.push(str)
@@ -4426,22 +4515,22 @@
             var strStyle = "";
             strStyle += "visibility:hidden;";
             var cls = const_cls;
-            if (column.align == "right") {
+            if (column.align === "right") {
                 cls += ' pq-align-right';
-            } else if (column.align == "center") {
+            } else if (column.align === "center") {
                 cls += ' pq-align-center';
             }
-            var valCell = (rowData[dataIndx] == null) ? "" : rowData[dataIndx];
+            var valCell = (rowData[dataIndx] === null) ? "" : rowData[dataIndx];
             var str = "<td class='" + cls + "' style='" + strStyle + "' >\
 			<div>" + valCell + "</div></td>";
             buffer.push(str)
         }
         buffer.push("</tr>");
         return buffer;
-    }
+    };
     fn.createTable = function(objP) {
         this.cTable._generateTables(objP);
-    }
+    };
     fn._refreshOtherTables = function() {
         return;
         var thisColModel = this.colModel,
@@ -4462,16 +4551,16 @@
                     }
                 } else if (this.hidearrHS[col]) {
                     var $td = $tr.find("td[pq-dataIndx='" + dataIndx + "']");
-                    if ($td.css("visibility") != "hidden") {}
+                    if ($td.css("visibility") !== "hidden") {}
                 }
                 var strStyle = "";
                 var cls = const_cls;
-                if (column.align == "right") {
+                if (column.align === "right") {
                     cls += ' pq-align-right';
-                } else if (column.align == "center") {
+                } else if (column.align === "center") {
                     cls += ' pq-align-center';
                 }
-                if (col == this.freezeCols - 1 && columnBorders) {
+                if (col === this.freezeCols - 1 && columnBorders) {
                     cls += " pq-last-freeze-col";
                 }
                 if (column.className) {
@@ -4492,9 +4581,9 @@
                 var strStyle = "";
                 strStyle += "visibility:hidden;";
                 var cls = const_cls;
-                if (column.align == "right") {
+                if (column.align === "right") {
                     cls += ' pq-align-right';
-                } else if (column.align == "center") {
+                } else if (column.align === "center") {
                     cls += ' pq-align-center';
                 }
                 var str = "<td class='" + cls + "' style='" + strStyle + "' pq-col-indx='" + col + "'>\
@@ -4502,12 +4591,12 @@
                 buffer.push(str)
             }
         }
-    }
+    };
     fn._sortLocalData = function(dataIndx, dir, dataType, data) {
         var m_sort_dir = dir,
             TVM = this.options.treeViewModel,
             that = this;
-        if (data == null || data.length == 0) {
+        if (data === null || data.length === 0) {
             return;
         }
 
@@ -4548,21 +4637,21 @@
                 }
                 return 0;
             }
-            if (dataType == "integer") {
+            if (dataType === "integer") {
                 data = data.sort(sort_integer)
-            } else if (dataType == "float") {
+            } else if (dataType === "float") {
                 data = data.sort(sort_float)
-            } else if (typeof dataType == "function") {
+            } else if (typeof dataType === "function") {
                 data = data.sort(sort_custom);
             } else {
                 data = data.sort(sort_string)
             }
-            if (m_sort_dir == "down") {
+            if (m_sort_dir === "down") {
                 data = data.reverse();
             }
         }
         $.measureTime(innerSort, "innerSort");
-    }
+    };
     $.widget("paramquery.pqGrid", fn);
     $.paramquery.pqGrid.regional = {};
     $.paramquery.pqGrid.regional['en'] = fn._regional;
@@ -4574,27 +4663,29 @@
         $(".pq-grid").each(function(i, grid) {
             $(grid).pqGrid("option", obj);
         })
-    }
+    };
     $.measureTime = function(fn, nameofFunc) {
         var initTime = (new Date()).getTime();
         fn();
         var finalTime = (new Date()).getTime();
         var cnt = finalTime - initTime;
-    }
+    };
 })(jQuery);
 var cons = {
     log: function(str) {
         try {
-            if (document.compatMode && document.all && typeof str == 'object') throw "";
+            if (document.compatMode && document.all && typeof str === 'object') {
+                throw "";
+            }
             console.log(str);
         } catch (e) {
             var st = "";
-            if (typeof str == 'object') {
+            if (typeof str === 'object') {
                 for (var key in str) {
-                    if (typeof str[key] != 'function') st += key + " = " + str[key]
+                    if (typeof str[key] !== 'function') st += key + " = " + str[key]
                 }
             } else {
-                if (document.getElementById('console') == undefined) {
+                if (document.getElementById('console') === undefined) {
                     $("<textarea id='console' rows=8 cols=100>" + str + "</textarea>").appendTo(document.body);
                 }
                 var $console = $("#console")

@@ -910,7 +910,8 @@
             TVM = thisOptions.treeViewModel,
             columnBorders = thisOptions.columnBorders,
             wrap = thisOptions.wrap,
-            customData = thisOptions.customData;
+            customData = thisOptions.customData,
+            levelIndx, leafIndx, expandIndx, isLeaf, level, treeMarginLeft, expanded;
         var objRender;
         if (TVM) {
             levelIndx = TVM.levelIndx;
@@ -1042,7 +1043,7 @@
         }
         var raiseEvent = objP.raiseEvent,
             that = this.that,
-            offset = (objP.offset === null) ? that.getRowIndxOffset() : obj.offset;
+            offset = (objP.offset === null) ? that.getRowIndxOffset() : objP.offset;
         var selectedRows = this.selectedRows.slice(0);
         for (var i = 0; i < selectedRows.length; i++) {
             var selR = selectedRows[i];
@@ -1075,9 +1076,9 @@
         }
         var rowIndx = obj.rowIndx,
             offset = obj.offset = (obj.offset === null) ? this.that.getRowIndxOffset() : obj.offset,
-            rowIndxPage = obj.rowIndxPage = rowIndx - offset;
-        $tr = obj.$tr,
-        evt = obj.evt;
+            rowIndxPage = obj.rowIndxPage = rowIndx - offset,
+            $tr = obj.$tr,
+            evt = obj.evt;
         this.removeAll({
             raiseEvent: true
         });
@@ -1232,7 +1233,7 @@
         }
         var raiseEvent = objP.raiseEvent,
             that = this.that,
-            offset = (objP.offset === null) ? that.getRowIndxOffset() : obj.offset;
+            offset = (objP.offset === null) ? that.getRowIndxOffset() : objP.offset;
         var selectedCells = this.selectedCells.slice(0);
         for (var i = 0; i < selectedCells.length; i++) {
             var selC = selectedCells[i];
@@ -1265,9 +1266,11 @@
         }
         return false;
     };
-    _pC.refresh = function() {
+    _pC.refresh = function(objP) {
         this.selectedCells = [];
-        var data = this.options.dataModel.data;
+        var that = this.that,
+            data = this.options.dataModel.data,
+            dataIndx = (objP.dataIndx === null) ? that.colModel[objP.colIndx].dataIndx : objP.dataIndx;
         if (!data) {
             return;
         }
@@ -1289,9 +1292,9 @@
         var rowIndx = obj.rowIndx,
             colIndx = obj.colIndx,
             offset = obj.offset = (obj.offset === null) ? this.that.getRowIndxOffset() : obj.offset,
-            rowIndxPage = obj.rowIndxPage = rowIndx - offset;
-        $td = obj.$td,
-        evt = obj.evt;
+            rowIndxPage = obj.rowIndxPage = rowIndx - offset,
+            $td = obj.$td,
+            evt = obj.evt;
         this.removeAll({
             raiseEvent: true
         });
@@ -1547,11 +1550,13 @@
                 });
             }
         }
+        /*
         for (row = initRowIndx; row <= finalRowIndx; row++) {
             that.sRows.add({
-                rowIndx: rowIndx
+                rowIndx: rowIndx   //missing reference
             });
         }
+        */
     };
     fn._rangeSelect = function(initRowIndx, initColIndx, finalRowIndx, finalColIndx, evt) {
         var that = this,
@@ -2241,7 +2246,7 @@
         }
         this._initPager();
         if (dataModel.location === "remote") {
-            var that = this;
+            that = this;
             this.generateLoading();
             this.remoteRequest();
         } else {
@@ -2255,17 +2260,19 @@
         }
         if (that.initH > 0) {
             var indx = that.freezeCols - 1 + that.initH;
-            for (var i = that.freezeCols; i <= indx; i++) {
-                if (that.colModel[i].hidden) {
+            for (var x = that.freezeCols; x <= indx; x++) {
+                if (that.colModel[x].hidden) {
                     continue;
                 }
-                that.hidearrHS[i] = true;
+                that.hidearrHS[x] = true;
             }
         } else {}
     };
     fn.generateLoading = function() {
-        if (this.$loading) this.$loading.remove();
-        this.$loading = $("<div class='pq-loading'></div>").appendTo(this.element)
+        if (this.$loading) {
+            this.$loading.remove();
+        }
+        this.$loading = $("<div class='pq-loading'></div>").appendTo(this.element);
         $("<div class='pq-loading-bg'></div><div class='pq-loading-mask ui-state-highlight'><div>" + this.options.strLoading + "...</div></div>").appendTo(this.$loading);
         this.$loading.find("div.pq-loading-bg").css("opacity", 0.2);
     };
@@ -2513,7 +2520,7 @@
         this.selectCellRowCallback(function() {
             this.cTable._generateTables();
             this._computeOuterWidths();
-        })
+        });
         this._refreshHeaderSortIcons();
         this._setRightGridHeight();
         this._setScrollVLength();
@@ -2604,13 +2611,15 @@
             thisColModelLength = thisColModel.length;
         for (var i = 0; i < thisColModelLength; i++) {
             var column = thisColModel[i];
-            this.outerWidths[i] = parseInt(column.width) + ((columnBorders) ? 1 : 0);
+            this.outerWidths[i] = parseInt(column.width, 10) + ((columnBorders) ? 1 : 0);
         }
         this.numberCell_outerWidth = this.numberCellWidth + 1;
         return;
     };
     fn._setOption = function(key, value) {
         this.refreshRequired = true;
+        var obj;
+        var prop;
         if (key === "height") {
             this.element.height(value);
             $.Widget.prototype._setOption.call(this, key, value);
@@ -2632,8 +2641,8 @@
             }
             this.refreshRequired = false;
         } else if (key === "freezeCols") {
-            if (!isNaN(value) && value >= 0 && parseInt(value) <= this.colModel.length - 2) {
-                this.options.freezeCols = this.freezeCols = parseInt(value);
+            if (!isNaN(value) && value >= 0 && parseInt(value, 10) <= this.colModel.length - 2) {
+                this.options.freezeCols = this.freezeCols = parseInt(value, 10);
                 this._refreshFreezeLine();
                 this._setScrollHLength();
                 $.Widget.prototype._setOption.call(this, key, value);
@@ -2641,9 +2650,9 @@
         } else if (key === "resizable") {
             $.Widget.prototype._setOption.call(this, key, value);
         } else if (key === "scrollModel") {
-            var obj = value;
-            for (var key in obj) {
-                this.options.scrollModel[key] = obj[key];
+            obj = value;
+            for (prop in obj) {
+                this.options.scrollModel[prop] = obj[prop];
             }
         } else if (key === "dataModel") {
             $.Widget.prototype._setOption.call(this, key, value);
@@ -2656,9 +2665,9 @@
             }
             this.refreshDataAndView();
         } else if (key === "selectionModel") {
-            var obj = value;
-            for (var key in obj) {
-                this.options.selectionModel[key] = obj[key];
+            obj = value;
+            for (prop in obj) {
+                this.options.selectionModel[prop] = obj[prop];
             }
             this.refreshRequired = false;
         } else if (key === "colModel") {
@@ -2687,15 +2696,17 @@
             this.generateLoading();
             this.refreshRequired = false;
         } else if (key === "topVisible") {
-            if (value === true)
+            if (value === true) {
                 this.$top.css("display", "");
-            else
+            } else {
                 this.$top.css("display", "none");
+            }
         } else if (key === "bottomVisible") {
-            if (value === true)
+            if (value === true) {
                 this.$bottom.css("display", "");
-            else
+            } else {
                 this.$bottom.css("display", "none");
+            }
         } else {
             $.Widget.prototype._setOption.call(this, key, value);
         }
@@ -2710,23 +2721,24 @@
     fn._generateCellRowOutline = function(obj) {
         var $td = obj.$td,
             $tr = obj.$tr,
-            that = this;
+            that = this,
+            wd, ht, $table, offsetParent, lft, top;
         if ($tr) {
-            var wd = that._calcRightEdgeCol(that.colModel.length - 1);
+            wd = that._calcRightEdgeCol(that.colModel.length - 1);
             wd -= 4;
-            var ht = $tr[0].offsetHeight - 4;
-            var $table = $($tr[0].offsetParent);
-            var offsetParent = $table[0].offsetParent;
-            var lft = $tr[0].offsetLeft + $table[0].offsetLeft;
-            var top = $tr[0].offsetTop + $table[0].offsetTop;
+            ht = $tr[0].offsetHeight - 4;
+            $table = $($tr[0].offsetParent);
+            offsetParent = $table[0].offsetParent;
+            lft = $tr[0].offsetLeft + $table[0].offsetLeft;
+            top = $tr[0].offsetTop + $table[0].offsetTop;
             that._generateCellHighlighter(offsetParent, lft, top, wd, ht);
         } else if ($td) {
-            var $table = $($td[0].offsetParent);
-            var offsetParent = $table[0].offsetParent;
-            var wd = $td[0].offsetWidth - 4;
-            var ht = $td[0].offsetHeight - 4;
-            var lft = $td[0].offsetLeft + $table[0].offsetLeft;
-            var top = $td[0].offsetTop + $table[0].offsetTop;
+            $table = $($td[0].offsetParent);
+            offsetParent = $table[0].offsetParent;
+            wd = $td[0].offsetWidth - 4;
+            ht = $td[0].offsetHeight - 4;
+            lft = $td[0].offsetLeft + $table[0].offsetLeft;
+            top = $td[0].offsetTop + $table[0].offsetTop;
             that._generateCellHighlighter(offsetParent, lft, top, wd, ht);
         }
     };
@@ -2765,12 +2777,12 @@
         }
     };
     fn._selectRow = function(rowIndx, evt) {
-        this.selectRow(rowIndx, evt)
+        this.selectRow(rowIndx, evt);
     };
     fn._findfirstUnhiddenColIndx = function() {
         for (var i = 0; i < this.colModel.length; i++) {
             if (!this.colModel[i].hidden) {
-                return i
+                return i;
             }
         }
     };
@@ -2818,7 +2830,7 @@
                         indx = i;
                         return false;
                     }
-                })
+                });
                 var cur_pos = this.scrollCurPos + indx;
                 var num_eles = this.$vscroll.pqScrollBar("option", "num_eles");
                 if (num_eles < cur_pos + 1) {
@@ -2842,7 +2854,7 @@
             this.$hscroll.pqScrollBar("option", "cur_pos", cur_pos).pqScrollBar("scroll");
             tdneedsRefresh = true;
         } else {
-            var $td = this.$tbl.find("tr[pq-row-indx=" + rowIndxPage + "]>td[pq-col-indx=" + colIndx + "]");
+            $td = this.$tbl.find("tr[pq-row-indx=" + rowIndxPage + "]>td[pq-col-indx=" + colIndx + "]");
             if ($td.length === 0) {
                 return false;
             }
@@ -2874,7 +2886,7 @@
             }
         }
         if (tdneedsRefresh) {
-            var $td = this.$tbl.find("tr[pq-row-indx=" + rowIndxPage + "]>td[pq-col-indx=" + colIndx + "]");
+            $td = this.$tbl.find("tr[pq-row-indx=" + rowIndxPage + "]>td[pq-col-indx=" + colIndx + "]");
             return $td;
         } else {
             return $td;
@@ -2890,7 +2902,6 @@
         } else if (type === 'cell') {
             return this['sCells'][method](obj);
         }
-        return;
     };
     fn.setSelection = function(obj) {
         if (obj === null || obj.rowIndx === null) {
@@ -2907,7 +2918,8 @@
     };
     fn._bringPageIntoView = function(obj) {
         var rowIndx = obj.rowIndx,
-            that = this;
+            that = this,
+            rowIndxPage;
         var DM = this.options.dataModel;
         if (DM.paging === "local" && rowIndx >= 0) {
             var curPage = DM.curPage;
@@ -3069,13 +3081,13 @@
             isLeaf, level, treeMarginLeft = 0,
             expanded;
         if (TVM) {
-            var levelIndx = TVM.levelIndx,
-                leafIndx = TVM.leafIndx,
-                expandIndx = TVM.expandIndx,
-                isLeaf = rowData[leafIndx],
-                level = rowData[levelIndx],
-                treeMarginLeft = (level + 1) * 18,
-                expanded = this._getRowPQData(rowIndx, "expanded");
+            levelIndx = TVM.levelIndx;
+            leafIndx = TVM.leafIndx;
+            expandIndx = TVM.expandIndx;
+            isLeaf = rowData[leafIndx];
+            level = rowData[levelIndx];
+            treeMarginLeft = (level + 1) * 18;
+            expanded = this._getRowPQData(rowIndx, "expanded");
         }
         var objRender = {
             rowIndx: rowIndx,
@@ -3164,7 +3176,7 @@
             if (that.$td_edit === null) {
                 that.$grid_inner.focus();
             }
-        }, 0)
+        }, 0);
     };
     fn.getEditCell = function() {
         if (this.$td_edit) {
@@ -3207,8 +3219,9 @@
             obj.colIndx = colIndx;
             this.bringRowIntoView(obj);
             var $td = this._bringCellIntoView(obj);
-            if ($td && $td.length > 0)
+            if ($td && $td.length > 0) {
                 this._editCell($td);
+            }
         }
     };
     fn._editCell = function($td) {
@@ -3248,16 +3261,16 @@
             });
         } else {
             $cell.html("<div contenteditable='true' tabindx='0' class='pq-grid-editor-default'></div>");
-            var that = this;
+            that = this;
             $cell.children().html(that.data[rowIndxPage][dataIndx]);
         }
-        var that = this;
+        that = this;
         window.setTimeout(function() {
             if (that.$td_edit !== null) {
                 var $cell = that.$div_focus;
                 $cell.children().focus();
             }
-        }, 0)
+        }, 0);
     };
     fn.getRow = function(obj) {
         var rowIndxPage = obj.rowIndxPage;
@@ -3289,9 +3302,10 @@
             rowIndxPage = obj.rowIndxPage,
             rowIndx = (obj.rowIndx !== null) ? obj.rowIndx : rowIndxPage + this.getRowIndxOffset(),
             column = (obj.column) ? obj.column : this.colModel[colIndx],
-            $cell = (obj.$cell) ? obj.$cell : this.$div_focus;
+            $cell = (obj.$cell) ? obj.$cell : this.$div_focus,
+            dataCell;
         if (column.getEditCellData) {
-            var dataCell = column.getEditCellData({
+            dataCell = column.getEditCellData({
                 $cell: $cell,
                 data: this.data,
                 dataIndx: column.dataIndx,
@@ -3301,34 +3315,36 @@
                 colIndx: colIndx
             });
         } else {
-            var dataCell = $cell.children().html();
+            dataCell = $cell.children().html();
         }
         return dataCell;
     };
     fn.getCellIndices = function($td) {
-        if ($td === null || $td.length === 0) return {
+        if ($td === null || $td.length === 0) {
+            return {
                 rowIndxPage: null,
                 colIndx: null
-        };
+            };
+        }
         var $tr = $td.parent("tr");
         var $tbl = $tr.parent("tbody");
-        var rowIndxPage = parseInt($tr.attr("pq-row-indx"));
-        var colIndx = parseInt($td.attr("pq-col-indx"));
+        var rowIndxPage = parseInt($tr.attr("pq-row-indx"), 10);
+        var colIndx = parseInt($td.attr("pq-col-indx"), 10);
         return {
             rowIndxPage: rowIndxPage,
             colIndx: colIndx
-        }
+        };
     };
     fn._incrRowIndx = function(rowIndxPage, noRows) {
         var newRowIndx = rowIndxPage,
-            noRows = (noRows === null) ? 1 : noRows,
+            numRows = (noRows === null) ? 1 : noRows,
             counter = 0;
         for (var i = rowIndxPage + 1, len = this.data.length; i < len; i++) {
             var hidden = this._getRowPQData(i, "hidden");
             if (!hidden) {
                 counter++;
                 newRowIndx = i;
-                if (counter === noRows) {
+                if (counter === numRows) {
                     return newRowIndx;
                 }
             }
@@ -3337,14 +3353,14 @@
     };
     fn._decrRowIndx = function(rowIndxPage, noRows) {
         var newRowIndx = rowIndxPage,
-            noRows = (noRows === null) ? 1 : noRows,
+            numRows = (noRows === null) ? 1 : noRows,
             counter = 0;
         for (var i = rowIndxPage - 1; i >= 0; i--) {
             var hidden = this._getRowPQData(i, "hidden");
             if (!hidden) {
                 counter++;
                 newRowIndx = i;
-                if (counter === noRows) {
+                if (counter === numRows) {
                     return newRowIndx;
                 }
             }
@@ -3462,7 +3478,7 @@
             selectedRows = this.sRows.getSelection(),
             offset = that.getRowIndxOffset(),
             selectionModel = that.options.selectionModel,
-            rowIndx, colIndx;
+            rowIndx, colIndx, $td, obj, rowIndxPage;
         var keyCodes = {
             left: 37,
             up: 38,
@@ -3476,14 +3492,14 @@
             esc: 27,
             home: 36,
             end: 35
-        }
+        };
         if (that.$td_edit) {
-            var $td = $(that.$td_edit[0]);
-            var obj = that.getCellIndices($td),
-                rowIndxPage = obj.rowIndxPage,
-                rowIndx = rowIndxPage + offset,
-                colIndx = obj.colIndx,
-                column = this.colModel[colIndx],
+            $td = $(that.$td_edit[0]);
+            obj = that.getCellIndices($td);
+            rowIndxPage = obj.rowIndxPage;
+            rowIndx = rowIndxPage + offset;
+            colIndx = obj.colIndx;
+            var column = this.colModel[colIndx],
                 colSaveKey = (column.editModel) ? column.editModel.saveKey : null;
             if (that._trigger("cellEditKeydown", evt, {
                 dataModel: this.dataModel,
@@ -3495,9 +3511,8 @@
                 column: that.colModel[colIndx]
             }) === false) {
                 return false;
-            };
+            }
             if (evt.keyCode === keyCodes.tab) {
-                var obj;
                 if (evt.shiftKey) {
                     obj = that._decrEditIndx(rowIndxPage, colIndx);
                 } else {
@@ -3555,18 +3570,19 @@
             }
             return;
         } else if (selectedRows.length > 0 && selectionModel.type === 'row') {
-            var obj = selectedRows[selectedRows.length - 1],
-                rowIndx = obj.rowIndx,
-                rowIndxPage = rowIndx - offset;
+            obj = selectedRows[selectedRows.length - 1];
+            rowIndx = obj.rowIndx;
+            rowIndxPage = rowIndx - offset;
         } else {
             if (selectedCells.length > 0 && selectionModel.type === 'cell') {
-                var obj = selectedCells[selectedCells.length - 1],
-                    rowIndx = obj.rowIndx,
-                    rowIndxPage = rowIndx - offset,
-                    dataIndx = obj.dataIndx,
-                    colIndx = this.getColIndxFromDataIndx(dataIndx);
-                if (rowIndx === null || colIndx === null)
+                obj = selectedCells[selectedCells.length - 1];
+                rowIndx = obj.rowIndx;
+                rowIndxPage = rowIndx - offset;
+                var dataIndx = obj.dataIndx;
+                colIndx = this.getColIndxFromDataIndx(dataIndx);
+                if (rowIndx === null || colIndx === null) {
                     return;
+                }
                 that._trigger("cellKeydown", evt, {
                     dataModel: this.dataModel,
                     rowIndx: rowIndx,
@@ -3582,57 +3598,66 @@
             }
         }
         if (evt.keyCode === keyCodes.left) {
-            var obj = that._decrIndx(rowIndxPage, colIndx);
-            if (obj) that._setSelection({
+            obj = that._decrIndx(rowIndxPage, colIndx);
+            if (obj) {
+                that._setSelection({
                     rowIndxPage: obj.rowIndxPage,
                     colIndx: obj.colIndx,
                     evt: evt
                 });
+            }
             evt.preventDefault();
             return;
         } else if (evt.keyCode === keyCodes.right) {
-            var obj = that._incrIndx(rowIndxPage, colIndx);
-            if (obj) that._setSelection({
+            obj = that._incrIndx(rowIndxPage, colIndx);
+            if (obj) {
+                that._setSelection({
                     rowIndxPage: obj.rowIndxPage,
                     colIndx: obj.colIndx,
                     evt: evt
                 });
+            }
             evt.preventDefault();
             return;
         } else if (evt.keyCode === keyCodes.tab) {
-            var obj;
             if (evt.shiftKey) {
                 obj = that._decrIndx(rowIndxPage, colIndx);
             } else {
                 obj = that._incrIndx(rowIndxPage, colIndx);
             }
-            if (obj) that._setSelection({
+            if (obj) {
+                that._setSelection({
                     rowIndxPage: obj.rowIndxPage,
                     colIndx: obj.colIndx,
                     evt: evt
                 });
+            }
             evt.preventDefault();
             return;
         } else if (evt.keyCode === keyCodes.up) {
             rowIndxPage = that._decrRowIndx(rowIndxPage);
-            if (obj) that._setSelection({
+            if (obj) {
+                that._setSelection({
                     rowIndxPage: rowIndxPage,
                     colIndx: colIndx,
                     evt: evt
                 });
+            }
             evt.preventDefault();
             return;
         } else if (evt.keyCode === keyCodes.down) {
             rowIndxPage = that._incrRowIndx(rowIndxPage);
-            if (obj) that._setSelection({
+            if (obj) {
+                that._setSelection({
                     rowIndxPage: rowIndxPage,
                     colIndx: colIndx,
                     evt: evt
                 });
+            }
             evt.preventDefault();
             return;
         } else if (evt.keyCode === keyCodes.pageDown || evt.keyCode === keyCodes.spaceBar) {
-            var rowIndx = this._incrRowIndx(rowIndxPage, this.pageSize + 1) + offset;
+            rowIndx = this._incrRowIndx(rowIndxPage, this.pageSize + 1) + offset;
             that._setSelection({
                 rowIndx: rowIndx,
                 colIndx: colIndx,
@@ -3641,7 +3666,7 @@
             evt.preventDefault();
             return;
         } else if (evt.keyCode === keyCodes.pageUp) {
-            var rowIndx = this._decrRowIndx(rowIndxPage, this.pageSize + 1) + offset;
+            rowIndx = this._decrRowIndx(rowIndxPage, this.pageSize + 1) + offset;
             that._setSelection({
                 rowIndx: rowIndx,
                 colIndx: colIndx,
@@ -3669,7 +3694,7 @@
             return;
         } else if (evt.keyCode === keyCodes.enter) {
             if (this.options.selectionModel.type === 'row') {
-                var $tr, $td;
+                var $tr;
                 if (selectedRows.length > 0) {
                     that._editFirstCellInRow({
                         rowIndxPage: rowIndxPage
@@ -3677,7 +3702,7 @@
                 }
             } else {
                 if (selectedCells.length > 0) {
-                    var $td = this.getCell({
+                    $td = this.getCell({
                         rowIndxPage: rowIndxPage,
                         colIndx: colIndx
                     });
@@ -3764,8 +3789,8 @@
         var that = this,
             $vscroll = this.$vscroll,
             options = $vscroll.pqScrollBar("option"),
-            num_eles = parseInt(options.num_eles),
-            cur_pos = parseInt(options.cur_pos);
+            num_eles = parseInt(options.num_eles, 10),
+            cur_pos = parseInt(options.cur_pos, 10);
         var htSB = this._getScollBarHorizontalHeight();
         var GM = this.options.groupModel;
         var data = (GM && GM.grouping === "local") ? this.dataGM : this.data;
@@ -3833,12 +3858,13 @@
         this.$vscroll.css("bottom", htSB);
         var len = (cont_ht - htSB);
         this.$vscroll.pqScrollBar("option", "length", len);
-        return;
+        //return; is this supposed to be here?
         var GM = this.options.groupModel;
         var data = (GM && GM.grouping === "local") ? this.dataGM : this.data;
         var totalVisibleRows = data ? this._getTotalVisibleRows(data) : 0;
         var options = this.$vscroll.pqScrollBar("option"),
-            cur_pos = parseInt(options.cur_pos);
+            cur_pos = parseInt(options.cur_pos, 10),
+            num_eles;
         if (totalVisibleRows >= 0 && this.$tbl) {
             var htCont = this.$cont[0].offsetHeight;
             var htTbl = this.$tbl[0].offsetHeight;
@@ -3947,15 +3973,16 @@
         var GM = this.options.groupModel,
             GMtrue = (GM && GM.grouping === "local") ? true : false,
             data = GMtrue ? this.dataGM : this.data,
-            TVM = this.options.treeViewModel;
+            TVM = this.options.treeViewModel,
+            hidden;
         if (data === null || data.length === 0) {
             this['final'] = this['init'] = null;
         } else if (this.options.flexHeight) {
             this.init = 0;
             this['final'] = data.length - 1;
         } else {
-            var cur_pos = parseInt(this.$vscroll.pqScrollBar("option", "cur_pos"));
-            this.scrollCurPos = parseInt(cur_pos);
+            var cur_pos = parseInt(this.$vscroll.pqScrollBar("option", "cur_pos"), 10);
+            this.scrollCurPos = parseInt(cur_pos, 10);
             if (isNaN(cur_pos) || cur_pos < 0) {
                 this.init = 0;
             } else if (TVM) {
@@ -3964,7 +3991,7 @@
                     if (j === cur_pos) {
                         break;
                     }
-                    var hidden = this._getRowPQData(i, "hidden");
+                    hidden = this._getRowPQData(i, "hidden");
                     if (!hidden) {
                         j++;
                     }
@@ -3980,16 +4007,16 @@
             this.pageSize = noRows;
             if (TVM) {
                 var visibleRows = 0;
-                for (var i = this.init; i < data.length; i++) {
+                for (var x = this.init; x < data.length; x++) {
                     if (noRows === visibleRows) {
                         break;
                     }
-                    var hidden = this._getRowPQData(i, "hidden");
+                    hidden = this._getRowPQData(x, "hidden");
                     if (!hidden) {
                         visibleRows++;
                     }
                 }
-                this['final'] = i;
+                this['final'] = x;
             } else {
                 this['final'] = this.init + noRows;
             }
@@ -3999,7 +4026,7 @@
         }
     };
     fn._bufferObj_calcInitFinalH = function() {
-        var cur_pos = parseInt(this.$hscroll.pqScrollBar("option", "cur_pos"));
+        var cur_pos = parseInt(this.$hscroll.pqScrollBar("option", "cur_pos"), 10);
         var initH = 0;
         var indx = 0,
             thisColModel = this.colModel;
@@ -4046,7 +4073,7 @@
         };
     };
     fn._refreshFreezeLine = function() {
-        return;
+        //return; is this supposed to be here? makes rest of code unreachable.
         if (this.$freezeLine) {
             this.$freezeLine.remove();
         }
@@ -4064,12 +4091,12 @@
         var $target = $(evt.currentTarget);
         this.$cl = $("<div class='pq-grid-drag-bar'></div>").appendTo(this.$grid_inner);
         this.$clleft = $("<div class='pq-grid-drag-bar'></div>").appendTo(this.$grid_inner);
-        var indx = parseInt($target.attr("pq-grid-col-indx"));
+        var indx = parseInt($target.attr("pq-grid-col-indx"), 10);
         var ht = this.$grid_inner.outerHeight();
         this.$cl.height(ht);
         this.$clleft.height(ht);
         var ele = $("td[pq-grid-col-indx=" + indx + "]", this.$header)[0];
-        var lft = ele.offsetLeft + ((indx > this.options.freezeCols) ? parseInt(this.$header[1].style.left) : 0);
+        var lft = ele.offsetLeft + ((indx > this.options.freezeCols) ? parseInt(this.$header[1].style.left, 10) : 0);
         this.$clleft.css({
             left: lft
         });
@@ -4238,7 +4265,7 @@
         var that = this;
         $(this.colModel).each(function(i, col) {
             if (col.width !== undefined) {
-                var wd = parseInt(col.width)
+                var wd = parseInt(col.width, 10);
                 if (wd < that.minWidth) {
                     wd = that.minWidth;
                     col.width = wd;
@@ -4259,18 +4286,19 @@
             thisColModelLength = thisColModel.length,
             depth = this.depth,
             columnBorders = thisOptions.columnBorders,
-            headerCells = this.headerCells;
+            headerCells = this.headerCells,
+            col, column, wd, lft;
         if (depth >= 1) {
             str += "<tr>";
             if (this.numberCell) {
                 str += "<td style='width:" + (this.numberCellWidth + 1) + "px;' ></td>";
             }
-            for (var col = 0; col < thisColModelLength; col++) {
-                var column = thisColModel[col];
+            for (col = 0; col < thisColModelLength; col++) {
+                column = thisColModel[col];
                 if (column.hidden) {
                     continue;
                 }
-                var wd = parseInt(column.width) + ((columnBorders) ? 1 : 0);
+                wd = parseInt(column.width, 10) + ((columnBorders) ? 1 : 0);
                 str += "<td style='width:" + wd + "px;'></td>";
             }
             str += "</tr>";
@@ -4281,8 +4309,8 @@
                 str += "<td class='pq-grid-number-col' rowspan='" + depth + "'>\
 				<div class='pq-grid-header-table-div'>&nbsp;</div></td>";
             }
-            for (var col = 0; col < thisColModelLength; col++) {
-                var column = headerCells[row][col];
+            for (col = 0; col < thisColModelLength; col++) {
+                column = headerCells[row][col];
                 var colSpan = column.colSpan;
                 if (row > 0 && column === headerCells[row - 1][col]) {
                     continue;
@@ -4319,15 +4347,15 @@
         this.$header.append(str);
         var $header_left = $(this.$header[0]);
         var $header_right = $(this.$header[1]);
-        var freezeCols = parseInt(this.options.freezeCols);
-        var wd = this._calcWidthCols(freezeCols - 1);
+        var freezeCols = parseInt(this.options.freezeCols, 10);
+        wd = this._calcWidthCols(freezeCols - 1);
         $header_left.css({
             width: wd,
             zIndex: 1
         });
-        var lft = 0;
+        lft = 0;
         for (var i = freezeCols; i < (this.initH + freezeCols); i++) {
-            var column = thisColModel[i];
+            column = thisColModel[i];
             if (column.hidden) {
                 continue;
             }
@@ -4377,13 +4405,13 @@
                     });
                 }
             });
-        })
-        var lft = 0;
+        });
+        lft = 0;
         var hd_ht = that.$header[0].offsetHeight;
         var direction = this.options.direction;
-        for (var i = 0; i < this.colModel.length; i++) {
-            var colModel = that.colModel[i];
-            if (that.hidearrHS[i]) {
+        for (var x = 0; x < this.colModel.length; x++) {
+            var colModel = that.colModel[x];
+            if (that.hidearrHS[x]) {
                 continue;
             } else if (colModel.hidden) {
                 continue;
@@ -4392,13 +4420,13 @@
                 continue;
             }
             var $head = that.$header_left;
-            if (i >= that.options.freezeCols) {
+            if (x >= that.options.freezeCols) {
                 $head = that.$header_right;
             }
-            var $handle = $("<div pq-grid-col-indx='" + i + "' class='pq-grid-col-resize-handle'>&nbsp;</div>")
+            var $handle = $("<div pq-grid-col-indx='" + x + "' class='pq-grid-col-resize-handle'>&nbsp;</div>")
                 .appendTo($head);
-            var pq_col = that.$header_right.find("td[pq-grid-col-indx=" + i + "]")[0];
-            lft = parseInt(pq_col.offsetLeft) + parseInt((direction === "rtl") ? 0 : (pq_col.offsetWidth - 10));
+            var pq_col = that.$header_right.find("td[pq-grid-col-indx=" + x + "]")[0];
+            lft = parseInt(pq_col.offsetLeft, 10) + parseInt((direction === "rtl") ? 0 : (pq_col.offsetWidth - 10), 10);
             $handle.css({
                 left: lft,
                 height: hd_ht
@@ -4408,15 +4436,15 @@
         var $pQuery_handles = that.$header.find(".pq-grid-col-resize-handle").draggable({
             axis: 'x',
             helper: function(evt, ui) {
-                var $target = $(evt.target)
-                var indx = parseInt($target.attr("pq-grid-col-indx"));
+                var $target = $(evt.target);
+                var indx = parseInt($target.attr("pq-grid-col-indx"), 10);
                 that._setDragLimits(indx);
                 that._getDragHelper(evt, ui);
                 return $target;
             },
             start: function(evt, ui) {
                 drag_left = ui.position.left;
-                cl_left = parseInt(that.$cl[0].style.left);
+                cl_left = parseInt(that.$cl[0].style.left, 10);
             },
             drag: function(evt, ui) {
                 drag_new_left = ui.position.left;
@@ -4429,9 +4457,9 @@
                 drag_new_left = ui.position.left;
                 var dx = (drag_new_left - drag_left);
                 var $target = $(ui.helper);
-                var colIndx = parseInt($target.attr("pq-grid-col-indx"));
+                var colIndx = parseInt($target.attr("pq-grid-col-indx"), 10);
                 var column = that.colModel[colIndx];
-                column.width = parseInt(column.width) + dx;
+                column.width = parseInt(column.width, 10) + dx;
                 that._computeOuterWidths(true);
                 that._refresh();
                 for (var i = 0; i < that.tables.length; i++) {
@@ -4450,18 +4478,20 @@
         $pQuery_cols.removeClass("pq-col-sort-asc pq-col-sort-desc ui-state-active");
         var sortIndx = DM.sortIndx;
         var colIndx = this.getColIndxFromDataIndx(sortIndx);
-        var addClass = "ui-state-active pq-col-sort-" + (DM.sortDir === "up" ? "asc" : "desc")
-        this.$header.find(".pq-grid-col[pq-grid-col-indx=" + colIndx + "]").addClass(addClass)
+        var addClass = "ui-state-active pq-col-sort-" + (DM.sortDir === "up" ? "asc" : "desc");
+        this.$header.find(".pq-grid-col[pq-grid-col-indx=" + colIndx + "]").addClass(addClass);
     };
     fn._generateSummaryRow = function(rowData, rowIndx, thisColModel, noColumns, hidearrHS1, offset, const_cls, buffer) {
         var row_cls = "pq-summary-row",
             row_str = "",
-            columnBorders = this.options.columBorders;
-        row_str += "<tr pq-row-indx='" + rowIndx + "' class='" + row_cls + "'>"
+            columnBorders = this.options.columBorders,
+            cellSelection = false,
+            col, column, dataIndx, strStyle, cls, valCell, str;
+        row_str += "<tr pq-row-indx='" + rowIndx + "' class='" + row_cls + "'>";
         buffer.push(row_str);
         if (this.numberCell) {
             buffer.push("<td style='width:" + this.numberCellWidth + "px;' class='pq-grid-number-cell pq-row-selector'>\
-		<div class='pq-td-div'></div></td>")
+		<div class='pq-td-div'></div></td>");
         }
         var objRender = {
             rowIndx: rowIndx + offset,
@@ -4469,12 +4499,11 @@
             rowData: rowData,
             summaryCell: true
         };
-        for (var col = 0; col < noColumns; col++) {
-            var column = thisColModel[col],
-                dataIndx = column.dataIndx;
+        for (col = 0; col < noColumns; col++) {
+            column = thisColModel[col];
+            dataIndx = column.dataIndx;
             objRender.column = column;
             objRender.colIndx = col; {
-                var cellSelection = false;
                 var selectedDataIndices = rowData.selectedDataIndices;
                 if (selectedDataIndices) {
                     cellSelection = selectedDataIndices[dataIndx];
@@ -4485,8 +4514,8 @@
             } else if (this.hidearrHS[col]) {
                 continue;
             }
-            var strStyle = "";
-            var cls = const_cls;
+            strStyle = "";
+            cls = const_cls;
             if (column.align === "right") {
                 cls += ' pq-align-right';
             } else if (column.align === "center") {
@@ -4501,29 +4530,29 @@
             if (cellSelection) {
                 cls = cls + " pq-cell-select";
             }
-            var valCell = (rowData[dataIndx] === null) ? "" : rowData[dataIndx];
-            var str = "<td class='" + cls + "' style='" + strStyle + "' >\
+            valCell = (rowData[dataIndx] === null) ? "" : rowData[dataIndx];
+            str = "<td class='" + cls + "' style='" + strStyle + "' >\
 			<div>" + valCell + "</div></td>";
-            buffer.push(str)
+            buffer.push(str);
         }
         for (var k = 0; k < hidearrHS1.length; k++) {
-            var col = hidearrHS1[k];
-            var column = thisColModel[col],
-                dataIndx = column.dataIndx;;
+            col = hidearrHS1[k];
+            column = thisColModel[col];
+            dataIndx = column.dataIndx;
             objRender.column = column;
             objRender.colIndx = col;
-            var strStyle = "";
+            strStyle = "";
             strStyle += "visibility:hidden;";
-            var cls = const_cls;
+            cls = const_cls;
             if (column.align === "right") {
                 cls += ' pq-align-right';
             } else if (column.align === "center") {
                 cls += ' pq-align-center';
             }
-            var valCell = (rowData[dataIndx] === null) ? "" : rowData[dataIndx];
-            var str = "<td class='" + cls + "' style='" + strStyle + "' >\
+            valCell = (rowData[dataIndx] === null) ? "" : rowData[dataIndx];
+            str = "<td class='" + cls + "' style='" + strStyle + "' >\
 			<div>" + valCell + "</div></td>";
-            buffer.push(str)
+            buffer.push(str);
         }
         buffer.push("</tr>");
         return buffer;
@@ -4532,29 +4561,32 @@
         this.cTable._generateTables(objP);
     };
     fn._refreshOtherTables = function() {
-        return;
+        //return; //line not necessary. makes code unreachable.
+        /** this code has missing references
+
         var thisColModel = this.colModel,
             noColumns = thisColModel.length,
-            columnBorders = this.options.columBorders;
+            columnBorders = this.options.columBorders,
+            col, column, $td, strStyle, cls, str, dataIndx;
         for (var i = 0; i < this.tables.length; i++) {
             var tblObj = this.tables[i];
             var $tbl = tblObj.$tbl,
                 $tr = $tbl.find("tr:first");
-            for (var col = 0; col < noColumns; col++) {
-                var column = thisColModel[col],
-                    dataIndx = column.dataIndx;
+            for (col = 0; col < noColumns; col++) {
+                column = thisColModel[col],
+                dataIndx = column.dataIndx;
                 if (column.hidden) {
-                    var $td = $tr.find("td[pq-dataIndx='" + dataIndx + "']");
+                    $td = $tr.find("td[pq-dataIndx='" + dataIndx + "']");
                     if ($td.length > 1) {
                         var $tds = $tbl.find("td[pq-dataIndx='" + dataIndx + "']").remove();
                         tblObj.$tds.add($tds);
                     }
                 } else if (this.hidearrHS[col]) {
-                    var $td = $tr.find("td[pq-dataIndx='" + dataIndx + "']");
+                    $td = $tr.find("td[pq-dataIndx='" + dataIndx + "']");
                     if ($td.css("visibility") !== "hidden") {}
                 }
-                var strStyle = "";
-                var cls = const_cls;
+                strStyle = "";
+                cls = const_cls;
                 if (column.align === "right") {
                     cls += ' pq-align-right';
                 } else if (column.align === "center") {
@@ -4569,28 +4601,29 @@
                 if (cellSelection) {
                     cls = cls + " pq-cell-select";
                 }
-                var str = "<td class='" + cls + "' style='" + strStyle + "' pq-col-indx='" + col + "'>\
+                str = "<td class='" + cls + "' style='" + strStyle + "' pq-col-indx='" + col + "'>\
 				" + this.cTable._renderCell(objRender) + "</td>";
-                buffer.push(str)
+                buffer.push(str);  missing reference
             }
             for (var k = 0; k < hidearrHS1.length; k++) {
-                var col = hidearrHS1[k];
-                var column = thisColModel[col];
+                col = hidearrHS1[k];
+                column = thisColModel[col];
                 objRender.column = column;
                 objRender.colIndx = col;
-                var strStyle = "";
+                strStyle = "";
                 strStyle += "visibility:hidden;";
-                var cls = const_cls;
+                cls = const_cls;
                 if (column.align === "right") {
                     cls += ' pq-align-right';
                 } else if (column.align === "center") {
                     cls += ' pq-align-center';
                 }
-                var str = "<td class='" + cls + "' style='" + strStyle + "' pq-col-indx='" + col + "'>\
+                 str = "<td class='" + cls + "' style='" + strStyle + "' pq-col-indx='" + col + "'>\
 				" + this.cTable._renderCell(objRender) + "</td>";
-                buffer.push(str)
+                buffer.push(str); missing reference
             }
         }
+        */
     };
     fn._sortLocalData = function(dataIndx, dir, dataType, data) {
         var m_sort_dir = dir,
@@ -4604,8 +4637,8 @@
             function sort_integer(obj1, obj2) {
                 var val1 = obj1[dataIndx];
                 var val2 = obj2[dataIndx];
-                val1 = val1 ? parseInt(val1) : 0;
-                val2 = val2 ? parseInt(val2) : 0;
+                val1 = val1 ? parseInt(val1, 10) : 0;
+                val2 = val2 ? parseInt(val2, 10) : 0;
                 return (val1 - val2);
             }
 
@@ -4638,13 +4671,13 @@
                 return 0;
             }
             if (dataType === "integer") {
-                data = data.sort(sort_integer)
+                data = data.sort(sort_integer);
             } else if (dataType === "float") {
-                data = data.sort(sort_float)
+                data = data.sort(sort_float);
             } else if (typeof dataType === "function") {
                 data = data.sort(sort_custom);
             } else {
-                data = data.sort(sort_string)
+                data = data.sort(sort_string);
             }
             if (m_sort_dir === "down") {
                 data = data.reverse();
@@ -4662,7 +4695,7 @@
         $.widget("paramquery.pqGrid", fn);
         $(".pq-grid").each(function(i, grid) {
             $(grid).pqGrid("option", obj);
-        })
+        });
     };
     $.measureTime = function(fn, nameofFunc) {
         var initTime = (new Date()).getTime();
@@ -4682,13 +4715,15 @@ var cons = {
             var st = "";
             if (typeof str === 'object') {
                 for (var key in str) {
-                    if (typeof str[key] !== 'function') st += key + " = " + str[key]
+                    if (typeof str[key] !== 'function') {
+                        st += key + " = " + str[key];
+                    }
                 }
             } else {
                 if (document.getElementById('console') === undefined) {
                     $("<textarea id='console' rows=8 cols=100>" + str + "</textarea>").appendTo(document.body);
                 }
-                var $console = $("#console")
+                var $console = $("#console");
                 $console.text($console.text() + '\r\n' + str);
                 $console[0].scrollTop = 1000000000000;
             }

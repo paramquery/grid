@@ -1,0 +1,21 @@
+ {
+     "name": "pqgrid",
+     "version": "0.0.0-ignored",
+     "engines": {
+         "node": ">= 0.8.0"
+     },
+     "scripts": {
+         "test": "grunt qunit"
+     },
+     "devDependencies": {
+         "grunt-css": "0.5.x",
+         "grunt-contrib-jshint": "0.4.x",
+         "grunt-contrib-uglify": "0.2.x",
+         "grunt-jsbeautifier": "0.1.x",
+         "grunt-contrib-qunit": "~0.1.0",
+         "grunt-contrib-watch": "~0.4.0",
+         "grunt-cli": "0.1.x",
+         "grunt": "0.4.x"
+     }
+ }
+

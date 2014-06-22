@@ -22,11 +22,12 @@ require_once '../include.php';
             { title: "Shipping Postal Code", width: 130, dataIndx: "ShipPostalCode" }
         ];
         var dataModel = {
-            location: "remote",            
-            paging: "remote",
+            location: "remote",                        
             dataType: "JSON",
             method: "GET",
-            url :"remote.php",
+            getUrl : function () {                
+                return { url: 'remote.php'};
+            },
             getData: function ( response ) {                
                 return { data: response };                
             }
@@ -34,6 +35,7 @@ require_once '../include.php';
 
         var grid1 = $("div#grid_php").pqGrid({ width: 900, height: 400,
             dataModel: dataModel,
+            bottomVisible: false,
             colModel: colM,            
             title: "Shipping Orders"
         });

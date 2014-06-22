@@ -1,17 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>PHP Grid Lesson1</title>
-
-<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" />    
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
-
-<link rel="stylesheet" href="../../Content/css/pqgrid.min.css" >    
-
-<script src="../../Content/js/pqgrid.min.js"></script>
+<?php
+require_once '../include.php';
+?>
 
 <script class="ppjs">
     $(function () {
@@ -33,11 +22,12 @@
             { title: "Shipping Postal Code", width: 130, dataIndx: "ShipPostalCode" }
         ];
         var dataModel = {
-            location: "remote",            
-            paging: "remote",
+            location: "remote",                        
             dataType: "JSON",
             method: "GET",
-            url :"remote.php",
+            getUrl : function () {                
+                return { url: 'remote.php'};
+            },
             getData: function ( response ) {                
                 return { data: response };                
             }
@@ -45,7 +35,8 @@
 
         var grid1 = $("div#grid_php").pqGrid({ width: 900, height: 400,
             dataModel: dataModel,
-            colModel: colM,            
+            colModel: colM,  
+            bottomVisible: false,
             title: "Shipping Orders"
         });
     });

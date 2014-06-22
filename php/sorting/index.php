@@ -43,7 +43,8 @@ require_once '../include.php';
 
         var grid1 = $("div#grid_php").pqGrid({ width: 900, height: 400,
             dataModel: dataModel,
-            colModel: colM,            
+            colModel: colM,  
+            bottomVisible: false,
             title: "Shipping Orders"
         });
     });

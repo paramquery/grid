@@ -17,9 +17,7 @@ ParamQuery grid is a lightweight jQuery grid plugin inspired by MS Excel and Goo
 
 3. [Demos or Examples](http://paramquery.com/demos)
 
-4. [Download](http://paramquery.com/download)
-
-5. [PHP Integration](http://paramquery.com/tutorial/php)
+4. [PHP Integration Tutorial](http://paramquery.com/tutorial/php)
 
 ### Features:
 

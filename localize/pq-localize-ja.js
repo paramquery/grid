@@ -19,6 +19,6 @@ $.paramquery.pqPager.regional['ja']={
 	strNextPage:"次ページ",
 	strLastPage:"最終ページ",
 	strRefresh:"再読み込み",	
-	strRpp:"1ページの件数:{0}",
+	strRpp:"1ページの件数:",
 	strDisplay:"{2} 件中 {0}-{1}件"	
 }

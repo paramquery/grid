@@ -1,7 +1,7 @@
 /**
  * ParamQuery Grid a.k.a. pqGrid v1.1.3
  * 
- * Copyright (c) 2012-2013 Paramvir Dhindsa
+ * Copyright (c) 2012-2015 Paramvir Dhindsa
  * Released under GPL v3 license
  * http://paramquery.com/license
  * 

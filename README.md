@@ -2,7 +2,7 @@ jQuery grid plugin based on jQueryui widget design
 ==================================================
 [ParamQuery Grid](http://paramquery.com) a.k.a. pqGrid v1.1
 
-Copyright (c) 2012-2014 Paramvir Dhindsa 
+Copyright (c) 2012-2015 Paramvir Dhindsa 
 
 [Released under GPL v3 license](http://paramquery.com/license)
  

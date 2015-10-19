@@ -1,3 +1,65 @@
+Version 2.0.4 (10/19/2015)
+
+Addition:
+
+filter conditions: between, range, regexp, lte, gte, notbegin, notend
+stringify
+updateRow, getData
+selectionModel: all, cbAll, cbHeader
+scrollModel: theme
+
+Changes: 
+
+rowSelect, rowUnSelect, cellSelect, cellUnSelect, pq-sb-vert, pq-sb-horiz
+
+
+New features:
+Nested grids & detail View (rowExpand,rowCollapse,rowInvalidate,detailModel)
+multiple Selections with mouse drag.
+
+Fixes:
+IE7: group title, DnD headers, resizable handles.
+Firefox: DnD headers (droppable areas)
+
+Migration steps:
+Move paging properties from dataModel to pageModel.
+
+
+editModel	
+editor	
+validation	
+quitEditMode	missing keys added
+isValid	
+isDirty	
+getRowsByClass	
+getRowIndx	
+getCellIndices	change from $td to {$td:$td}
+refreshView	
+column.validations	
+column.editModel
+
+Migration steps:	
+View needs to be refreshed manually
+
+
+Fixes:
+_refreshWidths
+_refreshWidthsAutoFit
+isEditableCell:
+_pKeyNav._decrEditIndx
+_editCell
+_getEditCellData
+getCell
+saveEditCell
+getRowIndx
+_refreshSortingDataAndView
+exportToExcel 
+rollback
+commit
+getChanges
+_refreshResizeColumnStop
+
+
 Version: 1.1.3
 
 1) Improved support for JSON: dataIndx can be int or String

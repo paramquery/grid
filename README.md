@@ -1,6 +1,6 @@
 jQuery grid plugin based on jQueryui widget design
 ==================================================
-[ParamQuery Grid](http://paramquery.com) a.k.a. pqGrid v1.1
+[ParamQuery Grid](http://paramquery.com) a.k.a. pqGrid v2.0
 
 Copyright (c) 2012-2015 Paramvir Dhindsa 
 
@@ -22,34 +22,36 @@ ParamQuery grid is a lightweight jQuery grid plugin inspired by MS Excel and Goo
 ### Features:
 
 ```
-It's designed on jQueryui widget pattern so it has all the advantages of it e.g. changing any 
-option during runtime, methods like enable, disable, destroy, etc.
 
-Sorting for common data formats like Integer, real numbers, Strings, etc.
+Local, remote and custom sorting for common data formats like Integer, real numbers, Strings, etc.
 
-Support for custom sorting through callback function.
+Local and remote filtering with header filtering row interface.
 
 Paging with local (Browser) or remote (Ajax) data in any format.
 
-Freeze any number of Columns like Excel.
+Column and row grouping and fixed summary row.
 
-Connect to any data source format like HTML, Array, XML, JSON, etc locally or remotely through Ajax.
+Frozen rows & columns like Excel.
+
+Export to Excel & CSV format.
+
+Nesting of grids and row details.
+
+Virtual Scrolling and Rendering with unlimited rows and columns support.
+
+Inline Editing: Batch editing, row editing, custom editors, multiline editing, validations.
+
+Hide/ show columns, resizable and reorderable columns through drag and drop.
+
+Theme support.
+
+i18n.
+
+Consistent look and functionality across all major browsers IE(8+), Firefox, Chrome, Opera, etc
+
+Display any data source format like HTML, Array, XML, JSON, etc locally or remotely through Ajax.
 
 Can be used with any server side framework e.g. ASP.NET, MVC3, JSP, JSF, PHP, etc.
-
-Minimal impact on performance with increase in number of records thanks to Virtual Scrolling and Rendering.
-
-Inline Editing of cells with support to plugin custom editors.
-
-Resizable columns.
-
-Resizable height and width.
-
-Customizable theme.
-
-Hiding / Showing columns.
-
-Consistent look and functionality across all major browsers IE(6+), Firefox, Chrome, Opera, etc
 
 Many more...
 ```

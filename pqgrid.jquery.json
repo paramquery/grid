@@ -1,7 +1,7 @@
 {
   "name": "pqgrid",
   "title": "ParamQuery Grid",
-  "version": "1.1.3",
+  "version": "2.0.4",
   "author": {
     "name": "Paramvir Dhindsa",
     "email": "pdhindsa@paramquery.com",
@@ -18,7 +18,7 @@
       "url": "http://paramquery.com/license"
     }
   ],
-  "description": "Data grid inspired by MS Excel, provides sorting, paging, grouping, rows and cell selections, frozen rows, frozen columns, Add, delete, update, search, can display HTML, JSON, Array, XML, inline editing, virtual rendering, virtual scrolling, cross browser, cross platform, Themeroller ready with 24 ready to use themes.",
+  "description": "Data grid inspired by MS Excel, provides sorting, filtering, paging, grouping, nesting, rows and cell selections, frozen rows, frozen columns, Add, delete, update, search, can display HTML, JSON, Array, XML, inline editing, validations, virtual rendering, virtual scrolling, cross browser, cross platform, Themeroller ready with 24 ready to use themes.",
   "homepage": "http://paramquery.com/",
   "docs": "http://paramquery.com/api",
   "demo": "http://paramquery.com/demos",  
@@ -31,10 +31,13 @@
     "ajax",
     "ui",
     "sort",
+    "filter",
+    "nesting",
+    "export",
     "i18n",
     "summary",
     "themeRoller",
-    "freeze",
+    "frozen",
     "group",
     "search",
     "crud",
@@ -43,6 +46,6 @@
   "bugs": "https://github.com/paramquery/grid/issues",
   "dependencies": {
     "jquery": ">=1.7.0",
-    "jqueryui": ">=1.9.1"
+    "jqueryui": ">=1.9.2"
   }
 }

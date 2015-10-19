@@ -2,23 +2,24 @@
  * @author pdhindsa
  */
 $.paramquery.pqGrid.regional['ja'] = {
-	strLoading: "読込中",
-	strAdd: "追加",
-	strEdit: "編集",
-	strDelete: "削除",
-	strSearch: "検索",
-	strNothingFound: "データが見つかりませんでした",
-	strSelectedmatches:"前の結果",
-	strPrevResult: "次の結果",
-	strNextResult: "データがありません"	
-}
+    strLoading: "積載",
+    strAdd: "",
+    strEdit: "",
+    strDelete: "",
+    strSearch: "",
+    strNothingFound: "",
+    strSelectedmatches:"",
+    strPrevResult: "",
+    strNextResult: "",
+    strNoRows: "表示するには行ません."
+};
 $.paramquery.pqPager.regional['ja']={
-	strPage:" {0} / {1} ページ",
-	strFirstPage:"先頭ページ",
-	strPrevPage:"前ページ",
-	strNextPage:"次ページ",
-	strLastPage:"最終ページ",
-	strRefresh:"再読み込み",	
-	strRpp:"1ページの件数:",
-	strDisplay:"{2} 件中 {0}-{1}件"	
-}
+    strPage:"{1} の {0} ページ",
+    strFirstPage:"最初",
+    strPrevPage:"前",
+    strNextPage:"次",
+    strLastPage:"最後",
+    strRefresh:"リフレッシュ",	
+    strRpp:"ページあたりのレコード: {0}",
+    strDisplay:"表示 {0} から {1} {2} 項目の"	
+};

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!--jQuery dependencies-->
+	<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/themes/base/jquery-ui.css" />    
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+
+<!--PQ Grid files-->
+    <link rel="stylesheet" href="pqgrid.min.css" />
+    <script src="pqgrid.min.js"></script>
+<!--PQ Grid Office theme-->
+    <link rel="stylesheet" href="themes/office/pqgrid.css" />
+
+<script>
+    $(function () {
+        var data = [[1, 'Exxon Mobil', '339938.0', '36130.0'],
+            [2, 'Wal-Mart Stores', '315654.0', '11231.0'],
+            [3, 'Royal Dutch Shell', '306731.0', '25311.0'],
+            [4, 'BP', '267600.0', '22341.0'],
+            [5, 'General Motors', '192604.0', '-10567.0'],
+            [6, 'Chevron', '189481.0', '14099.0'],
+            [7, 'DaimlerChrysler', '186106.3', '3536.3'],
+            [8, 'Toyota Motor', '185805.0', '12119.6'],
+            [9, 'Ford Motor', '177210.0', '2024.0'],
+            [10, 'ConocoPhillips', '166683.0', '13529.0'],
+            [11, 'General Electric', '157153.0', '16353.0'],
+            [12, 'Total', '152360.7', '15250.0'],
+            [13, 'ING Group', '138235.3', '8958.9'],
+            [14, 'Citigroup', '131045.0', '24589.0'],
+            [15, 'AXA', '129839.2', '5186.5'],
+            [16, 'Allianz', '121406.0', '5442.4'],
+            [17, 'Volkswagen', '118376.6', '1391.7'],
+            [18, 'Fortis', '112351.4', '4896.3'],
+            [19, 'Crédit Agricole', '110764.6', '7434.3'],
+            [20, 'American Intl. Group', '108905.0', '10477.0']];
+
+        var obj = { 
+            width: 700, 
+            height: 400, 
+            numberCell:{resizable:true,title:"#",width:30,minWidth:30},
+            editor: {type: 'textbox'},
+            title: "ParamQuery Grid with Array data",
+            resizable:true,
+            scrollModel:{autoFit:true, theme:true},
+            draggable:true 
+        };
+        obj.colModel = [
+            { title: "Rank", width: 100, dataType: "integer" },
+            { title: "Company", width: 200, dataType: "string" },
+            { title: "Revenues ($ millions)", width: 150, dataType: "float", align: "right" },
+            { title: "Profits ($ millions)", width: 150, dataType: "float", align: "right"}
+        ];
+        obj.dataModel = { data: data };
+        $("#grid_array").pqGrid(obj);
+    });
+        
+</script>    
+</head>
+<body>
+<div id="grid_array" style="margin:100px;"></div>
+</body>
+
+</html>

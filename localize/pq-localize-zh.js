@@ -20,6 +20,6 @@ jQuery.paramquery.pqPager.regional['zh']={
 	strNextPage:"下一页",
 	strLastPage:"尾页",
 	strRefresh:"刷新",	
-	strRpp:"每页记录:",
+	strRpp:"每页记录: {0}",
 	strDisplay:"显示第 {0} 到 {1} 条，总共 {2} 条数据"	
 }

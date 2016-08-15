@@ -1,4 +1,15 @@
+Version 2.0.5 (08/15/2016)
+==========================
+
+Addition:
+
+Angularjs bindings.
+User contributed translations.
+
+
+
 Version 2.0.4 (10/19/2015)
+==========================
 
 Addition:
 

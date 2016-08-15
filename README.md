@@ -2,12 +2,14 @@ jQuery grid plugin based on jQueryui widget design
 ==================================================
 [ParamQuery Grid](http://paramquery.com) a.k.a. pqGrid v2.0
 
-Copyright (c) 2012-2015 Paramvir Dhindsa 
+Copyright (c) 2012-2016 Paramvir Dhindsa 
 
 [Released under GPL v3 license](http://paramquery.com/license)
  
       
 ParamQuery grid is a lightweight jQuery grid plugin inspired by MS Excel and Google spreadsheet. 
+
+Angularjs binding is also supported now. More bindings with other MVC/MVVM frameworks like Knockoutjs, Reactjs are coming soon.
 
 
 
@@ -18,6 +20,11 @@ ParamQuery grid is a lightweight jQuery grid plugin inspired by MS Excel and Goo
 3. [Demos or Examples](http://paramquery.com/demos)
 
 4. [PHP Integration Tutorial](http://paramquery.com/tutorial/php)
+
+5. [Angularjs bindings](http://angularjsgrid.com)
+
+6. [Angularjs demos](http://angularjsgrid.com/demos)
+
 
 ### Features:
 

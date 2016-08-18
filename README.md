@@ -1,4 +1,4 @@
-jQuery grid plugin
+jQuery grid plugin with support for 100,000+ records.
 ==================================================
 [ParamQuery Grid](http://paramquery.com) (for jQuery)
 

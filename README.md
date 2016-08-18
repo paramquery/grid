@@ -1,8 +1,8 @@
 jQuery grid plugin
 ==================================================
-[ParamQuery Grid](http://paramquery.com) a.k.a. pqGrid v2.0
+[ParamQuery Grid](http://paramquery.com) (for jQuery)
 
-[Angularjs Grid](http://angularjsgrid.com)
+[Angularjs Grid](http://angularjsgrid.com) (for Angularjs)
 
 Copyright (c) 2012-2016 Paramvir Dhindsa 
 

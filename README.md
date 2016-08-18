@@ -1,6 +1,8 @@
-jQuery grid plugin based on jQueryui widget design
+jQuery grid plugin with Angularjs bindings
 ==================================================
 [ParamQuery Grid](http://paramquery.com) a.k.a. pqGrid v2.0
+
+[Angularjs Grid](http://angularjsgrid.com)
 
 Copyright (c) 2012-2016 Paramvir Dhindsa 
 

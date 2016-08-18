@@ -1,4 +1,4 @@
-jQuery grid plugin with Angularjs bindings
+jQuery grid plugin
 ==================================================
 [ParamQuery Grid](http://paramquery.com) a.k.a. pqGrid v2.0
 

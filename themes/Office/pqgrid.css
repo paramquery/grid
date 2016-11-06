@@ -1,7 +1,7 @@
-/**
- * ParamQuery Pro v2.0.4
+/*!
+ * ParamQuery Pro v2.1.0
  *
- * Copyright (c) 2012-2015 Paramvir Dhindsa (http://paramquery.com)
+ * Copyright (c) 2012-2016 Paramvir Dhindsa (http://paramquery.com)
  * Released under GPL v3 license
  * http://paramquery.com/license
  *
@@ -27,21 +27,22 @@ div.pq-toolbar{
 .pq-grid span.pq-separator{
     border-right:1px solid #fff;
 }
-div.pq-grid-footer{	
-    
+div.pq-grid-footer{	    
     border-top:1px solid #fff;
 }	
-.pq-grid div.pq-grid-bottom{
-    background:rgb(211, 225, 241);
+.pq-grid div.pq-grid-bottom{    
+    background:rgb(211, 225, 241);    
     color:#333;    
     border:1px solid #fff;
-    border-top:1px solid #c5c5c5;    
+    border-top:1px solid #c5c5c5;
+    /*border-radius:0 0 5px 5px;*/	
 }
 .pq-grid div.pq-header-outer{	
     background:#eee;
     border-bottom:1px solid #c5c5c5;	
 }
 .pq-grid span.pq-grid-header{
+    /*background:url('images/column-header-bg.png');*/
     background-image: linear-gradient(#fefefe,#e6e6e6);
     filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fefefe', endColorstr='#e6e6e6'); 
     background: -webkit-gradient(linear, left top, left bottom, from(#fefefe), to(#e6e6e6)); 
@@ -75,12 +76,14 @@ div.pq-hvscroll-square{
 }			
 tr.pq-grid-row-hover > td
 {
+    /*background-color:#d8e8fa;*/    
     background-color:#efefef;
 }     
 tr.pq-row-select > td
-{
-    background:#d8e8fa;
+{    
+    background:#d8e8fa;    
 }
+/*to show search/filter highlights*/
 .pq-grid td .ui-state-highlight{
     background:steelblue;
     border-width:0px;
@@ -96,9 +99,9 @@ div.pq-grid tr td.pq-grid-cell-hover
     background:#e4ecf7;
     color:#333; 
 }
-div.pq-grid tr td.pq-cell-select
+.pq-grid td.pq-cell-select
 {    
-    background:#d8e8fa;
+    background:#d8e8fa;    
 }       
 .pq-grid div.pq-loading-mask{
     background:#dae5f3;
@@ -115,4 +118,7 @@ div.pq-loading-mask div{
 }
 .pq-sb-horiz-theme .pq-sb-slider{
     border-color:#98AFC7;
+}
+.pq-grid div.pq-grid-summary table{
+    left:-1px;
 }

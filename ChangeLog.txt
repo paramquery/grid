@@ -1,9 +1,42 @@
+Version 2.1.0 (11/06/2016)
+==========================
+
+Additions:
+
+options: virtualY, swipeModel, columnTemplate, column.maxWidth, editModel.onBlur
+height, width of grid can be in px, % or %+-px
+column width, minWidth, maxWidth can be in px or %
+Methods: collapse, expand, getCellsByClass
+Events: editorBegin, editorBlur, editorEnd, editorFocus, editorKeyDown, editorKeyPress, editorKeyUp, refreshCell, refreshColumn, refreshRow.
+
+Changes: 
+
+Non virtual mode (virtualX = false, virtualY = false) by default.
+saveEditCell can return null when no cell is being edited.
+editModel.onBlur replaces quitEditMode event way to save blurred cells.
+Event refresh {type:'row'} changed to refreshRow
+collapsible is an object instead of boolean.
+cells, editors vertical middle align
+divs removed from cell layout
+
+Deprecated:
+
+Events: cellEditKeyDown, quitEditMode
+
+Fixes:
+
+updateRow, refreshRow for rows in master grid.
+dataModel.location = local in master grid
+empty row grouped data when no data.
+
+
 Version 2.0.5 (08/15/2016)
 ==========================
 
 Addition:
 
 Angularjs bindings.
+
 User contributed translations.
 
 

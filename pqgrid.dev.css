@@ -1,7 +1,7 @@
-/**
- * ParamQuery Pro v2.0.4
+/*!
+ * ParamQuery Pro v2.1.0
  *
- * Copyright (c) 2012-2015 Paramvir Dhindsa (http://paramquery.com)
+ * Copyright (c) 2012-2016 Paramvir Dhindsa (http://paramquery.com)
  * Released under GPL v3 license
  * http://paramquery.com/license
  *
@@ -111,7 +111,7 @@ div.pq-toolbar .pq-separator
 .pq-dialog-buttonset button{
     padding:0.5em 0em;margin:5px;
 }
-div.pq-grid div.draggable{
+div.pq-grid div.pq-draggable{
     cursor:move;
 }
 div.pq-grid-bottom{
@@ -130,10 +130,6 @@ div.pq-grid-inner{
     overflow-x:hidden;
     overflow-y:hidden;
 }		
-div.pq-grid-right{
-    position:relative;overflow:hidden;
-    display:block;
-}
 div.pq-header-outer{
     position:relative;
     border-width:0px;
@@ -145,11 +141,12 @@ div.pq-header-outer{
     top:-2px;	
     cursor:default;
     display:inline-block;
-    overflow:hidden;	
     border-width:0px;
 }
-.pq-grid .pq-cont div.pq-cont-inner{
-    position:relative;
+.pq-grid span.pq-grid-header-left{
+    overflow:hidden;
+}
+.pq-grid div.pq-cont-inner{
     left:0px;
     top:0px;	
     cursor:default;	
@@ -210,6 +207,7 @@ table.pq-grid-table{
     table-layout:fixed;width:0px;
     position:relative;
     top:0px;
+    left:0px;
     margin-top:-1px;	
 }
 table.pq-grid-header-table{
@@ -265,7 +263,9 @@ div.pq-grid tr{
 td.pq-grid-cell{
     overflow:hidden;
     padding:0px;
-    vertical-align:top;
+    padding: 4px 5px;
+    vertical-align:middle;
+    word-wrap:break-word;
 }	
 .pq-grid td.pq-cell-dirty
 {    
@@ -274,35 +274,49 @@ td.pq-grid-cell{
     background-position: left top;
 }
 td div.pq-td-div{
-    padding:4px 5px;				
+    padding: 0px;
 }
-.pq-wrap-text{			
+table.pq-td-border-right > tbody > tr > td.pq-grid-cell{	    
+    border-right:1px solid #d0d0d0;    
+}
+table.pq-td-border-bottom > tbody > tr > td.pq-grid-cell{
+    border-bottom:1px solid #ededed;    
+}
+table.pq-wrap > tbody > tr > td.pq-grid-cell,
+table.pq-wrap > tbody > tr > td.pq-grid-col
+{
+    word-wrap:break-word;
+    white-space: normal;
+}
+table.pq-no-wrap > tbody > tr > td.pq-grid-cell,
+table.pq-no-wrap > tbody > tr > td.pq-grid-col
+{
+    word-wrap:normal;
+    white-space: nowrap;
     overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-}				
-table.pq-grid-td-border-right td.pq-grid-cell{	
-    border-right:1px solid #d0d0d0;
+    text-overflow:ellipsis;    
 }
-table.pq-grid-td-border-bottom td.pq-grid-cell{	
-    border-bottom:1px solid #ededed;
+div.pq-editor-outer {
+    border:2px solid #666;
+    position:absolute;
+    left:0;top:0;
+    padding:0px;
+    z-index:5;
+    display:table;
+    color:#333;                
 }
-tr td.pq-grid-td-border-right div{	
-}						
-div.pq-editor-border{
-    border:2px solid #666;position:absolute;padding:0px;
-    z-index:2;
+div.pq-editor-inner{    
+    display: table-cell;
+    vertical-align: middle;
+    width:100%;
 }
-div.pq-editor-border-edit{
+div.pq-editor-inner > div[contenteditable='true']{
+    overflow: auto;
     background:#fff;
-    color:#333;
+    padding:2px;
 }
-div.pq-grid-editor-default{
-    background:#fff;padding:2px;
-}
-.pq-grid .pq-cell-editor{
-    border:1px solid #999;    
-    padding:2px 3px;
+div.pq-editor-inner > .pq-cell-editor{
+    padding:2px 3px;    
 }
 div.pq-tooltip{
     padding:3px 10px;
@@ -321,6 +335,7 @@ tr td.pq-grid-number-cell{
 .pq-grid td.pq-grid-number-cell{			
     border-top:0px;
     border-left:0px;
+    padding: 4px 5px;
 }
 .pq-grid table.pq-grid-table td.pq-last-freeze-col{
     border-right:1px solid #333;
@@ -331,7 +346,7 @@ tr td.pq-grid-number-cell{
     border-right:1px solid #333;
     top:0px;
 }
-.pq-grid tr.pq-last-freeze-row > td{
+table.pq-grid-table > tbody > tr.pq-last-freeze-row > td.pq-grid-cell{
     border-bottom:1px solid #333;
 }
 .pq-grid tr.pq-detail-master > td{
@@ -390,8 +405,9 @@ div.pq-hvscroll-square{
     width:17px;
     border:0px solid blue;
     position:absolute;
-    right:0px;
+    right:0px;    
     bottom:0px;
+    z-index:1;
 }			
 .pq-tree-icon-container{
     position:relative;float:left;height:16px;
@@ -402,22 +418,19 @@ div.pq-hvscroll-square{
 tr.pq-grid-row-hover td
 {
 }     
-tr.pq-row-select{
+div.pq-grid tr.pq-row-select{
+    border-width:0px;
 } 
-tr.pq-row-select td
+tr.pq-row-select > td
 {
 }
 div.pq-grid tr td.pq-grid-cell-hover
 {
     border-width:0px;	 
 } 
-tr td.pq-grid-number-cell
-{
-}   
 div.pq-grid tr td.pq-cell-select
 {    
-    border-top-width:0px;
-    border-left-width:0px;
+    border-width:0px;
 }    
 span.ui-sortable-placeholder{
 }

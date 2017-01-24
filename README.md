@@ -4,7 +4,7 @@ jQuery grid plugin, supports 100,000+ records.
 
 [Angularjs Grid](http://angularjsgrid.com) (for Angularjs)
 
-Copyright (c) 2012-2016 Paramvir Dhindsa 
+Copyright (c) 2012-2017 Paramvir Dhindsa 
 
 [Released under GPL v3 license](http://paramquery.com/license)
  
@@ -31,12 +31,15 @@ Angularjs binding is also supported now. More bindings with other MVC/MVVM frame
 ### Features:
 
 ```
+Copy paste to and from Excel.
 
-Local, remote and custom sorting for common data formats like Integer, real numbers, Strings, etc.
+Edit history and tracking: undo and redo.
+
+Local, remote and custom sorting for common data formats like Integer, real numbers, Strings, dates, etc.
 
 Local and remote filtering with header filtering row interface.
 
-Paging with local (Browser) or remote (Ajax) data in any format.
+Paging with local or remote data.
 
 Column and row grouping and fixed summary row.
 
@@ -58,7 +61,7 @@ i18n.
 
 Consistent look and functionality across all major browsers IE(8+), Firefox, Chrome, Opera, etc
 
-Display any data source format like HTML, Array, XML, JSON, etc locally or remotely through Ajax.
+Displays data source formats like HTML, Array, XML, JSON, etc.
 
 Can be used with any server side framework e.g. ASP.NET, MVC3, JSP, JSF, PHP, etc.
 

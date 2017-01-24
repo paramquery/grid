@@ -1,7 +1,7 @@
 {
 	"name": "pqGrid",
 	"description": "Data grid inspired by MS Excel, provides sorting, filtering, paging, grouping, nesting, rows and cell selections, frozen rows, frozen columns, Add, delete, update, search, can display HTML, JSON, Array, XML, inline editing, validations, virtual rendering, virtual scrolling, cross browser, cross platform, Themeroller ready with 24 ready to use themes.",
-	"version": "2.0.4",
+	"version": "2.2.0",
 	"author": {
     "name": "Paramvir Singh Dhindsa",
     "email": "pdhindsa@paramquery.com",

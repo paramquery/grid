@@ -1,3 +1,24 @@
+Version 2.2.0 (01/24/2017)
+==========================
+
+Addditions:
+
+options: pasteModel, column.copy, historyModel
+Methods: history, getInstance
+Events: beforeValidate, change, history, selectChange
+
+Changes:
+
+options: editModel, validations.type:'nonEmpty', track replaced by trackModel, toolbar.items.listener 
+methods: isValid, addRow, updateRow, deleteRow, isDirty
+
+Fixes:
+
+DnD columns with use of columTemplate and array data
+numberCell resize fix
+last row selection with grouping
+
+
 Version 2.1.0 (11/06/2016)
 ==========================
 

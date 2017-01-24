@@ -20,6 +20,6 @@ $.paramquery.pqPager.regional['pt-br']={
     strNextPage: "Próxima Página",
     strLastPage: "Última Página",
     strRefresh: "Atualizar",
-    strRpp: "Registros por página:",
+    strRpp: "Registros por página: {0}",
     strDisplay: "Mostrando {0} a {1} de {2} itens."
 }

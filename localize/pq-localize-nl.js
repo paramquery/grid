@@ -17,6 +17,6 @@ $.paramquery.pqPager.regional['nl'] = {
     strNextPage: "Volgende pagina",
     strLastPage: "Laatste pagina",
     strRefresh: "Verfrissen",
-    strRpp: "Notulen per pagina:",
+    strRpp: "Notulen per pagina: {0}",
     strDisplay: "Weergeven {0} t&m {1} van {2} artikelen."
 };

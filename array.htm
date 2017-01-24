@@ -9,6 +9,10 @@
 <!--PQ Grid files-->
     <link rel="stylesheet" href="pqgrid.min.css" />
     <script src="pqgrid.min.js"></script>
+
+<!--jqueryui touch punch for touch devices-->
+    <script src="touch-punch/touch-punch.min.js"></script>
+
 <!--PQ Grid Office theme-->
     <link rel="stylesheet" href="themes/office/pqgrid.css" />
 
@@ -36,14 +40,11 @@
             [20, 'American Intl. Group', '108905.0', '10477.0']];
 
         var obj = { 
-            width: 700, 
-            height: 400, 
             numberCell:{resizable:true,title:"#",width:30,minWidth:30},
             editor: {type: 'textbox'},
             title: "ParamQuery Grid with Array data",
             resizable:true,
-            scrollModel:{autoFit:true, theme:true},
-            draggable:true 
+            scrollModel:{autoFit:true, theme:true}
         };
         obj.colModel = [
             { title: "Rank", width: 100, dataType: "integer" },

@@ -19,6 +19,6 @@ $.paramquery.pqPager.regional['ru'] = {
 	strNextPage : "Следующая страница",
 	strLastPage : "Последняя страница",
 	strRefresh  : "Обновить",	
-	strRpp      : "Строк на странице:",
+	strRpp      : "Строк на странице: {0}",
 	strDisplay  : "Строки с {0} по {1} из {2}."
 }

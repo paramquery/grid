@@ -1,15 +1,15 @@
-/*!
- * ParamQuery Pro v2.1.0
+/**
+ * ParamQuery Pro v2.2.0
  *
- * Copyright (c) 2012-2016 Paramvir Dhindsa (http://paramquery.com)
+ * Copyright (c) 2012-2017 Paramvir Dhindsa (http://paramquery.com)
  * Released under GPL v3 license
  * http://paramquery.com/license
  *
  */
 (function($) {
-	$.paramquery = $.paramquery || {};
+	var pq = $.paramquery = $.paramquery || {};
 	$.paramquery.pqgrid = $.paramquery.pqgrid || {};
-	$.paramquery.xmlToArray = function(data, obj) {
+	pq.xmlToArray = function(data, obj) {
 		var itemParent = obj.itemParent;
 		var itemNames = obj.itemNames;
 		var arr = [];
@@ -18,13 +18,13 @@
 			var $item = $(item);
 			var arr2 = [];
 			$(itemNames).each(function(j, itemName) {
-				arr2.push($item.find(itemName).text())
+				arr2.push($item.find(itemName).text().replace(/\r|\n|\t/g, ""))
 			});
 			arr.push(arr2)
 		});
 		return arr
 	};
-	$.paramquery.xmlToJson = function(data, obj) {
+	pq.xmlToJson = function(data, obj) {
 		var itemParent = obj.itemParent;
 		var itemNames = obj.itemNames;
 		var arr = [];
@@ -34,13 +34,13 @@
 			var arr2 = {};
 			for (var j = 0, len = itemNames.length; j < len; j++) {
 				var itemName = itemNames[j];
-				arr2[itemName] = $item.find(itemName).text()
+				arr2[itemName] = $item.find(itemName).text().replace(/\r|\n|\t/g, "")
 			}
 			arr.push(arr2)
 		});
 		return arr
 	};
-	$.paramquery.tableToArray = function(tbl) {
+	pq.tableToArray = function(tbl) {
 		var $tbl = $(tbl);
 		var colModel = [];
 		var data = [];
@@ -54,16 +54,7 @@
 			var width = $td.width();
 			var dataType = "string";
 			var $tdsec = $trsecond.find("td:eq(" + i + ")");
-			var val = $tdsec.text();
 			var align = $tdsec.attr("align");
-			val = val.replace(/,/g, "");
-			if (parseInt(val) == val && (parseInt(val) + "").length == val.length) {
-				dataType = "integer"
-			} else {
-				if (parseFloat(val) == val) {
-					dataType = "float"
-				}
-			}
 			var obj = {
 				title: title,
 				width: width,
@@ -89,7 +80,10 @@
 			colModel: colModel
 		}
 	};
-	$.paramquery.formatCurrency = function(val) {
+	pq.formatCurrency = function(val) {
+		if (isNaN(val)) {
+			return val
+		}
 		val = Math.round(val * 10) / 10;
 		val = val + "";
 		if (val.indexOf(".") == -1) {
@@ -110,7 +104,7 @@
 		fp = arr2.join("");
 		return fp + lp
 	};
-	$.paramquery.validation = {
+	pq.validation = {
 		is: function(type, val) {
 			if (type == "string" || !type) {
 				return true
@@ -1470,9 +1464,12 @@
 			filterKeys: true,
 			keyUpDown: true,
 			reInt: /^([\-]?[1-9][0-9]*|[\-]?[0-9]?)$/,
-			reFloat: /^(([\-]?[1-9][0-9]*\.?[0-9]*)|([\-]?[0-9]\.[0-9]*)|([0-9]?))$/,
+			reFloat: /^[\-]?[0-9]*\.?[0-9]*$/,
 			onBlur: "validate",
-			saveKey: ""
+			saveKey: $.ui.keyCode.ENTER,
+			allowInvalid: false,
+			invalidClass: "ui-state-error",
+			validate: true
 		},
 		editor: {
 			select: false,
@@ -1486,7 +1483,7 @@
 		flexWidth: false,
 		freezeCols: 0,
 		freezeRows: 0,
-		getDataIndicesFromColIndices: true,
+		calcDataIndxFromColIndx: true,
 		height: 400,
 		hoverMode: "null",
 		_maxColWidth: "100%",
@@ -1495,8 +1492,9 @@
 		numberCell: {
 			width: 30,
 			title: "",
-			resizable: false,
+			resizable: true,
 			minWidth: 30,
+			maxWidth: 100,
 			show: true
 		},
 		pageModel: {
@@ -1515,8 +1513,9 @@
 			theme: false
 		},
 		selectionModel: {
-			type: "row",
-			mode: "range"
+			triggerSelectChange: true,
+			type: "cell",
+			mode: "block"
 		},
 		swipeModel: {
 			on: true,
@@ -1585,8 +1584,8 @@
 			v: false,
 			h: false
 		};
-		var pqpanes = this.pqpanes;
-		var o = this.options,
+		var pqpanes = this.pqpanes,
+			o = this.options,
 			virtualX = o.virtualX,
 			virtualY = o.virtualY,
 			flexHeight = o.flexHeight,
@@ -1741,7 +1740,7 @@
 		this.iSort._refreshSorters();
 		this._initTypeColumns();
 		var element = this.element;
-		element.empty().addClass("pq-grid ui-widget ui-widget-content" + (o.roundCorners ? " ui-corner-all" : "")).append(["<div class='pq-grid-top ui-widget-header", (o.roundCorners ? " ui-corner-top" : ""), "'>", "<div class='pq-grid-title", (o.roundCorners ? " ui-corner-top" : ""), "'>&nbsp;</div>", "</div>", "<div class='pq-grid-inner' >", "<div class='pq-header-outer ui-widget-header'>", "</div>", "<div class='pq-cont-right' >", "<div class='pq-cont'></div>", "</div>", "</div>", "<div class='pq-grid-bottom ui-widget-header", (o.roundCorners ? " ui-corner-bottom" : ""), "'>", "<div class='pq-grid-footer'>&nbsp;</div>", "</div>"].join(""));
+		element.empty().addClass("pq-grid ui-widget ui-widget-content" + (o.roundCorners ? " ui-corner-all" : "")).append(["<div class='pq-grid-top ui-widget-header", (o.roundCorners ? " ui-corner-top" : ""), "'>", "<div class='pq-grid-title", (o.roundCorners ? " ui-corner-top" : ""), "'>&nbsp;</div>", "</div>", "<div class='pq-grid-inner' >", "<div class='pq-header-outer ui-widget-header'>", "</div>", "<div class='pq-cont-right' >", "<div class='pq-cont' tabindex='0'></div>", "</div>", "</div>", "<div class='pq-grid-bottom ui-widget-header", (o.roundCorners ? " ui-corner-bottom" : ""), "'>", "<div class='pq-grid-footer'>&nbsp;</div>", "</div>"].join(""));
 		this._trigger("render", null, {
 			dataModel: this.options.dataModel,
 			colModel: this.colModel
@@ -1933,7 +1932,6 @@
 		}
 		this._refreshOptions();
 		this._refreshTitle();
-		this._refreshDataIndices();
 		this.iRows = new $.paramquery.cRows(this);
 		this.iCells = new $.paramquery.cCells(this);
 		this.generateLoading();
@@ -1986,8 +1984,24 @@
 			}
 		}
 	};
+	fn._mousePQUp = function(evt) {
+		$(document).unbind("mouseup." + this.widgetName, this._mousePQUpDelegate);
+		this._trigger("mousePQUp", evt, null)
+	};
 	fn._mouseDown = function(evt) {
+		var that = this;
+		if ($(evt.target).closest(".pq-editor-focus").length) {
+			this._blurEditMode = true;
+			window.setTimeout(function() {
+				that._blurEditMode = false
+			}, 0);
+			return
+		}
 		this._saveDims();
+		this._mousePQUpDelegate = function(event) {
+			return that._mousePQUp(event)
+		};
+		$(document).bind("mouseup." + this.widgetName, this._mousePQUpDelegate);
 		return this._super.call(this, evt)
 	};
 	fn._mouseStart = function(evt) {
@@ -2253,69 +2267,150 @@
 			return false
 		}
 	};
-	fn._isValidCell = function(objP) {
-		var that = this,
-			rowData = objP.rowData,
-			value = $.trim(objP.value),
-			valueOrig = objP.valueOrig,
-			column = objP.column,
-			silent = objP.silent,
-			dataIndx = column.dataIndx,
-			o = this.options,
-			gValid = o.validation,
-			valids = column.validations,
-			ae = document.activeElement;
-		if (valids && valids.length > 0) {
-			for (var j = 0; j < valids.length; j++) {
-				var valid = valids[j],
-					valid = $.extend({}, gValid, valid),
-					type = valid.type,
-					msg = valid.msg,
-					msg = msg ? msg : "&nbsp;",
-					icon = valid.icon,
-					cls = valid.cls,
-					cls = cls ? cls : "",
-					style = "padding:3px 10px;" + valid.style,
-					css = valid.css,
-					_valid = true,
-					invalid = {
-						valid: false,
-						msg: msg,
-						dataIndx: dataIndx
-					}, reqVal = valid.value;
-				if (type == "minLen" && value.length < reqVal) {
-					_valid = false
+	$.paramquery.getValueFromDataType = function(val, dataType, validation) {
+		var val2;
+		if (dataType == "date") {
+			val2 = Date.parse(val);
+			if (isNaN(val2)) {
+				return ""
+			} else {
+				if (validation) {
+					return val2
 				} else {
-					if (type == "maxLen" && value.length > reqVal) {
-						_valid = false
-					} else {
-						if (type == "gt" && value <= reqVal) {
-							_valid = false
+					return val
+				}
+			}
+		} else {
+			if (dataType == "integer") {
+				val2 = parseInt(val)
+			} else {
+				if (dataType == "float") {
+					val2 = parseFloat(val)
+				} else {
+					if (dataType == "bool") {
+						val2 = $.trim(val).toLowerCase();
+						if (val2.length == 0) {
+							return null
+						}
+						if (val2 == "true" || val2 == "yes" || val2 == "1") {
+							return true
 						} else {
-							if (type == "gte" && value < reqVal) {
-								_valid = false
+							if (val2 == "false" || val2 == "no" || val2 == "0") {
+								return false
 							} else {
-								if (type == "lt" && value >= reqVal) {
-									_valid = false
+								return Boolean(val2)
+							}
+						}
+					} else {
+						return $.trim(val)
+					}
+				}
+			}
+		} if (isNaN(val2) || val2 == null) {
+			if (val == null) {
+				return val
+			} else {
+				return null
+			}
+		} else {
+			return val2
+		}
+	};
+	fn.__isValidCell = function(objP) {
+		var column = objP.column,
+			valids = column.validations;
+		if (!valids || !valids.length) {
+			return {
+				valid: true
+			}
+		}
+		var value = objP.value,
+			dataType = column.dataType,
+			getValue = function(val) {
+				return $.paramquery.getValueFromDataType(val, dataType, true)
+			}, rowData = objP.rowData;
+		if (!rowData) {
+			throw ("rowData required.")
+		}
+		for (var j = 0; j < valids.length; j++) {
+			var valid = valids[j],
+				type = valid.type,
+				_valid = false,
+				msg = valid.msg,
+				reqVal = valid.value;
+			if (value == null) {
+				_valid = false
+			} else {
+				if (type == "minLen") {
+					value = getValue(value);
+					reqVal = getValue(reqVal);
+					if (value.length >= reqVal) {
+						_valid = true
+					}
+				} else {
+					if (type == "nonEmpty") {
+						if (value != null && value !== "") {
+							_valid = true
+						}
+					} else {
+						if (type == "maxLen") {
+							value = getValue(value);
+							reqVal = getValue(reqVal);
+							if (value.length <= reqVal) {
+								_valid = true
+							}
+						} else {
+							if (type == "gt") {
+								value = getValue(value);
+								reqVal = getValue(reqVal);
+								if (value > reqVal) {
+									_valid = true
+								}
+							} else {
+								if (type == "gte") {
+									value = getValue(value);
+									reqVal = getValue(reqVal);
+									if (value >= reqVal) {
+										_valid = true
+									}
 								} else {
-									if (type == "lte" && value > reqVal) {
-										_valid = false
+									if (type == "lt") {
+										value = getValue(value);
+										reqVal = getValue(reqVal);
+										if (value < reqVal) {
+											_valid = true
+										}
 									} else {
-										if (type == "regexp" && (new RegExp(reqVal)).test(value) == false) {
-											_valid = false
+										if (type == "lte") {
+											value = getValue(value);
+											reqVal = getValue(reqVal);
+											if (value <= reqVal) {
+												_valid = true
+											}
 										} else {
-											if (typeof type == "function") {
-												var obj2 = {
-													column: column,
-													value: value,
-													rowData: rowData,
-													msg: msg
-												};
-												if (type.call(that.element[0], obj2) == false) {
-													_valid = false;
-													if (obj2.msg != msg) {
-														msg = obj2.msg
+											if (type == "regexp") {
+												if ((new RegExp(reqVal)).test(value)) {
+													_valid = true
+												}
+											} else {
+												if (typeof type == "function") {
+													var obj2 = {
+														column: column,
+														value: value,
+														rowData: rowData,
+														msg: msg
+													};
+													var ret = type.call(this.element[0], obj2);
+													if (ret == false) {
+														_valid = false;
+														if (obj2.msg != msg) {
+															msg = obj2.msg
+														}
+													} else {
+														_valid = true
 													}
+												} else {
+													_valid = true
 												}
 											}
 										}
@@ -2324,79 +2419,131 @@
 							}
 						}
 					}
-				} if (!_valid && silent === true) {
-					return invalid
 				}
-				if (!_valid) {
-					var rowIndx = this.getRowIndx({
-						rowData: rowData
-					}).rowIndx;
-					if (valueOrig === undefined) {
-						if (rowIndx == null) {
-							throw ("incorrect usage of isValid")
-						}
-						this.goToPage({
-							rowIndx: rowIndx
-						});
-						this.editCell({
-							rowIndx: rowIndx,
-							dataIndx: dataIndx
-						})
-					} else {
-						if ($(ae).hasClass("pq-editor-focus")) {
-							var indices = o.editModel.indices;
-							if (indices) {
-								var rowIndx2 = indices.rowIndx,
-									dataIndx2 = indices.dataIndx;
-								if (rowIndx != null && rowIndx != rowIndx2) {
-									throw ("incorrect usage of isValid rowIndx: " + rowIndx)
-								}
-								if (dataIndx != dataIndx2) {
-									throw ("incorrect usage of isValid dataIndx: " + dataIndx)
-								}
-								this.editCell({
-									rowIndx: rowIndx2,
-									dataIndx: dataIndx
-								})
-							}
-						}
-					}
-					var cell = this.getEditCell();
-					if (cell && cell.$cell) {
-						var $cell = cell.$cell;
-						$cell.attr("title", msg);
-						try {
-							$cell.tooltip("destroy")
-						} catch (ex) {}
-						$cell.tooltip({
-							position: {
-								my: "left center+5",
-								at: "right center"
-							},
-							content: function() {
-								var $this = $(this),
-									strIcon = (icon == "") ? "" : ("<span class='ui-icon " + icon + " pq-tooltip-icon'></span>");
-								return strIcon + msg
-							},
-							open: function(evt, ui) {
-								if (cls) {
-									ui.tooltip.addClass(cls)
-								}
-								if (style) {
-									var olds = ui.tooltip.attr("style");
-									ui.tooltip.attr("style", olds + ";" + style)
-								}
-								if (css) {
-									ui.tooltip.css(css)
-								}
-							}
-						}).tooltip("open")
-					}
-					return invalid
+			} if (!_valid) {
+				return {
+					valid: false,
+					msg: msg,
+					column: column,
+					dataIndx: column.dataIndx,
+					validation: valid
 				}
 			}
 		}
-		if (valueOrig !== undefined) {
+		return {
+			valid: true
+		}
+	};
+	fn._isValidCell = function(objP) {
+		var that = this,
+			rowData = objP.rowData,
+			value = objP.value,
+			valueDef = objP.valueDef,
+			column = objP.column,
+			o = this.options,
+			allowInvalid = objP.allowInvalid,
+			dataIndx = column.dataIndx,
+			gValid = o.validation,
+			ae = document.activeElement;
+		var invalid = this.__isValidCell({
+			column: column,
+			value: value,
+			rowData: rowData
+		}),
+			_valid = invalid.valid,
+			msg, cls, icon, css, style;
+		if (!_valid) {
+			var valid = valid = $.extend({}, gValid, invalid.validation),
+				msg = invalid.msg,
+				css = valid.css,
+				cls = valid.cls,
+				icon = valid.icon,
+				style = "padding:3px 10px;" + valid.style
+		}
+		if (allowInvalid === true) {
+			if (!_valid) {
+				this.addClass({
+					rowData: rowData,
+					dataIndx: dataIndx,
+					cls: "ui-state-error"
+				});
+				return invalid
+			} else {
+				this.removeClass({
+					rowData: rowData,
+					dataIndx: dataIndx,
+					cls: "ui-state-error"
+				})
+			}
+		} else {
+			if (!_valid) {
+				var rowIndx = this.getRowIndx({
+					rowData: rowData
+				}).rowIndx;
+				if (rowIndx == null) {
+					return invalid
+				}
+				if (!valueDef) {
+					this.goToPage({
+						rowIndx: rowIndx
+					});
+					this.editCell({
+						rowIndx: rowIndx,
+						dataIndx: dataIndx
+					})
+				} else {
+					if ($(ae).hasClass("pq-editor-focus")) {
+						var indices = o.editModel.indices;
+						if (indices) {
+							var rowIndx2 = indices.rowIndx,
+								dataIndx2 = indices.dataIndx;
+							if (rowIndx != null && rowIndx != rowIndx2) {
+								throw ("incorrect usage of isValid rowIndx: " + rowIndx)
+							}
+							if (dataIndx != dataIndx2) {
+								throw ("incorrect usage of isValid dataIndx: " + dataIndx)
+							}
+							this.editCell({
+								rowIndx: rowIndx2,
+								dataIndx: dataIndx
+							})
+						}
+					}
+				}
+				var cell = this.getEditCell();
+				if (cell && cell.$cell) {
+					var $cell = cell.$cell;
+					$cell.attr("title", msg);
+					try {
+						$cell.tooltip("destroy")
+					} catch (ex) {}
+					$cell.tooltip({
+						position: {
+							my: "left center+5",
+							at: "right center"
+						},
+						content: function() {
+							var $this = $(this),
+								strIcon = (icon == "") ? "" : ("<span class='ui-icon " + icon + " pq-tooltip-icon'></span>");
+							return strIcon + msg
+						},
+						open: function(evt, ui) {
+							if (cls) {
+								ui.tooltip.addClass(cls)
+							}
+							if (style) {
+								var olds = ui.tooltip.attr("style");
+								ui.tooltip.attr("style", olds + ";" + style)
+							}
+							if (css) {
+								ui.tooltip.css(css)
+							}
+						}
+					}).tooltip("open")
+				}
+				return invalid
+			}
+		} if (valueDef) {
 			var cell = this.getEditCell();
 			if (cell && cell.$cell) {
 				var $cell = cell.$cell;
@@ -2411,42 +2558,82 @@
 		}
 	};
 	fn.isValid = function(objP) {
-		var rowData = this.getRowData(objP),
+		var objP = objP || {}, allowInvalid = objP.allowInvalid,
+			allowInvalid = (allowInvalid == null) ? false : allowInvalid,
 			dataIndx = objP.dataIndx;
-		if (dataIndx == null) {
-			var CM = this.colModel;
-			for (var i = 0, len = CM.length; i < len; i++) {
-				var column = CM[i],
-					hidden = column.hidden;
-				if (hidden) {
-					continue
-				}
-				var dataIndx = column.dataIndx,
-					value = rowData[dataIndx],
-					isValid = this._isValidCell({
-						rowData: rowData,
-						value: value,
-						column: column,
-						silent: objP.silent
-					});
-				if (!isValid.valid) {
-					return isValid
-				}
-			}
-		} else {
-			var column = this.getColumn({
-				dataIndx: dataIndx
-			}),
-				value = (objP.value === undefined) ? rowData[dataIndx] : objP.value,
+		if (objP.hasOwnProperty("dataIndx")) {
+			var column = this.columns[dataIndx],
+				rowData = objP.rowData || this.getRowData(objP),
+				valueDef = objP.hasOwnProperty("value"),
+				value = (valueDef) ? objP.value : rowData[dataIndx],
 				isValid = this._isValidCell({
 					rowData: rowData,
 					value: value,
-					valueOrig: objP.value,
+					valueDef: valueDef,
 					column: column,
-					silent: objP.silent
+					allowInvalid: allowInvalid
 				});
 			if (!isValid.valid) {
 				return isValid
+			}
+		} else {
+			if (objP.hasOwnProperty("data")) {
+				var data = objP.data,
+					isValid, cells = [];
+				if (!data) {
+					return null
+				}
+				for (var i = 0, len = data.length; i < len; i++) {
+					var ret = this.isValid({
+						rowData: data[i],
+						allowInvalid: allowInvalid
+					});
+					if (allowInvalid === false) {
+						if (!ret.valid) {
+							return isValid
+						}
+					} else {
+						cells = cells.concat(ret)
+					}
+				}
+				if (allowInvalid === false) {
+					return isValid
+				} else {
+					return cells
+				}
+			} else {
+				var rowData = objP.rowData || this.getRowData(objP),
+					CM = this.colModel,
+					cells = [];
+				for (var i = 0, len = CM.length; i < len; i++) {
+					var column = CM[i],
+						hidden = column.hidden;
+					if (hidden) {
+						continue
+					}
+					var dataIndx = column.dataIndx,
+						value = rowData[dataIndx],
+						isValid = this._isValidCell({
+							rowData: rowData,
+							value: value,
+							column: column,
+							allowInvalid: allowInvalid
+						});
+					if (!isValid.valid) {
+						if (allowInvalid === false) {
+							return isValid
+						} else {
+							cells.push({
+								rowData: rowData,
+								dataIndx: dataIndx,
+								column: column
+							})
+						}
+					}
+				}
+				if (allowInvalid && cells.length) {
+					return cells
+				}
 			}
 		}
 		return {
@@ -2454,12 +2641,14 @@
 		}
 	};
 	fn.isEditableRow = function(objP) {
-		var thisOptions = this.options,
-			gEditable = thisOptions.editable;
+		var o = this.options,
+			gEditable = o.editable;
 		if (gEditable != null) {
 			if (typeof gEditable == "function") {
 				var rowIndx = objP.rowIndx,
-					rowData = thisOptions.dataModel.data[rowIndx];
+					rowData = objP.rowData || this.getRowData({
+						rowIndx: rowIndx
+					});
 				return gEditable.call(this.element[0], {
 					rowData: rowData,
 					rowIndx: rowIndx
@@ -2486,7 +2675,7 @@
 		if (cEditable != null) {
 			if (typeof cEditable == "function") {
 				var rowIndx = objP.rowIndx,
-					rowData = this.getRowData(objP);
+					rowData = objP.rowData || this.getRowData(objP);
 				return cEditable.call(this.element[0], {
 					rowIndx: rowIndx,
 					rowData: rowData,
@@ -2518,11 +2707,18 @@
 			blurIfFocus: true
 		});
 		var that = this;
+		var DM = that.options.dataModel;
 		var objP = {
-			dataModel: that.options.dataModel
+			dataModel: DM
 		};
 		if (that._trigger("contMouseDown", evt, objP) === false) {
 			return false
+		}
+		var $target = $(evt.target),
+			$td = $target.closest(".pq-grid-cell"),
+			$tr = $target.closest(".pq-grid-row");
+		if (!$td.length && !$tr.length) {
+			this.$cont.attr("tabindex", 0).focus()
 		}
 		return true
 	};
@@ -3268,6 +3464,9 @@
 				}
 				that.hideLoading();
 				that.loading = false;
+				if (objP && objP.callback) {
+					objP.callback()
+				}
 				that._trigger("load", null, {
 					dataModel: DM,
 					colModel: thisColModel
@@ -3279,9 +3478,6 @@
 						colModel: thisColModel,
 						filterModel: FM
 					})
-				}
-				if (objP && objP.callback) {
-					objP.callback()
 				}
 			},
 			error: function(jqXHR, textStatus, errorThrown) {
@@ -3414,17 +3610,27 @@
 		this._refresh(objP)
 	};
 	fn._refreshDataIndices = function() {
-		if (this.options.getDataIndicesFromColIndices == false) {
-			return
-		}
+		var isJSON = (this.getDataType() == "JSON") ? true : false,
+			columns = {}, colIndxs = {}, validations = {};
 		var CM = this.colModel,
 			CMLength = CM.length;
 		for (var i = 0; i < CMLength; i++) {
-			var column = CM[i];
-			if (column.dataIndx == null) {
-				column.dataIndx = i
+			var column = CM[i],
+				dataIndx = column.dataIndx;
+			if (dataIndx == null) {
+				dataIndx = isJSON ? "dataIndx_" + i : i;
+				column.dataIndx = dataIndx
+			}
+			columns[dataIndx] = column;
+			colIndxs[dataIndx] = i;
+			var valids = column.validations;
+			if (valids) {
+				validations[dataIndx] = validations
 			}
 		}
+		this.columns = columns;
+		this.colIndxs = colIndxs;
+		this.validations = validations
 	};
 	fn.refreshView = function(obj) {
 		if (this.options.editModel.indices != null) {
@@ -3456,7 +3662,6 @@
 		o.collapsible._collapsed = false;
 		var that = this;
 		this._refreshGridWidthAndHeight();
-		this._refreshDataIndices();
 		this.iRefreshColumn.refreshColumnWidths();
 		this._setScrollHNumEles();
 		this._bufferObj_calcInitFinalH();
@@ -3522,9 +3727,9 @@
 			}
 		}
 	};
-	fn.getThis = function() {
+	fn.getInstance = function() {
 		return {
-			that: this
+			grid: this
 		}
 	};
 	fn._addRowsData = function(obj) {
@@ -3588,18 +3793,10 @@
 		}
 	};
 	fn.getColumn = function(obj) {
-		if (obj.dataIndx === undefined) {
+		if (obj.dataIndx == null) {
 			throw ("dataIndx N/A")
 		}
-		var dataIndx = obj.dataIndx;
-		var thisColModel = this.colModel;
-		for (var i = 0, len = thisColModel.length; i < len; i++) {
-			var column = thisColModel[i];
-			if (column.dataIndx == dataIndx) {
-				return column
-			}
-		}
-		return null
+		return this.columns[obj.dataIndx]
 	};
 	fn._onDataAvailable = function() {};
 	fn._setOption = function(key, value) {
@@ -3992,6 +4189,9 @@
 				rowIndxPage: rowIndxPage
 			}),
 			tr = $tr[0];
+		if (!tr) {
+			return
+		}
 		var offset1 = tr.offsetTop + parseInt($tbl.css("marginTop")),
 			trHt = tr.offsetHeight;
 		if (nested) {
@@ -4380,9 +4580,7 @@
 		}
 	};
 	fn.selection = function(obj) {
-		var rowIndx = obj.rowIndx,
-			colIndx = obj.colIndx,
-			method = obj.method,
+		var method = obj.method,
 			type = obj.type;
 		if (type == "row") {
 			return this["iRows"][method](obj)
@@ -4522,18 +4720,19 @@
 			if (this._trigger("cellBeforeSave", evt, objCell) === false) {
 				return false
 			}
-			if (newVal != oldVal) {
-				rowData[dataIndx] = newVal;
-				if (o.track) {
-					var rowData = this.getRowData({
-						rowIndx: rowIndx
-					});
-					this.iUCData.update({
-						rowData: rowData,
-						dataIndx: dataIndx,
-						oldVal: oldVal,
-						newVal: newVal
-					})
+			if (1 == 1) {
+				var newRow = {};
+				newRow[dataIndx] = newVal;
+				var ret = this.updateRow({
+					row: newRow,
+					rowIndx: rowIndx,
+					refresh: false,
+					silent: true,
+					source: "edit",
+					checkEditable: false
+				});
+				if (ret === false) {
+					return false
 				}
 				this._trigger("cellSave", evt, objCell);
 				var that = this;
@@ -4550,6 +4749,242 @@
 			}
 			return true
 		}
+	};
+	fn._digestData = function(ui) {
+		if (this._trigger("beforeValidate", null, ui) === false) {
+			return false
+		}
+		var that = this,
+			options = that.options,
+			EM = options.editModel,
+			data = options.dataModel.data,
+			CM = options.colModel,
+			PM = options.pageModel,
+			HM = options.historyModel,
+			validate = ui.validate,
+			validate = validate == null ? EM.validate : validate,
+			paging = PM.type,
+			allowInvalid = ui.allowInvalid,
+			allowInvalid = allowInvalid == null ? EM.allowInvalid : allowInvalid,
+			invalidClass = EM.invalidClass,
+			TM = options.trackModel,
+			track = ui.track,
+			track = (track == null) ? ((options.track == null) ? TM.on : options.track) : track,
+			history = ui.history,
+			history = (history == null) ? HM.on : history,
+			checkEditable = ui.checkEditable,
+			checkEditable = (checkEditable == null) ? true : checkEditable,
+			checkEditableAdd = ui.checkEditableAdd,
+			checkEditableAdd = (checkEditableAdd == null) ? checkEditable : checkEditableAdd,
+			columns = this.columns,
+			colIndxs = this.colIndxs,
+			source = ui.source,
+			offset = this.rowIndxOffset,
+			getValueFromDataType = $.paramquery.getValueFromDataType,
+			rowList = ui.rowList,
+			rowListLen = rowList.length;
+		if (!data) {
+			data = options.dataModel.data = []
+		}
+		var rowListFinal = [];
+		for (var i = 0; i < rowListLen; i++) {
+			var rowListObj = rowList[i],
+				newRow = rowListObj.newRow,
+				rowData = rowListObj.rowData,
+				type = rowListObj.type,
+				rowCheckEditable = rowListObj.checkEditable,
+				rowIndx = rowListObj.rowIndx,
+				oldRow = rowListObj.oldRow;
+			if (rowCheckEditable == null) {
+				if (type == "update") {
+					rowCheckEditable = checkEditable
+				} else {
+					if (type == "add") {
+						rowCheckEditable = checkEditableAdd
+					}
+				}
+			}
+			if (type == "update") {
+				if (!oldRow || !rowData) {
+					throw ("assert failed: oldRow and rowData required while update")
+				}
+				if (rowCheckEditable && options.editable !== true && that.isEditableRow({
+					rowIndx: rowIndx,
+					rowData: rowData
+				}) === false) {
+					continue
+				}
+			} else {
+				if (type == "delete") {
+					rowListFinal.push(rowListObj);
+					continue
+				}
+			} if (type == "add") {
+				for (var j = 0, lenj = CM.length; j < lenj; j++) {
+					var column = CM[j],
+						dataIndx = column.dataIndx;
+					newRow[dataIndx] = newRow[dataIndx]
+				}
+			}
+			for (var dataIndx in newRow) {
+				var column = columns[dataIndx],
+					colIndx = colIndxs[dataIndx];
+				if (column) {
+					if (rowCheckEditable && column.editable != null && (that.isEditableCell({
+						rowIndx: rowIndx,
+						colIndx: colIndx,
+						dataIndx: dataIndx
+					}) === false)) {
+						delete newRow[dataIndx];
+						continue
+					}
+					var dataType = column.dataType,
+						newVal = getValueFromDataType(newRow[dataIndx], dataType),
+						oldVal = rowData ? rowData[dataIndx] : undefined,
+						oldVal = (oldVal !== undefined) ? getValueFromDataType(oldVal, dataType) : undefined;
+					newRow[dataIndx] = newVal;
+					if (validate && column.validations) {
+						if (source == "edit") {
+							if (this.isValid({
+								dataIndx: dataIndx,
+								rowIndx: rowIndx,
+								value: newVal
+							}).valid == false) {
+								return false
+							} else {
+								this.removeClass({
+									rowData: rowData,
+									dataIndx: dataIndx,
+									cls: invalidClass,
+									refresh: false
+								})
+							}
+						} else {
+							if (this.__isValidCell({
+								column: column,
+								rowData: type == "add" ? newRow : rowData,
+								value: newVal
+							}).valid === false) {
+								if (allowInvalid === false) {
+									delete newRow[dataIndx];
+									if (type == "add") {
+										this.addClass({
+											rowData: newRow,
+											dataIndx: dataIndx,
+											cls: invalidClass,
+											refresh: false
+										})
+									}
+								} else {
+									this.addClass({
+										rowData: (type == "add") ? newRow : rowData,
+										dataIndx: dataIndx,
+										cls: invalidClass,
+										refresh: false
+									})
+								}
+							} else {
+								this.removeClass({
+									rowData: rowData,
+									dataIndx: dataIndx,
+									cls: invalidClass,
+									refresh: false
+								})
+							}
+						}
+					}
+					if (type == "update" && newVal === oldVal) {
+						if (source == "edit") {
+							return null
+						}
+						delete newRow[dataIndx];
+						continue
+					}
+				}
+				if (type == "update") {
+					oldRow[dataIndx] = oldVal
+				}
+			}
+			if (newRow) {
+				if (type == "update") {
+					for (var dataIndx in newRow) {
+						rowListFinal.push(rowListObj);
+						break
+					}
+				} else {
+					rowListFinal.push(rowListObj)
+				}
+			}
+		}
+		rowList = ui.rowList = rowListFinal;
+		rowListLen = rowList.length;
+		if (!rowListLen) {
+			return false
+		}
+		if (history) {
+			that.iHistory.increment();
+			that.iHistory.push({
+				rowList: rowList
+			})
+		}
+		for (var i = 0; i < rowListLen; i++) {
+			var rowListObj = rowList[i],
+				type = rowListObj.type,
+				newRow = rowListObj.newRow,
+				rowIndx = rowListObj.rowIndx,
+				rowIndxPage = rowListObj.rowIndxPage,
+				rowData = rowListObj.rowData;
+			if (type == "update") {
+				if (track) {
+					this.iUCData.update({
+						rowData: rowData,
+						row: newRow,
+						refresh: false
+					})
+				}
+				for (var dataIndx in newRow) {
+					var newVal = newRow[dataIndx];
+					rowData[dataIndx] = newVal
+				}
+			} else {
+				if (type == "add") {
+					if (track) {
+						this.iUCData.add({
+							rowData: newRow
+						})
+					}
+					if (rowIndx == null && rowIndxPage == null) {
+						data.push(newRow)
+					} else {
+						var rowIndxPage = rowIndx - offset,
+							indx = (paging == "remote") ? rowIndxPage : rowIndx;
+						data.splice(indx, 0, newRow)
+					} if (paging == "remote") {
+						PM.totalRecords++
+					}
+				} else {
+					if (type == "delete") {
+						var rowIndx = that.getRowIndx({
+							rowData: rowData
+						}).rowIndx;
+						if (track) {
+							this.iUCData["delete"]({
+								rowIndx: rowIndx,
+								rowData: rowData
+							})
+						}
+						var rowIndxPage = rowIndx - offset,
+							indx = (paging == "remote") ? rowIndxPage : rowIndx;
+						var remArr = data.splice(indx, 1);
+						if (remArr && remArr.length && paging == "remote") {
+							PM.totalRecords--
+						}
+					}
+				}
+			}
+		}
+		that._trigger("change", null, ui);
+		return true
 	};
 	fn._fixTableViewPort = function() {
 		var ele = this.element[0];
@@ -4665,6 +5100,12 @@
 			}),
 			CM = this.colModel,
 			rowData = this.data[rowIndxPage];
+		var refreshFocus = false,
+			ae = document.activeElement,
+			$ae = $(ae);
+		if (ae == $trOld[0] || ($trOld.length > 1 && ae == $trOld[1])) {
+			refreshFocus = true
+		}
 		if (!rowData || !$trOld || !$trOld.length) {
 			return null
 		}
@@ -4674,6 +5115,13 @@
 		$trOld.replaceWith(trStr);
 		this._fixTableViewPort();
 		this._refreshScrollbars();
+		if (refreshFocus) {
+			var $trNew = this.getRow({
+				all: true,
+				rowIndxPage: rowIndxPage
+			});
+			$trNew.attr("tabindex", 0).focus()
+		}
 		this._trigger("refreshRow", null, {
 			rowData: rowData,
 			rowIndx: rowIndx,
@@ -4769,7 +5217,10 @@
 	fn.editCell = function(obj) {
 		this.scrollRow(obj);
 		this.scrollColumn(obj);
-		return this._editCell(obj)
+		var $td = this.getCell(obj);
+		if ($td && $td.length) {
+			return this._editCell(obj)
+		}
 	};
 	fn.getFirstEditableColIndx = function(objP) {
 		if (objP.rowIndx == null) {
@@ -5135,7 +5586,7 @@
 					$tbl = $($tbl[0])
 				}
 			}
-			var $td = $tbl.children().children("tr:last").children("td[pq-col-indx=" + colIndx + "]")
+			var $td = $tbl.children().children("tr.pq-grid-title-row:last").children("td[pq-col-indx=" + colIndx + "]")
 		}
 		if ($td.length == 0 || $td[0].style.visibility == "hidden") {
 			return null
@@ -5270,30 +5721,38 @@
 			data = DM.data,
 			CM = this.colModel,
 			CMLength = CM.length,
-			cells = [];
+			cells = [],
+			getCellsByClass = function(ui) {
+				for (var j = 0; j < CMLength; j++) {
+					var column = CM[j],
+						dataIndx = column.dataIndx;
+					ui.dataIndx = dataIndx;
+					if (this.hasClass(ui)) {
+						var cell = {
+							rowData: rowData,
+							dataIndx: dataIndx,
+							colIndx: j
+						};
+						if (remotePaging) {
+							cell.rowIndx = (i + offset)
+						} else {
+							cell.rowIndx = i
+						}
+						cells.push(cell)
+					}
+				}
+			};
 		if (data == null) {
 			return cells
 		}
-		for (var i = 0, len = data.length; i < len; i++) {
-			var rowData = data[i];
-			obj.rowData = rowData;
-			for (var j = 0; j < CMLength; j++) {
-				var column = CM[j],
-					dataIndx = column.dataIndx;
-				obj.dataIndx = dataIndx;
-				if (this.hasClass(obj)) {
-					var cell = {
-						rowData: rowData,
-						dataIndx: dataIndx,
-						colIndx: j
-					};
-					if (remotePaging) {
-						cell.rowIndx = (i + offset)
-					} else {
-						cell.rowIndx = i
-					}
-					cells.push(cell)
-				}
+		if (obj.rowIndx != null || obj.rowIndxPage != null || obj.rowData != null) {
+			obj.rowData = obj.rowData || this.getRowData(obj);
+			getCellsByClass(obj)
+		} else {
+			for (var i = 0, len = data.length; i < len; i++) {
+				var rowData = data[i];
+				obj.rowData = rowData;
+				getCellsByClass(obj)
 			}
 		}
 		return cells
@@ -5303,60 +5762,76 @@
 			dataIndx = objP.dataIndx,
 			objcls = objP.cls,
 			offset = this.rowIndxOffset,
-			rowData = this.getRowData(objP);
+			refresh = objP.refresh,
+			rowData = objP.rowData || this.getRowData(objP);
 		if (!rowData) {
 			return
 		}
-		if (rowIndx == null) {
+		if (refresh !== false && rowIndx == null) {
 			rowIndx = this.getRowIndx({
 				rowData: rowData
 			}).rowIndx
 		}
-		var classes = objcls.split(" ");
+		var classes = objcls.split(" "),
+			dataIndxs = [];
 		for (var i = 0; i < classes.length; i++) {
 			var cls = classes[i];
-			if (dataIndx == null && this.hasClass({
-				rowData: rowData,
-				cls: cls
-			}) === false) {
-				var str = rowData.pq_rowcls;
-				if (str) {
-					rowData.pq_rowcls = $.trim(str) + " " + cls
-				} else {
-					rowData.pq_rowcls = cls
-				} if (rowIndx != null && objP.refresh !== false) {
-					var $tr = this.getRow({
-						rowIndxPage: (rowIndx - offset)
-					});
-					if ($tr) {
-						$tr.addClass(cls)
+			if (dataIndx == null) {
+				if (this.hasClass({
+					rowData: rowData,
+					cls: cls
+				}) === false) {
+					var str = rowData.pq_rowcls;
+					if (str) {
+						rowData.pq_rowcls = $.trim(str) + " " + cls
+					} else {
+						rowData.pq_rowcls = cls
+					} if (refresh !== false) {
+						if (rowIndx != null) {
+							var $tr = this.getRow({
+								rowIndxPage: (rowIndx - offset)
+							});
+							if ($tr) {
+								$tr.addClass(cls)
+							}
+						}
 					}
 				}
 			} else {
-				if (this.hasClass({
-					rowData: rowData,
-					dataIndx: dataIndx,
-					cls: cls
-				}) === false) {
-					var objCls = rowData.pq_cellcls;
-					if (objCls) {
-						var oldCls = objCls[dataIndx];
-						if (oldCls) {
-							objCls[dataIndx] = $.trim(oldCls) + " " + cls
+				if (typeof dataIndx.push != "function") {
+					dataIndxs.push(dataIndx)
+				} else {
+					dataIndxs = dataIndx
+				}
+				for (var j = 0, len = dataIndxs.length; j < len; j++) {
+					var dataIndx = dataIndxs[j];
+					if (this.hasClass({
+						rowData: rowData,
+						dataIndx: dataIndx,
+						cls: cls
+					}) === false) {
+						var objCls = rowData.pq_cellcls;
+						if (objCls) {
+							var oldCls = objCls[dataIndx];
+							if (oldCls) {
+								objCls[dataIndx] = $.trim(oldCls) + " " + cls
+							} else {
+								objCls[dataIndx] = cls
+							}
 						} else {
-							objCls[dataIndx] = cls
-						}
-					} else {
-						var objCls = {};
-						objCls[dataIndx] = cls;
-						rowData.pq_cellcls = objCls
-					} if (rowIndx != null && objP.refresh !== false) {
-						var $td = this.getCell({
-							rowIndxPage: (rowIndx - offset),
-							dataIndx: dataIndx
-						});
-						if ($td) {
-							$td.addClass(cls)
+							var objCls = {};
+							objCls[dataIndx] = cls;
+							rowData.pq_cellcls = objCls
+						} if (refresh !== false) {
+							if (rowIndx != null) {
+								var $td = this.getCell({
+									rowIndxPage: (rowIndx - offset),
+									dataIndx: dataIndx
+								});
+								if ($td) {
+									$td.addClass(cls)
+								}
+							}
 						}
 					}
 				}
@@ -5368,41 +5843,53 @@
 			rowData = this.getRowData(objP),
 			dataIndx = objP.dataIndx,
 			cls = objP.cls,
+			refresh = objP.refresh,
 			pq_cellcls = (dataIndx != null && rowData) ? rowData.pq_cellcls : null,
 			rowClass = rowData ? rowData.pq_rowcls : null;
 		if (rowData == null) {
 			return
 		}
-		if (rowIndx == null) {
+		if (refresh !== false && rowIndx == null) {
 			rowIndx = this.getRowIndx({
 				rowData: rowData
 			}).rowIndx
 		}
 		if (dataIndx == null) {
 			if (rowClass) {
-				rowData.pq_rowcls = this._removeClass(rowClass, cls)
-			}
-			if (rowIndx != null && objP.refresh !== false) {
-				var $tr = this.getRow({
-					rowIndx: rowIndx
-				});
-				if ($tr) {
-					$tr.removeClass(cls)
+				rowData.pq_rowcls = this._removeClass(rowClass, cls);
+				if (rowIndx != null && refresh !== false) {
+					var $tr = this.getRow({
+						rowIndx: rowIndx
+					});
+					if ($tr) {
+						$tr.removeClass(cls)
+					}
 				}
 			}
 		} else {
 			if (pq_cellcls) {
-				var cellClass = pq_cellcls[dataIndx];
-				if (cellClass) {
-					rowData.pq_cellcls[dataIndx] = this._removeClass(cellClass, cls)
-				}
-				if (rowIndx != null && objP.refresh !== false) {
-					var $td = this.getCell({
-						rowIndx: rowIndx,
-						dataIndx: dataIndx
-					});
-					if ($td) {
-						$td.removeClass(cls)
+				if (pq_cellcls) {
+					var dataIndxs = [];
+					if (typeof dataIndx.push != "function") {
+						dataIndxs.push(dataIndx)
+					} else {
+						dataIndxs = dataIndx
+					}
+					for (var i = 0, len = dataIndxs.length; i < len; i++) {
+						var dataIndx = dataIndxs[i];
+						var cellClass = pq_cellcls[dataIndx];
+						if (cellClass) {
+							rowData.pq_cellcls[dataIndx] = this._removeClass(cellClass, cls);
+							if (rowIndx != null && refresh !== false) {
+								var $td = this.getCell({
+									rowIndx: rowIndx,
+									dataIndx: dataIndx
+								});
+								if ($td) {
+									$td.removeClass(cls)
+								}
+							}
+						}
 					}
 				}
 			}
@@ -5868,11 +6355,12 @@
 					colIndx: colIndx
 				})
 			}
+		} if (objP.edit !== false) {
+			that._editCell({
+				rowIndxPage: rowIndxPage,
+				colIndx: colIndx
+			})
 		}
-		that._editCell({
-			rowIndxPage: rowIndxPage,
-			colIndx: colIndx
-		});
 		that._deleteBlurEditMode({
 			timer: true,
 			msg: "_saveAndMove"
@@ -5969,11 +6457,20 @@
 				obj = this._decrEditIndx(rowIndxPage, colIndx)
 			} else {
 				obj = this._incrEditIndx(rowIndxPage, colIndx)
+			} if (obj == null) {
+				obj = {
+					rowIndxPage: rowIndxPage,
+					colIndx: colIndx
+				}
 			}
 			return this._saveAndMove(obj, evt)
 		} else {
 			if (evt.keyCode == EM.saveKey) {
-				var obj = this._incrEditIndx(rowIndxPage, colIndx);
+				var obj = {
+					rowIndxPage: rowIndxPage,
+					colIndx: colIndx,
+					edit: false
+				};
 				return this._saveAndMove(obj, evt)
 			} else {
 				if (evt.keyCode == keyCodes.ESCAPE) {
@@ -7152,6 +7649,9 @@
 		})
 	};
 	fn._setDragLimits = function(colIndx) {
+		if (colIndx < 0) {
+			return
+		}
 		var that = this,
 			CM = this.colModel,
 			column = CM[colIndx],
@@ -7163,9 +7663,6 @@
 		}
 		var $pQuery_col = $head.find("td[pq-grid-col-indx='" + colIndx + "']");
 		var cont_left = $pQuery_col.offset().left + column._minWidth;
-		if (colIndx == -1) {
-			cont_left = $pQuery_col.offset().left + numberCell.minWidth
-		}
 		var cont_right = cont_left + column._maxWidth - column._minWidth;
 		var $pQuery_drag = $head.find("div.pq-grid-col-resize-handle[pq-grid-col-indx=" + colIndx + "]");
 		$pQuery_drag.draggable("option", "containment", [cont_left, 0, cont_right, 0])
@@ -7277,9 +7774,7 @@
 			if (typeof dataIndx == "string") {
 				return "JSON"
 			} else {
-				if (typeof dataIndx == "number") {
-					return "ARRAY"
-				}
+				return "ARRAY"
 			}
 		}
 		throw ("dataType unknown")
@@ -7318,15 +7813,18 @@
 		var obj = this.nestedCols(oCM);
 		this.colModel = obj.colModel;
 		this.depth = obj.depth;
+		var CM = this.colModel,
+			CMLength = CM.length;
 		if (CMT) {
-			var CM = this.colModel;
-			for (var i = 0, len = CM.length; i < len; i++) {
+			for (var i = 0; i < CMLength; i++) {
 				var column = CM[i];
-				CM[i] = $.extend({}, CMT, column, true)
+				var proxyColumn = $.extend({}, CMT, column, true);
+				$.extend(column, proxyColumn, true)
 			}
 		}
 		this.getHeadersCells();
-		this.assignRowSpan()
+		this.assignRowSpan();
+		this._refreshDataIndices()
 	};
 	var cRefreshColumn = function(that) {
 		this.that = that
@@ -9084,6 +9582,9 @@
 						titleIndx[m] = dataGM.length - 1
 					}
 				}
+				if (i == len) {
+					break
+				}
 				rowData.rowIndx = i + rowOffset;
 				rowData.pq_hidden = false;
 				dataGM.push(rowData);
@@ -9310,7 +9811,7 @@
 			topIcon: "ui-icon-circle-arrow-s",
 			bottomIcon: "ui-icon-circle-arrow-n"
 		},
-		track: false,
+		track: null,
 		treeModel: {
 			collapsed: true,
 			indent: 15,
@@ -9328,6 +9829,7 @@
 		$.extend($.paramquery.cGenerateView.prototype, _pGenerateView);
 		var that = this,
 			o = this.options;
+		this.iHistory = new $.paramquery.cHistory(this);
 		this.iGroupView = new cGroupView(this);
 		this.iHeaderSearch = new cHeaderSearch(this);
 		this.iUCData = new $.paramquery.cUCData(this);
@@ -9346,9 +9848,7 @@
 		var widgetEventPrefix = that.widgetEventPrefix.toLowerCase(),
 			widgetName = that.widgetName;
 		that.element.one(widgetEventPrefix + "load." + widgetName, function(evt, ui) {
-			that.refresh({
-				header: false
-			})
+			that.refresh()
 		})
 	};
 	fn._createToolbar = function() {
@@ -10414,14 +10914,14 @@
 				var header = [];
 				for (var i = 0; i < CMLength; i++) {
 					var column = CM[i];
-					if (!column.hidden) {
+					if (column.copy !== false) {
 						header.push('<Column ss:AutoFitWidth="1"  ss:Width="' + column._width + '" />')
 					}
 				}
 				header.push("<Row>");
 				for (var i = 0; i < CMLength; i++) {
 					var column = CM[i];
-					if (!column.hidden) {
+					if (column.copy !== false) {
 						header.push('<Cell><Data ss:Type="String">' + column.title + "</Data></Cell>")
 					}
 				}
@@ -10432,7 +10932,7 @@
 					response.push("<Row>");
 					for (var j = 0; j < CMLength; j++) {
 						var column = CM[j];
-						if (!column.hidden) {
+						if (column.copy !== false) {
 							var dataIndx = column.dataIndx;
 							response.push('<Cell><Data ss:Type="String"><![CDATA[' + rowData[dataIndx] + "]]></Data></Cell>")
 						}
@@ -10454,7 +10954,7 @@
 					response = [];
 				for (var i = 0; i < CMLength; i++) {
 					var column = CM[i];
-					if (!column.hidden) {
+					if (column.copy !== false) {
 						var title = column.title.replace(/\"/g, '""');
 						header.push('"' + title + '"')
 					}
@@ -10464,7 +10964,7 @@
 					var rowData = data[i];
 					for (var j = 0; j < CMLength; j++) {
 						var column = CM[j];
-						if (!column.hidden) {
+						if (column.copy !== false) {
 							var dataIndx = column.dataIndx;
 							var cellData = rowData[dataIndx] + "";
 							cellData = cellData.replace(/\"/g, '""');
@@ -10493,11 +10993,18 @@
 	}
 })(jQuery);
 (function($) {
+	var pq_options = $.paramquery.pqGrid.prototype.options;
+	var trackModel = {
+		on: false,
+		dirtyClass: "pq-cell-dirty"
+	};
+	pq_options.trackModel = pq_options.trackModel || trackModel;
 	var cUCData = $.paramquery.cUCData = function(that) {
 		this.that = that;
 		this.udata = [];
 		this.ddata = [];
 		this.adata = [];
+		this.options = that.options;
 		var self = this,
 			eventNamespace = that.eventNamespace,
 			widgetEventPrefix = that.widgetEventPrefix.toLowerCase();
@@ -10514,6 +11021,8 @@
 		var that = this.that,
 			adata = this.adata,
 			rowData = obj.rowData,
+			TM = this.options.trackModel,
+			dirtyClass = TM.dirtyClass,
 			recId = that.getRecId({
 				rowData: rowData
 			});
@@ -10526,6 +11035,15 @@
 				throw ("same data can't be added twice.")
 			}
 		}
+		var dataIndxs = [];
+		for (var dataIndx in rowData) {
+			dataIndxs.push(dataIndx)
+		}
+		that.removeClass({
+			rowData: rowData,
+			dataIndx: dataIndxs,
+			cls: dirtyClass
+		});
 		var obj = {
 			recId: recId,
 			rowData: rowData
@@ -10534,52 +11052,83 @@
 	};
 	_pUCData.update = function(objP) {
 		var that = this.that,
-			rowData = that.getRowData(objP),
+			TM = this.options.trackModel,
+			dirtyClass = TM.dirtyClass,
+			rowData = objP.rowData || that.getRowData(objP),
 			recId = that.getRecId({
 				rowData: rowData
 			}),
 			dataIndx = objP.dataIndx,
-			oldVal = objP.oldVal,
-			newVal = objP.newVal,
+			refresh = objP.refresh,
+			columns = that.columns,
+			getVal = $.paramquery.getValueFromDataType,
+			newRow = objP.row,
 			udata = this.udata,
+			newudata = udata.slice(0),
 			_found = false;
 		if (recId == null) {
 			return
 		}
 		for (var i = 0, len = udata.length; i < len; i++) {
-			var rec = udata[i];
-			if (rec.rowData == rowData && rec.dataIndx == dataIndx) {
+			var rec = udata[i],
+				oldRow = rec.oldRow;
+			if (rec.rowData == rowData) {
 				_found = true;
-				if (rec.oldVal == newVal) {
-					udata.splice(i, 1);
-					var obj = {
-						rowData: rowData,
-						dataIndx: dataIndx,
-						cls: "pq-cell-dirty"
-					};
-					that.removeClass(obj)
-				} else {
-					rec.newVal = newVal
+				for (var dataIndx in newRow) {
+					var column = columns[dataIndx],
+						dataType = column.dataType,
+						newVal = newRow[dataIndx],
+						newVal = getVal(newVal, dataType),
+						oldVal = oldRow[dataIndx],
+						oldVal = getVal(oldVal, dataType);
+					if (oldRow.hasOwnProperty(dataIndx) && oldVal === newVal) {
+						var obj = {
+							rowData: rowData,
+							dataIndx: dataIndx,
+							refresh: refresh,
+							cls: dirtyClass
+						};
+						that.removeClass(obj);
+						delete oldRow[dataIndx]
+					} else {
+						var obj = {
+							rowData: rowData,
+							dataIndx: dataIndx,
+							refresh: refresh,
+							cls: dirtyClass
+						};
+						that.addClass(obj);
+						if (!oldRow.hasOwnProperty(dataIndx)) {
+							oldRow[dataIndx] = rowData[dataIndx]
+						}
+					}
+				}
+				if ($.isEmptyObject(oldRow)) {
+					newudata.splice(i, 1)
 				}
 				break
 			}
 		}
 		if (!_found) {
+			var oldRow = {};
+			for (var dataIndx in newRow) {
+				oldRow[dataIndx] = rowData[dataIndx];
+				var obj = {
+					rowData: rowData,
+					dataIndx: dataIndx,
+					refresh: refresh,
+					cls: dirtyClass
+				};
+				that.addClass(obj)
+			}
 			var obj = {
 				rowData: rowData,
 				recId: recId,
-				dataIndx: dataIndx,
-				newVal: newVal,
-				oldVal: oldVal
+				oldRow: oldRow
 			};
-			udata.push(obj);
-			var obj = {
-				rowData: rowData,
-				dataIndx: dataIndx,
-				cls: "pq-cell-dirty"
-			};
-			that.addClass(obj)
+			newudata.push(obj)
 		}
+		this.udata = newudata
 	};
 	_pUCData["delete"] = function(obj) {
 		var that = this.that,
@@ -10601,19 +11150,31 @@
 		}
 		ddata.push({
 			indx: indx,
-			rowData: rowData
+			rowData: rowData,
+			rowIndx: rowIndx
 		})
 	};
-	_pUCData.isDirty = function() {
+	_pUCData.isDirty = function(ui) {
 		var that = this.that,
 			udata = this.udata,
 			adata = this.adata,
-			ddata = this.ddata;
-		if (udata.length || adata.length || ddata.length) {
-			return true
+			ddata = this.ddata,
+			dirty = false,
+			rowData = that.getRowData(ui);
+		if (rowData) {
+			for (var i = 0; i < udata.length; i++) {
+				var rec = udata[i];
+				if (rowData == rec.rowData) {
+					dirty = true;
+					break
+				}
+			}
 		} else {
-			return false
+			if (udata.length || adata.length || ddata.length) {
+				dirty = true
+			}
 		}
+		return dirty
 	};
 	_pUCData.getChangesValue = function() {
 		var that = this.that,
@@ -10691,7 +11252,7 @@
 				rowData = rec.rowData;
 			deleteList.push(rowData)
 		}
-		for (var i = 0; i < udata.length; i++) {
+		for (var i = 0, len = udata.length; i < len; i++) {
 			var rec = udata[i],
 				rowData = rec.rowData;
 			if ($.inArray(rowData, deleteList) != -1) {
@@ -10701,7 +11262,7 @@
 				updateList.push(rowData)
 			}
 		}
-		for (var i = 0; i < adata.length; i++) {
+		for (var i = 0, len = adata.length; i < len; i++) {
 			var rec = adata[i],
 				rowData = rec.rowData;
 			addList.push(rowData)
@@ -10726,25 +11287,14 @@
 		mydata.deleteList = ddata;
 		return mydata
 	};
-	_pUCData.getVal = function(val, dataType) {
-		if (dataType == "float") {
-			val = (val == null) ? null : parseFloat(val)
-		} else {
-			if (dataType == "integer") {
-				val = (val == null) ? null : parseInt(val)
-			} else {
-				if (dataType == "date") {
-					val = (val == null) ? null : Date.parse(val)
-				}
-			}
-		}
-		return val
-	};
 	_pUCData.commitAdd = function(rows, recIndx) {
 		var CM = this.that.colModel,
 			CMLength = CM.length,
 			adata = this.adata,
+			inArray = $.inArray,
 			adataLen = adata.length,
+			getVal = $.paramquery.getValueFromDataType,
+			rowList = [],
 			rowLen = rows.length,
 			foundRowData = [];
 		for (var j = 0; j < rowLen; j++) {
@@ -10752,48 +11302,64 @@
 			for (var i = 0; i < adataLen; i++) {
 				var rowData = adata[i].rowData,
 					_found = true;
-				for (var k = 0; k < CMLength; k++) {
-					var column = CM[k],
-						hidden = column.hidden,
-						dataType = column.dataType,
-						dataIndx = column.dataIndx;
-					if (hidden || (dataIndx == recIndx)) {
-						continue
+				if (inArray(rowData, foundRowData) == -1) {
+					for (var k = 0; k < CMLength; k++) {
+						var column = CM[k],
+							hidden = column.hidden,
+							dataType = column.dataType,
+							dataIndx = column.dataIndx;
+						if (hidden || (dataIndx == recIndx)) {
+							continue
+						}
+						var cellData = rowData[dataIndx],
+							cellData = getVal(cellData, dataType),
+							cell = row[dataIndx],
+							cell = getVal(cell, dataType);
+						if (cellData !== cell) {
+							_found = false;
+							break
+						}
 					}
-					var cellData = rowData[dataIndx],
-						cellData = this.getVal(cellData, dataType),
-						cell = row[dataIndx],
-						cell = this.getVal(cell, dataType);
-					if (cellData != cell) {
-						_found = false;
+					if (_found) {
+						var newRow = {}, oldRow = {};
+						newRow[recIndx] = row[recIndx];
+						oldRow[recIndx] = rowData[recIndx];
+						rowList.push({
+							type: "update",
+							rowData: rowData,
+							oldRow: oldRow,
+							newRow: newRow
+						});
+						foundRowData.push(rowData);
 						break
 					}
 				}
-				if (_found) {
-					rowData[recIndx] = row[recIndx];
-					foundRowData.push(rowData)
-				}
 			}
 		}
-		var newadata = [];
+		var remain_adata = [];
 		for (var i = 0; i < adataLen; i++) {
 			var rowData = adata[i].rowData;
-			if ($.inArray(rowData, foundRowData) == -1) {
-				newadata.push(adata[i])
+			if (inArray(rowData, foundRowData) == -1) {
+				remain_adata.push(adata[i])
 			}
 		}
-		this.adata = newadata
+		this.adata = remain_adata;
+		return rowList
 	};
 	_pUCData.commitUpdate = function(rows, recIndx) {
 		var that = this.that,
+			dirtyClass = this.options.trackModel.dirtyClass,
 			CM = that.colModel,
 			CMLength = CM.length,
 			udata = this.udata,
 			udataLen = udata.length,
 			rowLen = rows.length,
+			rowList = [],
 			foundRowData = [];
 		for (var i = 0; i < udataLen; i++) {
-			var rowData = udata[i].rowData;
+			var rec = udata[i],
+				rowData = rec.rowData,
+				oldRow = rec.oldRow;
 			if ($.inArray(rowData, foundRowData) != -1) {
 				continue
 			}
@@ -10803,16 +11369,14 @@
 					foundRowData.push(rowData);
 					for (var k = 0; k < CMLength; k++) {
 						var column = CM[k],
-							hidden = column.hidden,
 							dataIndx = column.dataIndx;
-						if (row[dataIndx] !== undefined) {
-							rowData[dataIndx] = row[dataIndx]
-						}
+						if (row[dataIndx] !== undefined) {}
+					}
+					for (var dataIndx in oldRow) {
 						that.removeClass({
 							rowData: rowData,
 							dataIndx: dataIndx,
-							cls: "pq-cell-dirty",
-							refresh: false
+							cls: dirtyClass
 						})
 					}
 				}
@@ -10825,7 +11389,8 @@
 				newudata.push(udata[i])
 			}
 		}
-		this.udata = newudata
+		this.udata = newudata;
+		return rowList
 	};
 	_pUCData.commitDelete = function(rows, recIndx) {
 		var ddata = this.ddata,
@@ -10852,16 +11417,19 @@
 	};
 	_pUCData.commitUpdateAll = function() {
 		var that = this.that,
+			dirtyClass = this.options.trackModel.dirtyClass,
 			udata = this.udata;
 		for (var i = 0, len = udata.length; i < len; i++) {
 			var rec = udata[i],
-				dataIndx = rec.dataIndx,
+				row = rec.oldRow,
 				rowData = rec.rowData;
-			that.removeClass({
-				rowData: rowData,
-				dataIndx: dataIndx,
-				cls: "pq-cell-dirty"
-			})
+			for (var dataIndx in row) {
+				that.removeClass({
+					rowData: rowData,
+					dataIndx: dataIndx,
+					cls: dirtyClass
+				})
+			}
 		}
 		this.udata = []
 	};
@@ -10873,7 +11441,12 @@
 	};
 	_pUCData.commit = function(objP) {
 		var that = this.that,
+			history = objP ? objP.history : null,
+			history = (history == null) ? false : history,
 			DM = that.options.dataModel,
+			rowList = [],
+			rowListAdd = [],
+			rowListUpdate = [],
 			recIndx = DM.recIndx;
 		if (objP == null) {
 			this.commitAddAll();
@@ -10884,14 +11457,14 @@
 				rows = objP.rows;
 			if (objType == "add") {
 				if (rows) {
-					this.commitAdd(rows, recIndx)
+					rowListAdd = this.commitAdd(rows, recIndx)
 				} else {
 					this.commitAddAll()
 				}
 			} else {
 				if (objType == "update") {
 					if (rows) {
-						this.commitUpdate(rows, recIndx)
+						rowListUpdate = this.commitUpdate(rows, recIndx)
 					} else {
 						this.commitUpdateAll()
 					}
@@ -10906,60 +11479,84 @@
 				}
 			}
 		}
-		that.refreshView()
+		rowList = rowListAdd.concat(rowListUpdate);
+		if (rowList.length) {
+			that._digestData({
+				source: "commit",
+				checkEditable: false,
+				track: false,
+				history: history,
+				rowList: rowList
+			});
+			that.refreshView()
+		}
 	};
 	_pUCData.rollbackAdd = function(PM, data) {
 		var adata = this.adata,
+			rowList = [],
 			paging = PM.type;
 		for (var i = 0, len = adata.length; i < len; i++) {
 			var rec = adata[i],
 				rowData = rec.rowData;
-			for (var j = 0, len2 = data.length; j < len2; j++) {
-				if (data[j] == rowData) {
-					var remA = data.splice(j, 1);
-					if (remA && remA.length && paging == "remote") {
-						PM.totalRecords--
-					}
-					break
-				}
-			}
+			rowList.push({
+				type: "delete",
+				rowData: rowData
+			})
 		}
-		this.adata = []
+		this.adata = [];
+		return rowList
 	};
 	_pUCData.rollbackDelete = function(PM, data) {
 		var ddata = this.ddata,
+			rowList = [],
 			paging = PM.type;
 		for (var i = ddata.length - 1; i >= 0; i--) {
 			var rec = ddata[i],
 				indx = rec.indx,
+				rowIndx = rec.rowIndx,
 				rowData = rec.rowData;
-			data.splice(indx, 0, rowData);
-			if (paging == "remote") {
-				PM.totalRecords++
-			}
+			rowList.push({
+				type: "add",
+				rowIndx: rowIndx,
+				newRow: rowData
+			})
 		}
-		this.ddata = []
+		this.ddata = [];
+		return rowList
 	};
 	_pUCData.rollbackUpdate = function(PM, data) {
 		var that = this.that,
-			udata = this.udata;
+			dirtyClass = this.options.trackModel.dirtyClass,
+			udata = this.udata,
+			rowList = [];
 		for (var i = 0, len = udata.length; i < len; i++) {
 			var rec = udata[i],
 				recId = rec.recId,
 				rowData = rec.rowData,
-				dataIndx = rec.dataIndx;
+				oldRow = {}, newRow = rec.oldRow;
 			if (recId == null) {
 				continue
 			}
-			rowData[dataIndx] = rec.oldVal;
+			var dataIndxs = [];
+			for (var dataIndx in newRow) {
+				oldRow[dataIndx] = rowData[dataIndx];
+				dataIndxs.push(dataIndx)
+			}
 			that.removeClass({
 				rowData: rowData,
-				dataIndx: dataIndx,
-				cls: "pq-cell-dirty",
+				dataIndx: dataIndxs,
+				cls: dirtyClass,
 				refresh: false
+			});
+			rowList.push({
+				type: "update",
+				rowData: rowData,
+				newRow: newRow,
+				oldRow: oldRow
 			})
 		}
-		this.udata = []
+		this.udata = [];
+		return rowList
 	};
 	_pUCData.rollback = function(objP) {
 		var that = this.that,
@@ -10967,16 +11564,29 @@
 			PM = that.options.pageModel,
 			refreshView = (objP && (objP.refresh != null)) ? objP.refresh : true,
 			objType = (objP && (objP.type != null)) ? objP.type : null,
+			rowList = [],
+			rowListAdd = [],
+			rowListUpdate = [],
+			rowListDelete = [],
 			data = DM.data;
 		if (objType == null || objType == "update") {
-			this.rollbackUpdate(PM, data)
+			rowListUpdate = this.rollbackUpdate(PM, data)
 		}
 		if (objType == null || objType == "delete") {
-			this.rollbackDelete(PM, data)
+			rowListAdd = this.rollbackDelete(PM, data)
 		}
 		if (objType == null || objType == "add") {
-			this.rollbackAdd(PM, data)
+			rowListDelete = this.rollbackAdd(PM, data)
 		}
+		rowList = rowListAdd.concat(rowListDelete, rowListUpdate);
+		that._digestData({
+			history: false,
+			allowInvalid: true,
+			checkEditable: false,
+			source: "rollback",
+			track: false,
+			rowList: rowList
+		});
 		if (refreshView) {
 			that.refreshView()
 		}
@@ -11006,13 +11616,10 @@
 		});
 		this.iUCData.rollback(obj)
 	};
-	fnGrid.isDirty = function() {
-		return this.iUCData.isDirty()
+	fnGrid.isDirty = function(ui) {
+		return this.iUCData.isDirty(ui)
 	};
 	fnGrid.commit = function(obj) {
-		this.blurEditor({
-			force: true
-		});
 		this.iUCData.commit(obj)
 	};
 	fnGrid._getRowIndx = function() {
@@ -11041,36 +11648,53 @@
 	};
 	fnGrid.updateRow = function(objP) {
 		var that = this,
-			options = that.options,
-			track = options.track,
-			track = (objP.track != null) ? objP.track : track,
 			rowIndx = objP.rowIndx,
-			row = objP.row,
-			requireRefresh = false,
-			rowData = that.getRowData({
+			newRow = objP.row,
+			rowData = objP.rowData || that.getRowData({
 				rowIndx: rowIndx
 			});
-		var obj = {
-			rowData: rowData
-		};
-		for (var dataIndx in row) {
-			var oldVal = rowData[dataIndx],
-				newVal = row[dataIndx];
-			if (newVal !== oldVal) {
-				requireRefresh = true;
-				if (track) {
-					obj.dataIndx = dataIndx;
-					obj.oldVal = oldVal;
-					obj.newVal = newVal;
-					this.iUCData.update(obj)
-				}
-				rowData[dataIndx] = newVal
-			}
+		if (!rowData) {
+			return false
 		}
-		if (requireRefresh) {
+		var oldRow = {};
+		for (var dataIndx in newRow) {
+			oldRow[dataIndx] = rowData[dataIndx]
+		}
+		var ret = this._digestData({
+			source: objP.source || "update",
+			history: objP.history,
+			checkEditable: objP.checkEditable,
+			track: objP.track,
+			allowInvalid: objP.allowInvalid,
+			rowList: [{
+				newRow: newRow,
+				oldRow: oldRow,
+				rowData: rowData,
+				rowIndx: rowIndx,
+				type: "update"
+			}]
+		});
+		if (ret === false) {
+			return false
+		}
+		if (objP.refresh !== false) {
 			that.refreshRow({
 				rowIndx: rowIndx
 			})
+		}
+	};
+	fnGrid.updateElseAdd = function(objP) {
+		var that = this,
+			rowIndx = objP.rowIndx,
+			row = objP.row,
+			rowData = that.getRowData({
+				rowIndx: rowIndx
+			});
+		if (rowData == null) {
+			objP.rowData = row;
+			that.addRow(objP)
+		} else {
+			that.updateRow(objP)
 		}
 	};
 	fnGrid._fillForm = function(obj) {
@@ -11100,14 +11724,25 @@
 			DM = that.options.dataModel;
 		obj.dataIndx = DM.recIndx;
 		var recId = that.getCellData(obj);
-		return recId
+		if (recId == null) {
+			return null
+		} else {
+			return recId
+		}
 	};
 	fnGrid.getCellData = function(obj) {
-		var rowData = this.getRowData(obj),
+		var rowData = obj.rowData || this.getRowData(obj),
 			dataIndx = obj.dataIndx;
-		return rowData[dataIndx]
+		if (rowData) {
+			return rowData[dataIndx]
+		} else {
+			return null
+		}
 	};
 	fnGrid.getRowData = function(obj) {
+		if (!obj) {
+			return null
+		}
 		var objRowData = obj.rowData;
 		if (objRowData != null) {
 			return objRowData
@@ -11133,70 +11768,45 @@
 				rowIndx = (rowIndx != null) ? rowIndx : rowIndxPage + offset,
 				rowIndxPage = (rowIndxPage != null) ? rowIndxPage : rowIndx - offset,
 				indx = (paging == "remote") ? rowIndxPage : rowIndx,
-				rowData = data[indx];
+				rowData = data ? data[indx] : null;
 			return rowData
 		}
 	};
-	fnGrid.deleteRow = function(obj) {
+	fnGrid.deleteRow = function(objP) {
 		var that = this,
-			rowIndx = obj.rowIndx,
-			effect = obj.effect,
-			options = that.options,
-			DM = options.dataModel,
-			PM = options.pageModel,
-			paging = PM.type;
+			rowIndx = objP.rowIndx,
+			rowIndxPage = objP.rowIndxPage,
+			offset = that.rowIndxOffset,
+			rowIndx = (rowIndxPage != null) ? rowIndxPage + offset : rowIndx;
 		if (rowIndx != null) {
-			var indx = (paging == "remote") ? (rowIndx - this.rowIndxOffset) : rowIndx,
-				data = DM.data,
-				track = options.track,
-				track = (obj.track != null) ? obj.track : track;
-			if (track) {
-				this.iUCData["delete"]({
-					rowIndx: rowIndx
-				})
-			}
-			if (effect) {
-				var that = this,
-					$tr = this.getRow({
-						rowIndx: rowIndx
-					});
-				if ($tr) {
-					$tr.effect("fade", null, 350, function() {
-						var complete = obj.complete;
-						if (complete && typeof complete == "function") {
-							complete.call(that.element[0])
-						}
-						var remArr = data.splice(indx, 1);
-						if (remArr && remArr.length && paging == "remote") {
-							PM.totalRecords--
-						}
-						that.refreshView()
-					})
-				}
-			} else {
-				var remArr = data.splice(indx, 1);
-				if (remArr && remArr.length && paging == "remote") {
-					PM.totalRecords--
-				}
-				this.refreshView()
+			var rowData = objP.rowData || this.getRowData({
+				rowIndx: rowIndx
+			});
+			this._digestData({
+				source: objP.source || "delete",
+				history: objP.history,
+				track: objP.track,
+				rowList: [{
+					rowIndx: rowIndx,
+					rowData: rowData,
+					oldRow: rowData,
+					type: "delete"
+				}]
+			});
+			if (objP.refresh !== false) {
+				that.refreshView()
 			}
 		}
 	};
-	fnGrid.addRow = function(obj) {
-		var self = this;
-		return self._addLocal(obj)
-	};
-	fnGrid._addLocal = function(obj) {
+	fnGrid.addRow = function(objP) {
 		var that = this,
-			rowData = obj.rowData,
-			rowIndx = obj.rowIndx,
-			rowIndxPage = obj.rowIndxPage,
-			thatOptions = that.options,
-			DM = thatOptions.dataModel,
-			PM = thatOptions.pageModel,
-			paging = PM.type,
-			track = thatOptions.track,
-			track = (obj.track != null) ? obj.track : track,
+			rowData = objP.rowData || objP.row,
+			rowIndx = objP.rowIndx,
+			rowIndxPage = objP.rowIndxPage,
+			offset = that.rowIndxOffset,
+			rowIndx = (rowIndxPage != null) ? rowIndxPage + offset : rowIndx,
+			o = that.options,
+			DM = o.dataModel,
 			data = DM.data;
 		if (rowData == null) {
 			return null
@@ -11205,23 +11815,21 @@
 			DM.data = [];
 			data = DM.data
 		}
-		if (track) {
-			this.iUCData.add({
-				rowData: rowData
-			})
+		var ret = this._digestData({
+			source: objP.source || "add",
+			history: objP.history,
+			track: objP.track,
+			checkEditable: objP.checkEditable,
+			rowList: [{
+				newRow: rowData,
+				rowIndx: rowIndx,
+				type: "add"
+			}]
+		});
+		if (ret === false) {
+			return false
 		}
-		if (rowIndx == null && rowIndxPage == null) {
-			data.push(rowData)
-		} else {
-			var offset = this.rowIndxOffset,
-				rowIndx = (rowIndx == null) ? (rowIndxPage + offset) : rowIndx,
-				rowIndxPage = (rowIndxPage == null) ? (rowIndx - offset) : rowIndxPage,
-				indx = (paging == "remote") ? rowIndxPage : rowIndx;
-			data.splice(indx, 0, rowData)
-		} if (paging == "remote") {
-			PM.totalRecords++
-		}
-		if (!obj.refresh !== false) {
+		if (objP.refresh !== false) {
 			this.refreshView()
 		}
 		if (rowIndx == null) {
@@ -11229,12 +11837,6 @@
 		} else {
 			return rowIndx
 		}
-	};
-	fnGrid._addRemote = function(obj) {
-		var that = this,
-			rowData = obj.rowData;
-		rowData.pq_oper = "add";
-		that.options.dataModel.postDataOnce = rowData
 	}
 })(jQuery);
 (function($) {
@@ -11258,7 +11860,8 @@
 				icon = item.icon,
 				options = item.options,
 				text = item.label,
-				listeners = item.listeners,
+				listener = item.listener,
+				listeners = listener ? [listener] : item.listeners,
 				itemcls = item.cls,
 				cls = "ui-corner-all " + (itemcls ? itemcls : ""),
 				itemstyle = item.style,
@@ -11276,12 +11879,14 @@
 						$("<span class='pq-separator '" + cls + "' " + attr + " " + style + "></span>").appendTo(element)
 					} else {
 						if (type == "button") {
-							$ctrl = $("<button type='button' class='" + cls + "' " + attr + " " + style + ">" + text + "</button>").button({
+							var options = item.options ? item.options : {};
+							$.extend(options, {
 								text: text ? true : false,
 								icons: {
 									primary: icon
 								}
-							}).appendTo(element)
+							});
+							$ctrl = $("<button type='button' class='" + cls + "' " + attr + " " + style + ">" + text + "</button>").button(options).appendTo(element)
 						} else {
 							if (type == "select") {
 								var options = item.options ? item.options : [];
@@ -11355,6 +11960,18 @@
 		this.focusSelection = null
 	};
 	var _pSelection = cSelection.prototype;
+	_pSelection.triggerSelectChange = function(evt) {
+		var that = this.that,
+			SM = that.options.selectionModel;
+		if (SM.triggerSelectChange) {
+			var rowSel = that.iRows.getSelection(),
+				cellSel = that.iCells.getSelection();
+			that._trigger("selectChange", evt, {
+				rows: rowSel,
+				cells: cellSel
+			})
+		}
+	};
 	_pSelection.getOldRowSel = function() {
 		var that = this.that,
 			lastSel;
@@ -11481,11 +12098,10 @@
 			selection = this.getSelection(),
 			selection2 = [],
 			options = that.options,
-			DM = options.dataModel,
 			PM = options.pageModel;
 		if (PM.type) {
-			var curPage = DM.curPage,
-				rPP = DM.rPP;
+			var curPage = PM.curPage,
+				rPP = PM.rPP;
 			for (var i = 0; i < selection.length; i++) {
 				var sel = selection[i],
 					rowIndx = sel.rowIndx;
@@ -11512,7 +12128,7 @@
 		if (GM) {
 			var data = that.dataGM;
 			if (data && data.length) {
-				for (var i = initV; i < finalV; i++) {
+				for (var i = initV; i <= finalV; i++) {
 					var rowDataGM = data[i],
 						rowIndxP = rowDataGM.rowIndx - offset;
 					if (rowIndxP != null && rowIndxP == rowIndxPage) {
@@ -11579,6 +12195,7 @@
 			paging = PM.type,
 			remote = (paging == "remote") ? true : false,
 			offset = that.rowIndxOffset,
+			selection = [],
 			data = DM.data;
 		if (!data) {
 			return
@@ -11587,12 +12204,13 @@
 			var rowData = data[i];
 			if (rowData.pq_rowselect) {
 				var rowIndx = (remote) ? (i + offset) : i;
-				this.selection.push({
+				selection.push({
 					rowIndx: rowIndx,
 					rowData: rowData
 				})
 			}
 		}
+		this.selection = selection
 	};
 	_pR.replace = function(obj) {
 		var rowIndx = obj.rowIndx,
@@ -11620,7 +12238,7 @@
 	};
 	_pR.isSelected = function(objP) {
 		var that = this.that,
-			rowData = that.getRowData(objP);
+			rowData = objP.rowData || that.getRowData(objP);
 		return (rowData) ? ((rowData.pq_rowselect == null) ? false : rowData.pq_rowselect) : null
 	};
 	_pR._boundRow = function(obj) {
@@ -11642,26 +12260,37 @@
 			evt = objP.evt,
 			rowSelection = this.getSelection(),
 			rowSelection2 = rowSelection.slice(0);
+		var arr = [];
 		for (var i = 0; i < rowSelection2.length; i++) {
 			var rowS = rowSelection2[i],
 				row = rowS.rowIndx;
 			if (row < initRowIndx || row > finalRowIndx) {
-				this.remove({
-					rowIndx: row
+				arr.push({
+					rowIndx: row,
+					rowData: rowS.rowData
 				})
 			}
 		}
+		this.remove({
+			rows: arr,
+			evt: evt
+		});
+		arr = [];
 		if (initRowIndx > finalRowIndx) {
 			var temp = initRowIndx;
 			initRowIndx = finalRowIndx;
 			finalRowIndx = temp
 		}
 		for (var row = initRowIndx; row <= finalRowIndx; row++) {
-			this.add({
+			arr.push({
 				rowIndx: row,
-				focus: false
+				evt: evt
 			})
 		}
+		this.add({
+			rows: arr,
+			evt: evt
+		})
 	};
 	_pC._addToData = function(objP) {
 		var dataIndx = objP.dataIndx,
@@ -11746,9 +12375,12 @@
 	_pC.removeAll = function() {
 		this.refresh();
 		var cells = this.selection.slice(0);
-		this.remove({
-			cells: cells
-		});
+		var self = this;
+		$.measureTime(function() {
+			self.remove({
+				cells: cells
+			})
+		}, "removeAll");
 		this.lastSelection = null
 	};
 	_pR.removeAll = function(objP) {
@@ -11785,12 +12417,16 @@
 	};
 	_pC.isSelected = function(objP) {
 		var that = this.that,
-			rowData = that.getRowData(objP),
+			rowData = objP.rowData || that.getRowData(objP),
 			dataIndx = objP.dataIndx,
-			dataIndx = (dataIndx == null) ? that.colModel[objP.colIndx].dataIndx : dataIndx;
+			colIndx = objP.colIndx;
+		if (colIndx == null && dataIndx == null) {
+			return null
+		}
 		if (rowData == null) {
 			return null
 		}
+		dataIndx = (dataIndx == null) ? that.colModel[colIndx].dataIndx : dataIndx;
 		if (rowData.pq_cellselect) {
 			if (rowData.pq_cellselect[dataIndx]) {
 				return true
@@ -11804,29 +12440,45 @@
 			DM = that.options.dataModel,
 			PM = that.options.pageModel,
 			data = DM.data,
+			selection = [],
 			paging = PM.type,
 			remote = (paging == "remote") ? true : false,
-			offset = that.rowIndxOffset;
+			offset = that.rowIndxOffset,
+			CM = this.that.colModel,
+			CMLength = CM.length;
 		if (!data) {
 			return
+		}
+		var colIndxs = [],
+			columns = [],
+			dataIndxs = [];
+		for (var i = 0; i < CMLength; i++) {
+			var column = CM[i],
+				dataIndx = column.dataIndx;
+			dataIndxs[i] = dataIndx;
+			colIndxs[dataIndx] = i;
+			columns[dataIndx] = column
 		}
 		for (var i = 0, len = data.length; i < len; i++) {
 			var rowData = data[i];
 			var pq_cellselect = rowData.pq_cellselect;
 			if (pq_cellselect) {
 				var rowIndx = (remote) ? (i + offset) : i;
-				for (var dataIndx in pq_cellselect) {
+				for (var j = 0; j < CMLength; j++) {
+					var dataIndx = dataIndxs[j];
 					if (pq_cellselect[dataIndx]) {
-						this.selection.push({
+						selection.push({
 							rowIndx: rowIndx,
 							rowData: rowData,
-							dataIndx: dataIndx
+							dataIndx: dataIndx,
+							colIndx: j,
+							column: CM[j]
 						})
 					}
 				}
 			}
 		}
-		this.isDirty = false
+		this.selection = selection
 	};
 	_pC.replace = function(obj) {
 		var rowIndx = obj.rowIndx,
@@ -11856,11 +12508,10 @@
 		var that = this.that,
 			rowIndx = objP.rowIndx,
 			rowIndxPage = objP.rowIndxPage,
-			rowData = objP.rowData,
+			rowData = objP.rowData || that.getRowData(objP),
 			offset = that.rowIndxOffset,
 			success, rowIndx = (rowIndx == null) ? (rowIndxPage + offset) : rowIndx,
 			rowIndxPage = (rowIndxPage == null) ? (rowIndx - offset) : rowIndxPage,
-			rowData = (rowData == null) ? that.getRowData(objP) : rowData,
 			colIndx = objP.colIndx,
 			dataIndx = objP.dataIndx,
 			colIndx = (colIndx == null) ? that.getColIndx({
@@ -12015,47 +12666,55 @@
 		var that = this.that,
 			evt = objP.evt,
 			cells = objP.cells,
+			ret = false,
 			cells2 = [];
 		if (cells && typeof cells.push == "function") {
 			for (var i = 0, len = cells.length; i < len; i++) {
 				var cell = cells[i];
 				cell.trigger = false;
-				var ret = this._add(cell);
+				ret = this._add(cell);
 				if (ret) {
 					cells2.push(ret)
 				}
 			}
 			if (cells2.length) {
+				ret = true;
 				that._trigger("cellSelect", evt, {
 					cells: cells2
 				})
 			}
 		} else {
-			this._add(objP)
+			ret = this._add(objP)
+		} if (ret) {
+			that._fixIE();
+			this.triggerSelectChange(evt)
 		}
-		that._fixIE()
 	};
 	_pR.add = function(objP) {
 		var that = this.that,
 			evt = objP.evt,
 			rows = objP.rows,
+			ret = false,
 			rows2 = [];
 		if (rows && typeof rows.push == "function") {
 			for (var i = 0, len = rows.length; i < len; i++) {
 				var row = rows[i];
 				row.trigger = false;
-				var ret = this._add(row);
+				ret = this._add(row);
 				if (ret) {
 					rows2.push(ret)
 				}
 			}
 			if (rows2.length) {
+				ret = true;
 				that._trigger("rowSelect", evt, {
 					rows: rows2
 				})
 			}
 		} else {
-			this._add(objP)
+			ret = this._add(objP)
+		} if (ret) {
+			this.triggerSelectChange()
 		}
 	};
 	_pC._remove = function(objP) {
@@ -12065,14 +12724,14 @@
 			offset = that.rowIndxOffset,
 			rowIndx = (rowIndx == null) ? (rowIndxPage + offset) : rowIndx,
 			rowIndxPage = (rowIndxPage == null) ? (rowIndx - offset) : rowIndxPage,
-			rowData = objP.rowData,
-			rowData = (rowData == null) ? that.getRowData(objP) : rowData,
+			rowData = objP.rowData || that.getRowData(objP),
 			colIndx = objP.colIndx,
 			dataIndx = objP.dataIndx,
 			colIndx = (colIndx == null) ? that.getColIndx({
 				dataIndx: dataIndx
 			}) : colIndx,
-			column = that.colModel[colIndx],
+			column = objP.column,
+			column = (column == null) ? that.colModel[colIndx] : column,
 			dataIndx = (dataIndx == null) ? column.dataIndx : dataIndx,
 			evt = objP.evt,
 			isSelected = this.isSelected({
@@ -12151,45 +12810,53 @@
 		}
 	};
 	_pC.remove = function(objP) {
-		var cells = objP.cells;
+		var cells = objP.cells,
+			ret = false;
 		if (cells && typeof cells.push == "function") {
 			var cells2 = [];
 			for (var i = 0, len = cells.length; i < len; i++) {
 				var cell = cells[i];
 				cell.trigger = false;
-				var ret = this._remove(cell);
+				ret = this._remove(cell);
 				if (ret) {
 					cells2.push(ret)
 				}
 			}
 			if (cells2.length) {
+				ret = true;
 				this.that._trigger("cellUnSelect", objP.evt, {
 					cells: cells2
 				})
 			}
 		} else {
-			this._remove(objP)
+			ret = this._remove(objP)
+		} if (ret) {
+			this.triggerSelectChange()
 		}
 	};
 	_pR.remove = function(objP) {
-		var rows = objP.rows;
+		var rows = objP.rows,
+			ret = false;
 		if (rows && typeof rows.push == "function") {
 			var rows2 = [];
 			for (var i = 0, len = rows.length; i < len; i++) {
 				var row = rows[i];
 				row.trigger = false;
-				var ret = this._remove(row);
+				ret = this._remove(row);
 				if (ret) {
 					rows2.push(ret)
 				}
 			}
 			if (rows2.length) {
+				ret = true;
 				this.that._trigger("rowUnSelect", objP.evt, {
 					rows: rows2
 				})
 			}
 		} else {
-			this._remove(objP)
+			ret = this._remove(objP)
+		} if (ret) {
+			this.triggerSelectChange()
 		}
 	};
 	_pC.indexOf = function(obj) {
@@ -12256,9 +12923,12 @@
 				addCell(rowData, rowIndx)
 			}
 		}
-		this.add({
-			cells: cells
-		})
+		var self = this;
+		$.measureTime(function() {
+			self.add({
+				cells: cells
+			})
+		}, "selectAll with length = " + cells.length)
 	};
 	_pR.selectAll = function(objP) {
 		var that = this.that,
@@ -12303,8 +12973,11 @@
 			initColIndx = objP.initColIndx,
 			finalRowIndx = objP.finalRowIndx,
 			finalColIndx = objP.finalColIndx,
+			CM = that.colModel,
+			CMLength = CM.length,
 			cellSelection = this.getSelection(),
-			cellSelection2 = cellSelection.slice(0);
+			cellSelection2 = cellSelection.slice(0),
+			arrSel = [];
 		for (var i = 0; i < cellSelection2.length; i++) {
 			var cellS = cellSelection2[i],
 				row = cellS.rowIndx,
@@ -12313,21 +12986,21 @@
 					dataIndx: dataIndx
 				});
 			if (row < initRowIndx || row > finalRowIndx) {
-				this.remove({
+				arrSel.push({
 					rowIndx: row,
 					colIndx: col,
 					dataIndx: dataIndx
 				})
 			} else {
 				if (row == initRowIndx && col < initColIndx) {
-					this.remove({
+					arrSel.push({
 						rowIndx: row,
 						colIndx: col,
 						dataIndx: dataIndx
 					})
 				} else {
 					if (row == finalRowIndx && col > finalColIndx) {
-						this.remove({
+						arrSel.push({
 							rowIndx: row,
 							colIndx: col,
 							dataIndx: dataIndx
@@ -12336,8 +13009,12 @@
 				}
 			}
 		}
-		for (var col = 0; col < that.colModel.length; col++) {
-			var column = that.colModel[col];
+		this.remove({
+			cells: arrSel
+		});
+		arrSel = [];
+		for (var col = 0; col < CMLength; col++) {
+			var column = CM[col];
 			if (column.hidden) {
 				continue
 			}
@@ -12348,7 +13025,7 @@
 					if (row == finalRowIndx && col > finalColIndx) {
 						break
 					} else {
-						this.add({
+						arrSel.push({
 							rowIndx: row,
 							colIndx: col,
 							dataIndx: dataIndx,
@@ -12359,6 +13036,9 @@
 				row++
 			} while (row <= finalRowIndx)
 		}
+		this.add({
+			cells: arrSel
+		})
 	};
 	_pC.selectBlock = function(objP) {
 		var that = this.that,
@@ -12366,8 +13046,11 @@
 			initColIndx = objP.initColIndx,
 			finalRowIndx = objP.finalRowIndx,
 			finalColIndx = objP.finalColIndx,
+			evt = objP.evt,
 			cellSelection = this.getSelection(),
-			cellSelection2 = cellSelection.slice(0);
+			cellSelection2 = cellSelection.slice(0),
+			CM = that.colModel,
+			arrSel = [];
 		for (var i = 0; i < cellSelection2.length; i++) {
 			var cellS = cellSelection2[i],
 				row = cellS.rowIndx,
@@ -12376,23 +13059,25 @@
 					dataIndx: dataIndx
 				});
 			if (col < initColIndx || col > finalColIndx) {
-				this.remove({
+				arrSel.push({
 					rowIndx: row,
-					dataIndx: dataIndx,
-					colIndx: col
+					colIndx: col,
+					dataIndx: dataIndx
 				})
 			} else {
 				if (row < initRowIndx || row > finalRowIndx) {
-					this.remove({
+					arrSel.push({
 						rowIndx: row,
-						dataIndx: dataIndx,
-						colIndx: col
+						colIndx: col,
+						dataIndx: dataIndx
 					})
 				}
 			}
 		}
-		var arrSel = [],
-			CM = that.colModel;
+		this.remove({
+			cells: arrSel
+		});
+		arrSel = [];
 		for (var col = initColIndx; col <= finalColIndx; col++) {
 			var column = CM[col];
 			var dataIndx = column.dataIndx;
@@ -12408,11 +13093,12 @@
 					focus: false
 				});
 				row++
-			} while (row <= finalRowIndx);
-			this.add({
-				cells: arrSel
-			})
+			} while (row <= finalRowIndx)
 		}
+		this.add({
+			cells: arrSel,
+			evt: evt
+		})
 	}
 })(jQuery);
 (function($) {
@@ -12450,7 +13136,7 @@
 				return self.cellKeyDown(evt, ui)
 			}
 		});
-		element.on(widgetEventPrefix + "refreshheader" + eventNamespace, function(evt, ui) {
+		element.on(widgetEventPrefix + "refresh" + eventNamespace + " " + widgetEventPrefix + "refreshrow" + eventNamespace, function(evt, ui) {
 			if (self.belongs(evt)) {
 				return self.refreshHeader(evt, ui)
 			}
@@ -12508,6 +13194,9 @@
 			$td = that.getCellHeader({
 				dataIndx: this.cbDataIndx
 			});
+		if (!$td) {
+			return
+		}
 		$td.html("<input type='checkbox'/>");
 		var $inp = this.$inp = $td.find("input").click(function(evt) {
 			if ($(this).is(":checked")) {
@@ -12680,6 +13369,9 @@
 		element.on(prefix + "mousestop" + eventNamespace, function(evt, ui) {
 			return self._onMouseStop(evt, ui)
 		});
+		element.on(prefix + "mousepqup." + eventNamespace, function(evt, ui) {
+			return self._onMousePQUp(evt, ui)
+		});
 		element.on(prefix + "rowmousedown" + eventNamespace, function(evt, ui) {
 			if (self.belongs(evt)) {
 				return self._onRowMouseDown(evt, ui)
@@ -12698,6 +13390,16 @@
 		element.on(prefix + "refresh" + eventNamespace, function(evt, ui) {
 			if (self.belongs(evt)) {
 				return self._onRefresh(evt, ui)
+			}
+		});
+		element.on(prefix + "cellmouseenter" + eventNamespace, function(evt, ui) {
+			if (self.belongs(evt)) {
+				return self._onCellMouseEnter(evt, ui)
+			}
+		});
+		element.on(prefix + "rowmouseenter" + eventNamespace, function(evt, ui) {
+			if (self.belongs(evt)) {
+				return self._onRowMouseEnter(evt, ui)
 			}
 		})
 	}
@@ -12794,6 +13496,58 @@
 		}
 		return true
 	};
+	_pMouseSelection._onCellMouseEnter = function(evt, ui) {
+		var that = this.that,
+			SM = that.options.selectionModel,
+			type = SM.type,
+			pq = $.paramquery,
+			mode = SM.mode;
+		if (type == "cell" && this.mousedown) {
+			var mousedown = this.mousedown,
+				r1 = mousedown.r1,
+				c1 = mousedown.c1,
+				r2 = ui.rowIndx,
+				c2 = ui.colIndx;
+			if (r1 == r2 && c1 == c2) {
+				return
+			} else {
+				if (mousedown.r2 == r2 && mousedown.c2 == c2) {
+					return
+				} else {
+					this.mousedown.r2 = r2;
+					this.mousedown.c2 = c2
+				}
+			}
+			that.iCells.extendSelection({
+				rowIndx: r2,
+				colIndx: c2,
+				evt: evt
+			})
+		}
+	};
+	_pMouseSelection._onRowMouseEnter = function(evt, ui) {
+		var that = this.that,
+			SM = that.options.selectionModel,
+			type = SM.type;
+		if (type == "row" && this.mousedown) {
+			var m = this.mousedown;
+			var r1 = this.mousedown.r1,
+				r2 = ui.rowIndx;
+			if (r1 == r2) {
+				return
+			} else {
+				if (this.mousedown.r2 == r2) {
+					return
+				} else {
+					this.mousedown.r2 = r2
+				}
+			}
+			that.iRows.extendSelection({
+				rowIndx: r2,
+				evt: evt
+			})
+		}
+	};
 	_pMouseSelection._onRowMouseDown = function(evt, ui) {
 		var that = this.that,
 			self = this,
@@ -12854,6 +13608,10 @@
 		}
 		return true
 	};
+	_pMouseSelection._onMousePQUp = function(evt, ui) {
+		var that = this.that;
+		this.mousedown = null
+	};
 	_pMouseSelection._stopSwipe = function(full) {
 		var self = this;
 		if (full) {
@@ -12865,8 +13623,7 @@
 	};
 	_pMouseSelection._onMouseStop = function(evt, ui) {
 		var self = this,
-			that = this.that,
-			pq = $.paramquery;
+			that = this.that;
 		if (this.swipedownPrev) {
 			var SW = that.options.swipeModel,
 				sdP = this.swipedownPrev,
@@ -13033,61 +13790,119 @@
 	}
 })(jQuery);
 (function($) {
+	var pq_options = $.paramquery.pqGrid.prototype.options;
+	var copyModel = {
+		on: true,
+		header: false
+	};
+	var pasteModel = {
+		on: true,
+		compare: "byVal",
+		select: true,
+		validate: true,
+		allowInvalid: true,
+		type: "replace"
+	};
+	pq_options.pasteModel = pq_options.pasteModel || pasteModel;
+	pq_options.copyModel = pq_options.copyModel || copyModel;
 	var cExcel = function(that, $ae) {
 		this.that = that;
-		this.$ae = $ae
+		this.$ae = $ae;
+		if ($ae.hasClass("pq-grid-row")) {
+			this.rowIndx = that.getRowIndx({
+				$tr: $ae
+			}).rowIndx;
+			this.dataIndx = null
+		} else {
+			if ($ae.hasClass("pq-grid-cell")) {
+				var obj = that.getCellIndices({
+					$td: $ae
+				});
+				this.rowIndx = obj.rowIndx;
+				this.dataIndx = obj.dataIndx
+			} else {
+				this.rowIndx = null;
+				this.dataIndx = null
+			}
+		}
 	};
 	var _pExcel = cExcel.prototype;
 	_pExcel.createClipBoard = function() {
 		var $ae = this.$ae,
-			$text = $("textarea#pq-grid-excel");
+			$div = $("#pq-grid-excel-div"),
+			$text = $("#pq-grid-excel");
 		if ($text.length == 0) {
-			$text = $("<textarea id='pq-grid-excel' />").appendTo(document.body)
+			$div = $("<div id='pq-grid-excel-div'  style='position:fixed;top:20px;left:20px;height:1px;width:1px;overflow:hidden;'/>").appendTo(document.body);
+			$text = $("<textarea id='pq-grid-excel' autocomplete='off'  style='overflow:hidden;height:10000px;width:10000px;opacity:0' />").appendTo($div);
+			$text.css({
+				opacity: 0
+			})
 		}
 		var off = $ae.offset(),
 			left = off.left,
-			top = off.top;
-		$text.css({
-			position: "absolute",
-			left: left,
-			top: top,
-			display: "",
-			height: 1,
-			width: 1,
-			borderWidth: 0
-		});
-		$text.focus()
+			top = off.top,
+			pageTop = $(window).scrollTop(),
+			pageLeft = $(window).scrollLeft();
+		$text.select()
 	};
 	_pExcel.destroyClipBoard = function() {
-		var $text = $("textarea#pq-grid-excel");
-		if ($text.length) {
-			var ae = document.activeElement;
-			if (ae == $text[0]) {
-				this.$ae.focus()
+		var that = this.that,
+			$tdr;
+		var obj = that.iCells.getFocusSelection({
+			old: true
+		});
+		if (obj) {
+			$tdr = that.getCell({
+				rowIndx: obj.rowIndx,
+				dataIndx: obj.dataIndx
+			})
+		} else {
+			obj = that.iRows.getFocusSelection({
+				old: true
+			});
+			if (obj) {
+				$tdr = that.getRow({
+					rowIndx: obj.rowIndx
+				})
 			}
-			$text.css("display", "none")
+		}
+		var pageTop = $(window).scrollTop(),
+			pageLeft = $(window).scrollLeft();
+		if ($tdr) {
+			$tdr.attr("tabindex", 0).focus()
+		} else {
+			that.$cont.focus()
+		}
+		var pageTop2 = $(window).scrollTop(),
+			pageLeft2 = $(window).scrollLeft();
+		if (pageTop != pageTop2 || pageLeft != pageLeft2) {
+			window.scrollTo(pageLeft, pageTop)
 		}
 	};
 	_pExcel.clearClipBoard = function() {
-		var $text = $("textarea#pq-grid-excel");
+		var $text = $("#pq-grid-excel");
 		$text.val("")
 	};
 	_pExcel.copy = function() {
-		var $text = $("textarea#pq-grid-excel");
+		var $text = $("#pq-grid-excel");
 		var that = this.that,
+			o = that.options,
+			CPM = o.copyModel,
 			CM = that.colModel,
 			CMLength = CM.length,
-			type = that.options.selectionModel.type,
 			selArr = [],
 			buffer = [];
+		if (!CPM.on) {
+			return
+		}
 		selArr = that.iRows.getSelection();
 		for (var i = 0, len = selArr.length; i < len; i++) {
 			var sel = selArr[i],
-				rowData = that.getRowData(sel),
+				rowData = sel.rowData,
 				rowBuffer = [];
 			for (var j = 0; j < CMLength; j++) {
 				var column = CM[j];
-				if (column.hidden) {
+				if (column.copy === false) {
 					continue
 				}
 				rowBuffer.push(rowData[column.dataIndx])
@@ -13102,44 +13917,220 @@
 			rowBuffer = [];
 		for (var i = 0, len = selArr.length; i < len; i++) {
 			var sel = selArr[i],
-				rowIndx = sel.rowIndx;
-			if (rowIndx == prevRowIndx) {
+				rowIndx = sel.rowIndx,
+				rowData = sel.rowData,
+				column = sel.column,
+				dataIndx = sel.dataIndx;
+			if (column.copy === false) {
 				continue
 			}
-			var rowData = that.getRowData(sel);
-			for (var j = 0; j < CMLength; j++) {
-				var column = CM[j];
-				if (column.hidden) {
-					continue
+			if (prevRowIndx != null && rowIndx != prevRowIndx) {
+				var str = rowBuffer.join("\t");
+				rowBuffer = [];
+				buffer.push(str);
+				prevRowIndx = rowIndx
+			} else {
+				if (prevRowIndx == null) {
+					prevRowIndx = rowIndx
 				}
-				var dataIndx = column.dataIndx;
-				if (that.iCells.isSelected({
-					rowData: rowData,
-					dataIndx: dataIndx
-				})) {
-					rowBuffer.push(rowData[dataIndx])
-				} else {}
 			}
-			var str = rowBuffer.join("\t");
-			rowBuffer = [];
-			buffer.push(str);
-			prevRowIndx = rowIndx
+			rowBuffer.push(rowData[dataIndx])
 		}
-		$text.val(buffer.join("\n"));
-		$text.select()
+		buffer.push(rowBuffer.join("\t"));
+		var str = buffer.join("\n");
+		$.measureTime(function() {
+			$text.val(str);
+			$text.select()
+		}, "copy of text: set text.val and text.select")
 	};
-	var iExcel = null;
-	$(window).unbind(".pqExcel").bind("keydown.pqExcel", function(evt) {
+	_pExcel.paste = function() {
+		var that = this.that,
+			$text = $("#pq-grid-excel"),
+			text = $text.val(),
+			text = text.replace(/\n$/, ""),
+			rows = text.split("\n"),
+			rows_length = rows.length,
+			cells_length, CM = that.colModel,
+			o = that.options,
+			PSTM = o.pasteModel,
+			SMType = "row",
+			CMLength = CM.length;
+		if (!PSTM.on) {
+			return
+		}
+		if (text.length == 0 || rows_length == 0) {
+			return
+		}
+		var ui = {
+			rows: rows
+		};
+		if (that._trigger("beforePaste", null, ui) === false) {
+			return false
+		}
+		var PMtype = PSTM.type,
+			selRowIndx, selColIndx, selEndRowIndx, selEndColIndx;
+		var selArr = that.iRows.getSelectionCurPage();
+		if (!selArr || !selArr.length) {
+			SMType = "cell";
+			selArr = that.iCells.getSelectionCurPage()
+		}
+		if (selArr && selArr.length) {
+			selRowIndx = selArr[0].rowIndx;
+			selEndRowIndx = selArr[selArr.length - 1].rowIndx;
+			if (SMType == "cell") {
+				selColIndx = that.getColIndx({
+					dataIndx: selArr[0].dataIndx
+				});
+				selEndColIndx = that.getColIndx({
+					dataIndx: selArr[selArr.length - 1].dataIndx
+				})
+			}
+		} else {
+			selRowIndx = 0;
+			selEndRowIndx = 0;
+			selColIndx = 0;
+			selEndColIndx = 0
+		}
+		var selRowIndx2, selEndRowIndx2, modeV, updateAddOp;
+		if (PMtype == "replace") {
+			selRowIndx2 = selRowIndx;
+			updateAddOp = "updateElseAdd";
+			modeV = ((selEndRowIndx - selRowIndx + 1) < rows_length) ? "extend" : "repeat"
+		} else {
+			if (PMtype == "append") {
+				selRowIndx2 = selEndRowIndx + 1;
+				modeV = "extend";
+				updateAddOp = "addRow"
+			} else {
+				if (PMtype == "prepend") {
+					selRowIndx2 = selRowIndx;
+					modeV = "extend";
+					updateAddOp = "addRow"
+				}
+			}
+		}
+		var modeH, lenV = (modeV == "extend") ? rows_length : (selEndRowIndx - selRowIndx + 1),
+			lenH, lenHCopy;
+		var ii = 0,
+			rowList = [],
+			rowsAffected = 0;
+		for (var i = 0; i < lenV; i++) {
+			var row = rows[ii],
+				rowIndx = i + selRowIndx2,
+				rowData = (PMtype == "replace") ? that.getRowData({
+					rowIndx: rowIndx
+				}) : null,
+				oldRow = rowData ? {} : null,
+				newRow = {};
+			if (row === undefined && modeV === "repeat") {
+				ii = 0;
+				row = rows[ii]
+			}
+			ii++;
+			var cells = row.split("\t");
+			if (!lenH) {
+				if (SMType == "cell") {
+					cells_length = cells.length;
+					modeH = ((selEndColIndx - selColIndx + 1) < cells.length) ? "extend" : "repeat";
+					lenH = (modeH == "extend") ? cells_length : (selEndColIndx - selColIndx + 1);
+					if (isNaN(lenH)) {
+						throw ("lenH NaN. assert failed.")
+					}
+					if (lenH + selColIndx > CMLength) {
+						lenH = CMLength - selColIndx
+					}
+				} else {
+					lenH = CMLength;
+					selColIndx = 0
+				}
+			}
+			var jj = 0,
+				j = 0,
+				hidden = 0,
+				lenHCopy = lenH;
+			for (var j = 0; j < lenHCopy; j++) {
+				var colIndx = j + selColIndx,
+					column = CM[colIndx],
+					cell = cells[jj],
+					dataIndx = column.dataIndx;
+				if (column.hidden) {
+					if (modeH == "extend") {
+						if (lenHCopy + selColIndx < CMLength) {
+							lenHCopy++
+						}
+					}
+					continue
+				} else {
+					if (cell === undefined && modeH === "repeat") {
+						jj = 0;
+						cell = cells[jj]
+					}
+					jj++;
+					newRow[dataIndx] = cell;
+					if (oldRow) {
+						oldRow[dataIndx] = rowData[dataIndx]
+					}
+				}
+			}
+			if ($.isEmptyObject(newRow) == false) {
+				var type = "update";
+				if (rowData == null) {
+					type = "add"
+				}
+				rowList.push({
+					newRow: newRow,
+					rowIndx: rowIndx,
+					rowData: rowData,
+					oldRow: oldRow,
+					type: type
+				});
+				rowsAffected++
+			}
+		}
+		var ui = {
+			rowList: rowList,
+			source: "paste",
+			allowInvalid: PSTM.allowInvalid,
+			validate: PSTM.validate
+		};
+		that._digestData(ui);
+		$.measureTime(function() {
+			if (PSTM.select) {
+				if (SMType == "cell") {
+					that.iCells.selectBlock({
+						initRowIndx: selRowIndx2,
+						finalRowIndx: selRowIndx2 + rowsAffected - 1,
+						initColIndx: selColIndx,
+						finalColIndx: (modeH == "extend") ? selColIndx + lenH - 1 + hidden : selEndColIndx
+					})
+				} else {
+					that.iRows.selectRange({
+						initRowIndx: selRowIndx2,
+						finalRowIndx: selRowIndx2 + rowsAffected - 1
+					})
+				}
+			}
+		}, "selection in paste");
+		that.refreshView();
+		var ui = {
+			rows: rows
+		};
+		that._trigger("paste", null, ui)
+	};
+	var iExcel = null,
+		pasteProgress = false,
+		copyProgress = false;
+	$(document).unbind(".pqExcel").bind("keydown.pqExcel", function(evt) {
 		if (evt.ctrlKey) {
-			var $ae = $(document.activeElement);
-			if (!$ae.hasClass("pq-grid-row") && !$ae.hasClass("pq-grid-cell") && !$ae.is("textarea#pq-grid-excel")) {
+			var $ae = $(evt.target);
+			if (!$ae.hasClass("pq-grid-row") && !$ae.hasClass("pq-grid-cell") && !$ae.is("#pq-grid-excel") && !$ae.is("div.pq-cont")) {
 				return
 			}
 			var $grid = $ae.closest(".pq-grid");
 			if (iExcel || ($ae.length && $grid.length)) {
 				if (!iExcel) {
 					try {
-						var that = $grid.pqGrid("getThis").that
+						var that = $grid.pqGrid("getInstance").grid
 					} catch (ex) {
 						return true
 					}
@@ -13147,24 +14138,328 @@
 					iExcel.createClipBoard()
 				}
 				if (evt.keyCode == "67" || evt.keyCode == "99") {
+					copyProgress = true;
 					iExcel.copy()
 				} else {
-					var $text = $("textarea#pq-grid-excel");
-					if ($text.length) {
-						var ae = document.activeElement;
-						if (ae == $text[0]) {
-							iExcel.that._onKeyPressDown(evt)
+					if (evt.keyCode == "86" || evt.keyCode == "118") {
+						pasteProgress = true;
+						$.measureTime(function() {
+							iExcel.clearClipBoard()
+						}, "clearClipBoard");
+						window.setTimeout(function() {
+							$.measureTime(function() {
+								if (iExcel) {
+									iExcel.paste();
+									iExcel.destroyClipBoard();
+									iExcel = null
+								}
+								pasteProgress = false
+							}, "iExcel.paste")
+						}, 0)
+					} else {
+						var $text = $("#pq-grid-excel");
+						if ($text.length) {
+							var ae = document.activeElement;
+							if (ae == $text[0]) {
+								iExcel.that._onKeyPressDown(evt)
+							}
 						}
+					}
+				}
+			} else {}
+		}
+	}).bind("keyup.pqExcel", function(evt) {
+		if (!pasteProgress && iExcel && !evt.ctrlKey && evt.keyCode == 17) {
+			iExcel.destroyClipBoard();
+			iExcel = null
+		}
+		copyProgress = false
+	})
+})(jQuery);
+(function($) {
+	var pq_options = $.paramquery.pqGrid.prototype.options;
+	var historyModel = {
+		on: true,
+		checkEditable: true,
+		checkEditableAdd: false,
+		allowInvalid: true
+	};
+	pq_options.historyModel = pq_options.historyModel || historyModel;
+	var cHistory = $.paramquery.cHistory = function(that) {
+		var self = this;
+		this.that = that;
+		this.options = that.options;
+		this.records = [];
+		this.counter = 0;
+		this.id = 0;
+		var eventNamespace = that.eventNamespace,
+			widgetEventPrefix = that.widgetEventPrefix.toLowerCase();
+		that.element.on(widgetEventPrefix + "keydown" + eventNamespace, function(evt, ui) {
+			if (self.belongs(evt)) {
+				return self._onKeyDown(evt, ui)
+			}
+		});
+		that.element.on(widgetEventPrefix + "dataavailable" + eventNamespace, function(evt, ui) {
+			if (self.belongs(evt)) {
+				self.reset()
+			}
+		})
+	};
+	var _pHistory = cHistory.prototype = new $.paramquery.cClass;
+	_pHistory._onKeyDown = function(evt, ui) {
+		var keyCodes = {
+			z: "90",
+			y: "89",
+			c: "67",
+			v: "86"
+		};
+		if (evt.ctrlKey && evt.keyCode == keyCodes.z) {
+			if (this.undo()) {}
+			return false
+		} else {
+			if (evt.ctrlKey && evt.keyCode == keyCodes.y) {
+				if (this.redo()) {}
+				return false
+			}
+		}
+	};
+	_pHistory.resetUndo = function() {
+		if (this.counter == 0) {
+			return false
+		}
+		this.counter = 0;
+		var that = this.that;
+		that._trigger("history", null, {
+			type: "resetUndo",
+			num_undo: 0,
+			num_redo: this.records.length - this.counter,
+			canUndo: false,
+			canRedo: true
+		})
+	};
+	_pHistory.reset = function() {
+		if (this.counter == 0 && this.records.length == 0) {
+			return false
+		}
+		this.records = [];
+		this.counter = 0;
+		this.id = 0;
+		var that = this.that;
+		that._trigger("history", null, {
+			num_undo: 0,
+			num_redo: 0,
+			type: "reset",
+			canUndo: false,
+			canRedo: false
+		})
+	};
+	_pHistory.increment = function() {
+		var records = this.records,
+			len = records.length;
+		if (len) {
+			var id = records[len - 1].id;
+			this.id = id + 1
+		} else {
+			this.id = 0
+		}
+	};
+	_pHistory.push = function(objP) {
+		var prevCanRedo = this.canRedo();
+		var records = this.records,
+			counter = this.counter;
+		if (records.length > counter) {
+			records.splice(counter, (records.length - counter))
+		}
+		records[counter] = $.extend({
+			id: this.id
+		}, objP);
+		this.counter++;
+		var that = this.that,
+			canUndo, canRedo;
+		if (this.counter == 1) {
+			canUndo = true
+		}
+		if (prevCanRedo && this.counter == records.length) {
+			canRedo = false
+		}
+		that._trigger("history", null, {
+			type: "add",
+			canUndo: canUndo,
+			canRedo: canRedo,
+			num_undo: this.counter,
+			num_redo: 0
+		})
+	};
+	_pHistory.canUndo = function() {
+		if (this.counter > 0) {
+			return true
+		} else {
+			return false
+		}
+	};
+	_pHistory.canRedo = function() {
+		if (this.counter < this.records.length) {
+			return true
+		} else {
+			return false
+		}
+	};
+	_pHistory.undo = function() {
+		var prevCanRedo = this.canRedo();
+		var that = this.that,
+			HM = this.options.historyModel,
+			records = this.records;
+		if (this.counter > 0) {
+			this.counter--
+		} else {
+			return false
+		}
+		var counter = this.counter,
+			record = records[counter],
+			rowList = record.rowList,
+			rowListFinal = [],
+			id = record.id;
+		for (var i = 0, len = rowList.length; i < len; i++) {
+			var rowListObj = rowList[i],
+				newRow = rowListObj.newRow,
+				rowData = rowListObj.rowData,
+				type = rowListObj.type,
+				oldRow = rowListObj.oldRow,
+				rowIndx = rowListObj.rowIndx;
+			if (type == "update") {
+				rowIndx = that.getRowIndx({
+					rowData: rowData
+				}).rowIndx;
+				rowListFinal.push({
+					type: type,
+					rowIndx: rowIndx,
+					rowData: rowData,
+					oldRow: newRow,
+					newRow: oldRow
+				})
+			} else {
+				if (type == "add") {
+					rowListFinal.push({
+						type: "delete",
+						rowData: newRow
+					})
+				} else {
+					if (type == "delete") {
+						rowListFinal.push({
+							type: "add",
+							rowIndx: rowIndx,
+							newRow: rowData
+						})
 					}
 				}
 			}
 		}
-	}).bind("keyup.pqExcel", function(evt) {
-		if (iExcel && !evt.ctrlKey && evt.keyCode == 17) {
-			iExcel.destroyClipBoard();
-			iExcel = null
+		var ret = that._digestData({
+			history: false,
+			source: "undo",
+			checkEditable: HM.checkEditable,
+			checkEditableAdd: HM.checkEditableAdd,
+			allowInvalid: HM.allowInvalid,
+			rowList: rowListFinal
+		});
+		that.refreshView();
+		var canRedo, canUndo;
+		if (prevCanRedo === false) {
+			canRedo = true
 		}
-	})
+		if (this.counter == 0) {
+			canUndo = false
+		}
+		that._trigger("history", null, {
+			canUndo: canUndo,
+			canRedo: canRedo,
+			type: "undo",
+			num_undo: this.counter,
+			num_redo: this.records.length - this.counter
+		});
+		return true
+	};
+	_pHistory.redo = function() {
+		var prevCanUndo = this.canUndo();
+		var that = this.that,
+			HM = this.options.historyModel,
+			counter = this.counter,
+			records = this.records;
+		if (counter == records.length) {
+			return false
+		}
+		var record = records[counter],
+			rowList = record.rowList,
+			rowListFinal = [],
+			id = record.id;
+		for (var i = 0, len = rowList.length; i < len; i++) {
+			var rowListObj = rowList[i],
+				newRow = rowListObj.newRow,
+				rowData = rowListObj.rowData,
+				type = rowListObj.type,
+				oldRow = rowListObj.oldRow,
+				rowIndx = rowListObj.rowIndx;
+			if (type == "update") {
+				rowIndx = that.getRowIndx({
+					rowData: rowData
+				}).rowIndx;
+				rowListFinal.push({
+					type: type,
+					rowIndx: rowIndx,
+					rowData: rowData,
+					oldRow: oldRow,
+					newRow: newRow
+				})
+			} else {
+				if (type == "add") {
+					rowListFinal.push({
+						type: "add",
+						rowIndx: rowIndx,
+						newRow: newRow
+					})
+				} else {
+					if (type == "delete") {
+						rowListFinal.push({
+							type: "delete",
+							rowData: rowData
+						})
+					}
+				}
+			}
+		}
+		var ret = that._digestData({
+			history: false,
+			source: "redo",
+			checkEditable: HM.checkEditable,
+			checkEditableAdd: HM.checkEditableAdd,
+			allowInvalid: HM.allowInvalid,
+			rowList: rowListFinal
+		});
+		that.refreshView();
+		if (this.counter < records.length) {
+			this.counter++
+		}
+		var canUndo, canRedo;
+		if (prevCanUndo == false) {
+			canUndo = true
+		}
+		if (this.counter == this.records.length) {
+			canRedo = false
+		}
+		that._trigger("history", null, {
+			canUndo: canUndo,
+			canRedo: canRedo,
+			type: "redo",
+			num_undo: this.counter,
+			num_redo: this.records.length - this.counter
+		});
+		return true
+	};
+	var fnGrid = $.paramquery.pqGrid.prototype;
+	fnGrid.history = function(obj) {
+		var method = obj.method;
+		return this["iHistory"][method](obj)
+	}
 })(jQuery);
 (function($) {
 	var _p = $.ui.autocomplete.prototype;

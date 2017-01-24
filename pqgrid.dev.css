@@ -1,11 +1,11 @@
-/*!
- * ParamQuery Pro v2.1.0
- *
- * Copyright (c) 2012-2016 Paramvir Dhindsa (http://paramquery.com)
+/**
+ * ParamQuery Pro v2.2.0
+ * 
+ * Copyright (c) 2012-2017 Paramvir Dhindsa (http://paramquery.com)
  * Released under GPL v3 license
  * http://paramquery.com/license
- *
- */
+ * 
+ */     	
 div.pq-grid{
     overflow:hidden;
     position:relative;
@@ -260,14 +260,15 @@ tr.pq-row-hidden{
 }
 div.pq-grid tr{
 }			
-td.pq-grid-cell{
+.pq-grid td.pq-grid-cell{
     overflow:hidden;
     padding:0px;
     padding: 4px 5px;
     vertical-align:middle;
+    border-width:0px;
     word-wrap:break-word;
 }	
-.pq-grid td.pq-cell-dirty
+div.pq-grid td.pq-cell-dirty
 {    
     background-image:url("images/square_dirty.gif");
     background-repeat:no-repeat;   

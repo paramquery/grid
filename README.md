@@ -1,13 +1,17 @@
-jQuery grid plugin based on jQueryui widget design
+jQuery grid plugin, supports 100,000+ records.
 ==================================================
-[ParamQuery Grid](http://paramquery.com) a.k.a. pqGrid v1.1
+[ParamQuery Grid](http://paramquery.com) (for jQuery)
 
-Copyright (c) 2012-2013 Paramvir Dhindsa 
+[Angularjs Grid](http://angularjsgrid.com) (for Angularjs)
+
+Copyright (c) 2012-2017 Paramvir Dhindsa 
 
 [Released under GPL v3 license](http://paramquery.com/license)
  
       
 ParamQuery grid is a lightweight jQuery grid plugin inspired by MS Excel and Google spreadsheet. 
+
+Angularjs binding is also supported now. More bindings with other MVC/MVVM frameworks like Knockoutjs, Reactjs are coming soon.
 
 
 
@@ -17,40 +21,49 @@ ParamQuery grid is a lightweight jQuery grid plugin inspired by MS Excel and Goo
 
 3. [Demos or Examples](http://paramquery.com/demos)
 
-4. [Download](http://paramquery.com/download)
+4. [PHP Integration Tutorial](http://paramquery.com/tutorial/php)
+
+5. [Angularjs bindings](http://angularjsgrid.com)
+
+6. [Angularjs demos](http://angularjsgrid.com/demos)
 
 
 ### Features:
 
 ```
-It's designed on jQueryui widget pattern so it has all the advantages of it e.g. changing any 
-option during runtime, methods like enable, disable, destroy, etc.
+Copy paste to and from Excel.
 
-Sorting for common data formats like Integer, real numbers, Strings, etc.
+Edit history and tracking: undo and redo.
 
-Support for custom sorting through callback function.
+Local, remote and custom sorting for common data formats like Integer, real numbers, Strings, dates, etc.
 
-Paging with local (Browser) or remote (Ajax) data in any format.
+Local and remote filtering with header filtering row interface.
 
-Freeze any number of Columns like Excel.
+Paging with local or remote data.
 
-Connect to any data source format like HTML, Array, XML, JSON, etc locally or remotely through Ajax.
+Column and row grouping and fixed summary row.
+
+Frozen rows & columns like Excel.
+
+Export to Excel & CSV format.
+
+Nesting of grids and row details.
+
+Virtual Scrolling and Rendering with unlimited rows and columns support.
+
+Inline Editing: Batch editing, row editing, custom editors, multiline editing, validations.
+
+Hide/ show columns, resizable and reorderable columns through drag and drop.
+
+Theme support.
+
+i18n.
+
+Consistent look and functionality across all major browsers IE(8+), Firefox, Chrome, Opera, etc
+
+Displays data source formats like HTML, Array, XML, JSON, etc.
 
 Can be used with any server side framework e.g. ASP.NET, MVC3, JSP, JSF, PHP, etc.
-
-Minimal impact on performance with increase in number of records thanks to Virtual Scrolling and Rendering.
-
-Inline Editing of cells with support to plugin custom editors.
-
-Resizable columns.
-
-Resizable height and width.
-
-Customizable theme.
-
-Hiding / Showing columns.
-
-Consistent look and functionality across all major browsers IE(6+), Firefox, Chrome, Opera, etc
 
 Many more...
 ```

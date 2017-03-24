@@ -19,6 +19,6 @@ $.paramquery.pqPager.regional['it'] = {
     strNextPage: "Pagina successiva",
     strLastPage: "Ultima pagina",
     strRefresh: "Aggiorna",
-    strRpp: "Risultati per pagina:",
+    strRpp: "Risultati per pagina: {0}",
     strDisplay: "Visualizzazione {0} a {1} di {2} risultati."
 }

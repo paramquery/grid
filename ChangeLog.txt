@@ -1,3 +1,129 @@
+Version 2.2.0 (01/24/2017)
+==========================
+
+Addditions:
+
+options: pasteModel, column.copy, historyModel
+Methods: history, getInstance
+Events: beforeValidate, change, history, selectChange
+
+Changes:
+
+options: editModel, validations.type:'nonEmpty', track replaced by trackModel, toolbar.items.listener 
+methods: isValid, addRow, updateRow, deleteRow, isDirty
+
+Fixes:
+
+DnD columns with use of columTemplate and array data
+numberCell resize fix
+last row selection with grouping
+
+
+Version 2.1.0 (11/06/2016)
+==========================
+
+Additions:
+
+options: virtualY, swipeModel, columnTemplate, column.maxWidth, editModel.onBlur
+height, width of grid can be in px, % or %+-px
+column width, minWidth, maxWidth can be in px or %
+Methods: collapse, expand, getCellsByClass
+Events: editorBegin, editorBlur, editorEnd, editorFocus, editorKeyDown, editorKeyPress, editorKeyUp, refreshCell, refreshColumn, refreshRow.
+
+Changes: 
+
+Non virtual mode (virtualX = false, virtualY = false) by default.
+saveEditCell can return null when no cell is being edited.
+editModel.onBlur replaces quitEditMode event way to save blurred cells.
+Event refresh {type:'row'} changed to refreshRow
+collapsible is an object instead of boolean.
+cells, editors vertical middle align
+divs removed from cell layout
+
+Deprecated:
+
+Events: cellEditKeyDown, quitEditMode
+
+Fixes:
+
+updateRow, refreshRow for rows in master grid.
+dataModel.location = local in master grid
+empty row grouped data when no data.
+
+
+Version 2.0.5 (08/15/2016)
+==========================
+
+Addition:
+
+Angularjs bindings.
+
+User contributed translations.
+
+
+Version 2.0.4 (10/19/2015)
+==========================
+
+Addition:
+
+filter conditions: between, range, regexp, lte, gte, notbegin, notend
+stringify
+updateRow, getData
+selectionModel: all, cbAll, cbHeader
+scrollModel: theme
+
+Changes: 
+
+rowSelect, rowUnSelect, cellSelect, cellUnSelect, pq-sb-vert, pq-sb-horiz
+
+
+New features:
+Nested grids & detail View (rowExpand,rowCollapse,rowInvalidate,detailModel)
+multiple Selections with mouse drag.
+
+Fixes:
+IE7: group title, DnD headers, resizable handles.
+Firefox: DnD headers (droppable areas)
+
+Migration steps:
+Move paging properties from dataModel to pageModel.
+
+
+editModel	
+editor	
+validation	
+quitEditMode	missing keys added
+isValid	
+isDirty	
+getRowsByClass	
+getRowIndx	
+getCellIndices	change from $td to {$td:$td}
+refreshView	
+column.validations	
+column.editModel
+
+Migration steps:	
+View needs to be refreshed manually
+
+
+Fixes:
+_refreshWidths
+_refreshWidthsAutoFit
+isEditableCell:
+_pKeyNav._decrEditIndx
+_editCell
+_getEditCellData
+getCell
+saveEditCell
+getRowIndx
+_refreshSortingDataAndView
+exportToExcel 
+rollback
+commit
+getChanges
+_refreshResizeColumnStop
+
+
 Version: 1.1.3
 
 1) Improved support for JSON: dataIndx can be int or String

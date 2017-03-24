@@ -8,17 +8,17 @@ $.paramquery.pqGrid.regional ['fr'] = {
     strDelete: "Supprimer", 
     strSearch: "Rechercher", 
     strNothingFound: "Aucun résultat", 
-    strSelectedmatches: "Selected {0} sur {1} résultat (s)", 
+    strSelectedmatches: "Résultat {0} sur {1} résultat(s)", 
     strPrevResult: "Résultat précédent", 
     strNextResult: "Résultat suivant" 
 } 
-$.paramquery.pqPager.regional [ 'fr'] = { 
+$.paramquery.pqPager.regional ['fr'] = { 
     strPage: "Page {0} sur {1}", 
     strFirstPage: "Première page", 
     strPrevPage: "Page précédente", 
     strNextPage: "Page suivante", 
     strLastPage: "Dernière page", 
-    strRefresh: "Refresh", 
-    strRpp: "Résultats par page:", 
+    strRefresh: "Actualiser", 
+    strRpp: "Résultats par page: {0}",
     strDisplay: "Voir {0} à {1} sur {2} résultats." 
 }

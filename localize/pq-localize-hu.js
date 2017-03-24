@@ -19,6 +19,6 @@ $.paramquery.pqPager.regional ['hu'] = {
     strNextPage: "Következõ oldal", 
     strLastPage: "Utolsó oldal", 
     strRefresh: "Frissítés", 
-    strRpp: "Találatok az oldalon:", 
+    strRpp: "Találatok az oldalon: {0}",
     strDisplay: "{2} találatból megjelenítve {0} - {1}." 
 };

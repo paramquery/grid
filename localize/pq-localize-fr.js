@@ -1,5 +1,5 @@
 /**
- * @author pdhindsa(wrong)
+ * @author pdhindsa
  */
 $.paramquery.pqGrid.regional ['fr'] = { 
     strLoading: "Chargement en cours", 
@@ -10,7 +10,8 @@ $.paramquery.pqGrid.regional ['fr'] = {
     strNothingFound: "Aucun résultat", 
     strSelectedmatches: "Résultat {0} sur {1} résultat(s)", 
     strPrevResult: "Résultat précédent", 
-    strNextResult: "Résultat suivant" 
+    strNextResult: "Résultat suivant",
+    strNoRows: "Pas de lignes à afficher." 
 } 
 $.paramquery.pqPager.regional ['fr'] = { 
     strPage: "Page {0} sur {1}", 

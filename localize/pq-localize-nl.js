@@ -8,7 +8,8 @@ $.paramquery.pqGrid.regional['nl'] = {
     strNothingFound: "niets gevonden",
     strSelectedmatches: "Gekozen {0} van {1} partuur(en)",
     strPrevResult: "Vorige Resultaat",
-    strNextResult: "Volgende Resultaat"
+    strNextResult: "Volgende Resultaat",
+    strNoRows: "Geen rijen weer te geven"
 };
 $.paramquery.pqPager.regional['nl'] = {
     strPage: "Pagina {0} van {1}",

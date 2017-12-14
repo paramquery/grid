@@ -10,7 +10,8 @@ $.paramquery.pqGrid.regional ['hu'] = {
     strNothingFound: "Nincs találat", 
     strSelectedmatches: "{1} találatból {0} kiválasztva", 
     strPrevResult: "Elõzõ találat", 
-    strNextResult: "Következõ találat" 
+    strNextResult: "Következõ találat",
+    strNoRows: "Nincs megjelenítendő sorok" 
 }; 
 $.paramquery.pqPager.regional ['hu'] = { 
     strPage: "Oldal: {0} / {1}", 

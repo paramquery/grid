@@ -1,3 +1,32 @@
+Version 2.3.0 (12/14/2017)
+==========================
+
+Additions:
+
+options: virtualXHeader, warning
+sub-options: 
+	collapsible: {toggle, css:{zIndex}}
+	column.cb {all,header} replace selectionModel {cbAll, cbHeader}
+	column.validations {warn}
+	editModel { pressToEdit: true, onSave: 'next', warnClass: 'pq-cell-blue-tr pq-has-tooltip' }
+	height: 'flex'
+	width: 'flex'
+	isValid: {checkEditable}
+Methods: attr, copy, paste, removeAttr, data, removeData, toggle
+Events: toggle,beforeCheck,beforeunCheck, check, unCheck
+
+Changes:
+
+editModel: {invalidClass: 'pq-cell-red-tr pq-has-tooltip'}
+
+Deprecated: flexWidth, flexHeight
+
+Fixes: copy/paste for Mac, 
+	filtering and history work together,
+	validation callback was not called when value null.
+	filterKeys for Firefox.
+
+
 Version 2.2.0 (01/24/2017)
 ==========================
 

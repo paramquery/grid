@@ -10,8 +10,9 @@ $.paramquery.pqGrid.regional['it'] = {
     strNothingFound: "Nessun risultato trovato",
     strSelectedmatches: "Selezionato {0} di {1} risultato(i)",
     strPrevResult: "Risultato precedente",
-    strNextResult: "Risultato successivo"
-}
+    strNextResult: "Risultato successivo",
+    strNoRows: "Nessun file da visualizzare."        
+};
 $.paramquery.pqPager.regional['it'] = {
     strPage: "Pagina {0} di {1}",
     strFirstPage: "Prima Pagina",
@@ -21,4 +22,4 @@ $.paramquery.pqPager.regional['it'] = {
     strRefresh: "Aggiorna",
     strRpp: "Risultati per pagina: {0}",
     strDisplay: "Visualizzazione {0} a {1} di {2} risultati."
-}
+};

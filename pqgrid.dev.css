@@ -1,5 +1,5 @@
 /**
- * ParamQuery Pro v2.2.0
+ * ParamQuery Pro v2.3.0
  * 
  * Copyright (c) 2012-2017 Paramvir Dhindsa (http://paramquery.com)
  * Released under GPL v3 license
@@ -133,7 +133,6 @@ div.pq-grid-inner{
 div.pq-header-outer{
     position:relative;
     border-width:0px;
-    overflow:hidden;
     text-align: left; 	
 }
 .pq-grid span.pq-grid-header{
@@ -274,6 +273,18 @@ div.pq-grid td.pq-cell-dirty
     background-repeat:no-repeat;   
     background-position: left top;
 }
+div.pq-grid td.pq-cell-red-tr
+{    
+    background-image:url("images/square-red-tr.gif");
+    background-repeat:no-repeat;   
+    background-position: right top;
+}
+div.pq-grid td.pq-cell-blue-tr
+{    
+    background-image:url("images/square-blue-tr.gif");
+    background-repeat:no-repeat;   
+    background-position: right top;
+}
 td div.pq-td-div{
     padding: 0px;
 }
@@ -294,7 +305,6 @@ table.pq-no-wrap > tbody > tr > td.pq-grid-col
 {
     word-wrap:normal;
     white-space: nowrap;
-    overflow:hidden;
     text-overflow:ellipsis;    
 }
 div.pq-editor-outer {
@@ -683,4 +693,19 @@ div.pq-filter-dialog button.ui-button span{
 }
 div.pq-filter-dialog *{
     margin:2px 4px;
+}
+.ui-multiselect-single ul.ui-multiselect-checkboxes label{
+    padding:0px !important
+}
+.ui-multiselect-checkboxes li.ui-multiselect-optgroup-label a {
+    padding:0px; margin:0px;
+}
+.ui-multiselect-checkboxes label {
+    padding: 0px;
+}
+button.ui-multiselect{
+    padding: 3px;
+}
+.ui-multiselect-header{
+    padding: 0px;
 }

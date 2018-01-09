@@ -10,8 +10,9 @@ $.paramquery.pqGrid.regional['ru'] = {
 	strNothingFound: "Ничего не найдено",
 	strSelectedmatches:"Выделено {0} из {1}",
 	strPrevResult: "Предыдущий",
-	strNextResult: "Следующий"
-} 
+	strNextResult: "Следующий",
+    strNoRows: "Нет строк для отображения"
+};
 $.paramquery.pqPager.regional['ru'] = { 
     strPage     : "Страница {0} из {1}",
 	strFirstPage: "Первая страница",
@@ -21,4 +22,4 @@ $.paramquery.pqPager.regional['ru'] = {
 	strRefresh  : "Обновить",	
 	strRpp      : "Строк на странице: {0}",
 	strDisplay  : "Строки с {0} по {1} из {2}."
-}
+};

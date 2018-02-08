@@ -1,3 +1,43 @@
+Version 2.4.1 (02/08/2018)
+==========================
+Fixes: 
+	Text same color as background in some themes e.g., Le-frog
+	Header filter fields cut off when column widths change due to flexContent:true
+	Header filter fields width are incorrect when column.width in % 
+	last column auto should work only with virtualX:true
+	sort event not firing with local sorting
+	Error is thrown if grid is destroyed with pending remote request.
+	refresh method of scrollbar.
+	rowData in editor.getData callback.
+	Lazy draggable with resizable columns for performance.
+	Firefox scroll with height:'flex'
+	export to excel broken with hidden columns.(column._width)
+
+Version 2.4.0 (02/08/2018)
+==========================
+Additions: 
+
+	New component pqSelect.
+	New classes pq-no-capture & pq-native-select
+
+sub-options: scrollModel.flexContent
+	selectionModel {native, fireSelectChange}
+	groupModel: titleCls, summaryCls
+	column.editor {dataMap, mapIndices}
+	column.validations type:'neq'
+Events: 
+	beforeRowExpand
+Changes:
+	swipeModel.speed reduced from 50 to 20
+	groupModel.title[i](can be callback)
+	column.summary.title[i](can be callback)
+	
+Fixes: scrollModel autoFit imperfection w.r.t last column and vertical scrollbar.
+	virtualXHeader: false w.r.t filtering.	
+	footer controls of nested grid inaccessible in Firefox.
+	slow scrolling in IE, Firefox, touch tablets. (changed margin* to scroll* and layout of panes)
+	Header filtering with scrollModel.autoFit could affect the widths of columns in other grids on same page.
+
 Version 2.3.0 (12/14/2017)
 ==========================
 

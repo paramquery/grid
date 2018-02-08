@@ -1,7 +1,7 @@
 /**
- * ParamQuery Pro v2.3.0
+ * ParamQuery Pro v2.4.1
  *
- * Copyright (c) 2012-2017 Paramvir Dhindsa (http://paramquery.com)
+ * Copyright (c) 2012-2018 Paramvir Dhindsa (http://paramquery.com)
  * Released under GPL v3 license
  * http://paramquery.com/license
  *
@@ -87,14 +87,19 @@
 		if (isNaN(val)) {
 			return val
 		}
-		val = Math.round(val * 10) / 10;
+		val = Math.round(val * 100) / 100;
 		val = val + "";
 		if (val.indexOf(".") == -1) {
-			val = val + ".0"
+			val = val + ".00"
+		} else {
+			if (val.indexOf(".") + 2 == val.length) {
+				val = val + "0"
+			}
 		}
-		var len = val.length;
-		var fp = val.substring(0, len - 2),
-			lp = val.substring(len - 2, len),
+		var len = val.length,
+			sublen = 3,
+			fp = val.substring(0, len - sublen),
+			lp = val.substring(len - sublen, len),
 			arr = fp.match(/\d/g).reverse(),
 			arr2 = [];
 		for (var i = 0; i < arr.length; i++) {
@@ -267,13 +272,13 @@
 	};
 	fnPG._onChange = function(evt, val) {
 		if (this._trigger("beforeChange", evt, {
-			curPage: val
-		}) === false) {
+				curPage: val
+			}) === false) {
 			return false
 		}
 		if (this._trigger("change", evt, {
-			curPage: val
-		}) === false) {
+				curPage: val
+			}) === false) {
 			return false
 		} else {
 			this.option({
@@ -312,14 +317,14 @@
 				var $select = $(this),
 					val = $select.val();
 				if (that._trigger("beforeChange", evt, {
-					rPP: val
-				}) === false) {
+						rPP: val
+					}) === false) {
 					$select.val(that.options.rPP);
 					return false
 				}
 				if (that._trigger("change", evt, {
-					rPP: val
-				}) !== false) {
+						rPP: val
+					}) !== false) {
 					that.options.rPP = val
 				}
 			})
@@ -338,7 +343,8 @@
 			this.last.button({
 				disabled: false
 			})
-		} if (options.curPage <= 1) {
+		}
+		if (options.curPage <= 1) {
 			this.first.button({
 				disabled: true
 			});
@@ -403,6 +409,7 @@
 		theme: false
 	};
 	fnSB._destroy = function() {
+		$(document).off("." + this.eventNamespace);
 		this.element.removeClass("pq-sb-vert pq-sb-vert-t pq-sb-vert-wt").enableSelection().removeClass("pq-sb-horiz pq-sb-horiz-t pq-sb-horiz-wt").unbind("click.pq-scrollbar").empty();
 		this.element.removeData()
 	};
@@ -413,6 +420,7 @@
 		var that = this,
 			options = this.options,
 			direction = options.direction,
+			eventNamespace = this.eventNamespace,
 			theme = options.theme;
 		var ele = this.element.empty();
 		if (direction == "vertical") {
@@ -435,15 +443,16 @@
 				ele.html(["<div class='left-btn pq-sb-btn'></div>", "<div class='pq-sb-slider pq-sb-slider-h'>", "<span class='horiz-slider-left'></span>", "<span class='horiz-slider-bg'></span>", "<span class='horiz-slider-center'></span>", "<span class='horiz-slider-bg'></span>", "<span class='horiz-slider-right'></span>", "</div>", "<div class='right-btn pq-sb-btn'></div>"].join(""))
 			}
 		}
-		ele.disableSelection().unbind(".pq-scrollbar").on("mouseup.pq-scrollbar", function(evt) {
-			that._mouseup(evt)
-		}).on("mousedown.pq-scrollbar", function(evt) {
+		ele.disableSelection().unbind(".pq-scrollbar").on("mousedown.pq-scrollbar", function(evt) {
 			if (options.disabled) {
 				return
 			}
 			if (that.$slider.is(":hidden")) {
 				return
 			}
+			$(document).off("." + eventNamespace).on("mouseup." + eventNamespace, function(evt) {
+				that._mouseup(evt)
+			});
 			if (direction == "vertical") {
 				var clickY = evt.pageY,
 					top_this = that.element.offset().top,
@@ -533,7 +542,7 @@
 		}).bind("mouseup mouseout", function(evt) {
 			that._mouseup(evt)
 		});
-		this._refresh()
+		this.refresh()
 	};
 	fnSB._bindSliderEvents = function($slider) {
 		var that = this,
@@ -549,7 +558,8 @@
 				return this
 			},
 			start: function(evt) {
-				that.topWhileDrag = null
+				that.topWhileDrag = null;
+				that.dragging = true
 			},
 			drag: function(evt) {
 				that.dragging = true;
@@ -563,8 +573,11 @@
 				}
 			},
 			stop: function(evt) {
-				that._updateCurPosAndTrigger(evt);
-				that.dragging = false
+				if (that.options.pace != "fast") {
+					that._updateCurPosAndTrigger(evt)
+				}
+				that.dragging = false;
+				that.refresh()
 			}
 		}).on("keydown.pq-scrollbar", function(evt) {
 			var keyCode = evt.keyCode,
@@ -699,36 +712,31 @@
 			this.$slider.draggable("option", "containment", [top, 0, bot, 0])
 		}
 	};
-	fnSB._refresh = function() {
-		var o = this.options;
+	fnSB.refresh = function() {
+		var o = this.options,
+			$sb = this.element;
 		if (o.num_eles <= 1) {
-			this.element.css("display", "none")
+			$sb.css("display", "none");
+			return
 		} else {
-			this.element.css("display", "")
+			$sb.css("display", "")
 		}
 		this._validateCurPos();
-		this.$slider.css("display", "");
-		if (o.direction == "vertical") {
-			this.element.height(o.length);
+		if (!this.dragging) {
+			$sb[o.direction === "vertical" ? "height" : "width"](o.length);
 			this._setSliderBgLength();
-			this.scroll_space = o.length - 34 - this.slider_length;
 			if (this.scroll_space < 4 || o.num_eles <= 1) {
 				this.$slider.css("display", "none")
+			} else {
+				this.$slider.css("display", "")
 			}
-			this.updateSliderPos(o.cur_pos)
-		} else {
-			this.element.width(o.length);
-			this._setSliderBgLength();
-			this.scroll_space = o.length - 34 - this.slider_length;
-			if (this.scroll_space < 4 || o.num_eles <= 1) {
-				this.$slider.css("display", "none")
-			}
-			this.updateSliderPos(o.cur_pos)
 		}
+		this.updateSliderPos()
 	};
 	fnSB._setSliderBgLength = function() {
 		var o = this.options,
 			theme = o.theme,
+			$slider = this.$slider,
 			outerHeight = o.length,
 			innerHeight = o.num_eles * 40 + outerHeight,
 			avail_space = outerHeight - 34,
@@ -737,20 +745,22 @@
 		if (slider_bg_ht < 1) {
 			slider_bg_ht = 1
 		}
-		this.slider_length = 8 + 3 + 3 + (2 * slider_bg_ht);
-		if (o.direction == "vertical") {
+		var slider_length = 8 + 3 + 3 + (2 * slider_bg_ht);
+		this.scroll_space = o.length - 34 - slider_length;
+		if (slider_length !== this.slider_length) {
+			this.slider_length = slider_length;
+			var obj = (o.direction === "vertical") ? {
+				dim: "height",
+				cls: ".vert-slider-bg"
+			} : {
+				dim: "width",
+				cls: ".horiz-slider-bg"
+			};
 			if (theme) {
-				this.$slider.height(this.slider_length - 2)
+				$slider[obj.dim](slider_length - 2)
 			} else {
-				$("div.vert-slider-bg", this.element).height(slider_bg_ht);
-				this.$slider.height(this.slider_length)
-			}
-		} else {
-			if (theme) {
-				this.$slider.width(this.slider_length - 2)
-			} else {
-				$(".horiz-slider-bg", this.element).width(slider_bg_ht);
-				this.$slider.width(this.slider_length)
+				$(obj.cls, this.element)[obj.dim](slider_bg_ht);
+				$slider[obj.dim](slider_length)
 			}
 		}
 	};
@@ -760,7 +770,7 @@
 			direction = o.direction,
 			$slider = that.$slider;
 		if (top == null) {
-			top = (direction == "vertical") ? parseInt($slider[0].style.top, 10) : parseInt($slider[0].style.left, 10)
+			top = parseInt($slider[0].style[(direction === "vertical" ? "top" : "left")])
 		}
 		var scroll_space = o.length - 34 - this.slider_length;
 		var ratio = (top - 17) / scroll_space;
@@ -798,18 +808,14 @@
 			direction = o.direction;
 		that.timer = window.setInterval(function() {
 			var $slider = that.$slider;
-			var top = (direction == "vertical") ? parseInt($slider[0].style.top, 10) : parseInt($slider[0].style.left, 10);
-			if (that.prev_top == top) {
+			var top = parseInt($slider[0].style[(direction === "vertical" ? "top" : "left")]);
+			if (that.prev_top === top) {
 				that._updateCurPosAndTrigger(evt, top);
 				window.clearInterval(that.timer);
 				that.timer = null
 			}
 			that.prev_top = top
 		}, 20)
-	};
-	fnSB.setNumEles = function(num_eles) {
-		this.options.num_eles = num_eles;
-		this.updateSliderPos()
 	};
 	fnSB._validateCurPos = function() {
 		var o = this.options;
@@ -879,7 +885,7 @@
 	};
 	fnSB._setOption = function(key, value) {
 		if (key == "disabled") {
-			this._super.call(this, key, value);
+			this._super(key, value);
 			if (value == true) {
 				this.$slider.draggable("disable")
 			} else {
@@ -887,24 +893,52 @@
 			}
 		} else {
 			if (key == "theme") {
-				this._super.call(this, key, value);
+				this._super(key, value);
 				this._createLayout()
 			} else {
 				if (key == "ratio") {
 					if (value >= 0 && value <= 1) {
-						this._super.call(this, key, value)
+						this._super(key, value)
 					} else {}
 				} else {
-					this._super.call(this, key, value)
+					this._super(key, value)
 				}
 			}
 		}
 	};
 	fnSB._setOptions = function() {
 		this._super.apply(this, arguments);
-		this._refresh()
+		this.refresh()
 	};
 	$.widget("paramquery.pqScrollBar", fnSB)
+})(jQuery);
+(function($) {
+	$.paramquery = $.paramquery || {};
+	$.paramquery.onResize = function(ele, fn) {
+		var attachEvent = false,
+			$ele = $(ele);
+		if ($ele.css("position") === "static") {
+			$ele.css("position", "relative")
+		}
+		if (!attachEvent) {
+			var $iframe = $('<iframe type="text/html" src="about:blank" class="pq-resize-iframe" style="display:block;width:100%;height:100%;position:absolute;top:0;left:0;z-index:-1;overflow: hidden; pointer-events: none;" />').appendTo($ele);
+			$iframe[0].data = "about:blank";
+			$iframe.css("opacity", "0")
+		}
+		for (var i = 0; i < $ele.length; i++) {
+			if (attachEvent) {
+				$($ele[i]).on("resize", function(e) {
+					fn()
+				})
+			} else {
+				var ele2 = $iframe[i];
+				var $win = $(ele2.contentWindow);
+				$win.on("resize", function(evt) {
+					fn()
+				})
+			}
+		}
+	}
 })(jQuery);
 (function($) {
 	var cClass = function() {};
@@ -927,8 +961,8 @@
 			that = this.that,
 			o = that.options,
 			freezeCols = o.freezeCols,
-			virtualX = o.virtualX,
-			virtualY = o.virtualY,
+			flexWidth = o.width === "flex",
+			flexHeight = o.height === "flex",
 			CM = that.colModel,
 			initV, finalV, initH = that.initH,
 			finalH = that.finalH,
@@ -939,12 +973,14 @@
 				$cont = objP.$cont;
 			$cont.empty();
 			if (pqpanes.v) {
-				$cont.append(["<div class='pq-cont-inner'>", strTbl, "</div>", "<div class='pq-cont-inner'>", strTbl, "</div>"].join(""))
+				$cont.append(["<div class='pq-grid-cont-inner'>", strTbl, "</div>", "<div class='pq-grid-cont-inner'>", strTbl, "</div>"].join(""))
 			} else {
-				$cont.append("<div class='pq-cont-inner'>" + strTbl + "</div>")
+				$cont.append("<div class='pq-grid-cont-inner'>" + strTbl + "</div>")
 			}
 			var $div_child = $cont.children("div"),
 				$tbl = $div_child.children("table"),
+				iR = that.iRefresh,
+				contWd = flexWidth ? "" : iR.getEContWd(),
 				tblHt = $tbl[0].scrollHeight - 1;
 			$cont.height(tblHt);
 			if (pqpanes.v) {
@@ -960,12 +996,16 @@
 				});
 				$cont_r.css({
 					left: wd - 1,
-					width: wdTbl,
-					position: "absolute",
+					width: contWd - wd,
 					height: tblHt
 				});
 				$tbl_r.css({
 					left: (-1 * (lft + wd))
+				})
+			} else {
+				$div_child.css({
+					width: contWd,
+					height: tblHt
 				})
 			}
 			if (!that.tables) {
@@ -987,7 +1027,6 @@
 				that.tables[indx].$tbl = $tbl
 			}
 		} else {
-			that._bufferObj_calcInitFinal();
 			initV = that.initV;
 			finalV = that.finalV;
 			var data = (GM ? that.dataGM : that.pdata);
@@ -1000,32 +1039,45 @@
 			var strTbl = self._generateTables(initV, finalV, objP);
 			$cont.empty();
 			if (that.totalVisibleRows === 0) {
-				$cont.append("<div class='pq-cont-inner pq-grid-norows' >" + o.strNoRows + "</div>")
+				$cont.append("<div class='pq-grid-cont-inner pq-grid-norows' >" + o.strNoRows + "</div>")
 			} else {
+				var style = (flexHeight || flexWidth) ? "style='position:relative;'" : "";
 				if (pqpanes.h && pqpanes.v) {
-					$cont.append(["<div class='pq-cont-inner'>", strTbl, "</div>", "<div class='pq-cont-inner'>", strTbl, "</div>", "<div class='pq-cont-inner'>", strTbl, "</div>", "<div class='pq-cont-inner'>", strTbl, "</div>"].join(""))
+					$cont[0].innerHTML = ["<div class='pq-grid-cont-inner'>", strTbl, "</div>", "<div class='pq-grid-cont-inner'>", strTbl, "</div>", "<div class='pq-grid-cont-inner'>", strTbl, "</div>", "<div class='pq-grid-cont-inner'>", strTbl, "</div>"].join("")
 				} else {
-					if (pqpanes.h || pqpanes.v) {
-						$cont.append(["<div class='pq-cont-inner'>", strTbl, "</div>", "<div class='pq-cont-inner'>", strTbl, "</div>"].join(""))
+					if (pqpanes.v) {
+						$cont[0].innerHTML = ["<div class='pq-grid-cont-inner' ", style, " >", strTbl, "</div>", "<div class='pq-grid-cont-inner' >", strTbl, "</div>"].join("")
 					} else {
-						$cont.append("<div class='pq-cont-inner'>" + strTbl + "</div>")
+						if (pqpanes.h) {
+							$cont[0].innerHTML = ["<div class='pq-grid-cont-inner' style='position:static;' >", strTbl, "</div>", "<div class='pq-grid-cont-inner' style='position:static;' >", strTbl, "</div>"].join("")
+						} else {
+							$cont[0].innerHTML = ["<div class='pq-grid-cont-inner' ", style, " >", strTbl, "</div>"].join("")
+						}
 					}
 				}
 			}
 			that.$tbl = $cont.children("div").children("table");
-			that._fixTableViewPort();
-			that._trigger("afterTable", null, {
-				dataModel: o.dataModel,
-				colModel: CM,
-				pageData: data,
-				initV: initV,
-				finalV: finalV,
-				initH: initH,
-				finalH: finalH
-			})
+			if (o.scrollModel.flexContent && that.$tbl[0]) {
+				$.paramquery.onResize(that.$tbl[0], function() {
+					var iR = that.iRefresh;
+					if (!iR.ignoreTResize) {
+						iR.refreshScrollbars();
+						that.iGenerateView.setPanes();
+						that._saveDims();
+						that.iMouseSelection.syncScrollBarVert();
+						if (o.height == "flex") {
+							iR.setContAndGridHeightFromTable()
+						}
+						if (o.width == "flex") {
+							iR.setContAndGridWidthFromTable()
+						}
+						iR._refreshFrozenLine()
+					}
+				})
+			}
+			this.setPanes();
+			this.setPaneEvents()
 		}
-		that._saveDims();
-		this.scrollView();
 		if (!objP) {
 			that._trigger("refresh", null, {
 				dataModel: o.dataModel,
@@ -1044,12 +1096,83 @@
 		var that = this.that,
 			o = this.options,
 			virtualX = o.virtualX,
+			virtualXHeader = o.virtualXHeader,
 			virtualY = o.virtualY;
-		if (!virtualX) {
+		if (!virtualX && o.width !== "flex") {
 			that.$hscroll.pqScrollBar("drag")
 		}
-		if (!virtualY) {
+		if (!virtualY && o.height !== "flex") {
 			that.$vscroll.pqScrollBar("drag")
+		}
+		if (virtualXHeader === false) {
+			if (that.$hscroll) {
+				var soptions = that.$hscroll.pqScrollBar("option"),
+					cur_pos = parseInt(soptions.cur_pos);
+				that.iMouseSelection.syncHeaderViewWithScrollBarHor(cur_pos)
+			}
+		}
+	};
+	_pGenerateView.setPaneEvents = function() {
+		var that = this.that,
+			$cont = that.$cont,
+			pqpanes = that.pqpanes,
+			$div_child = $cont.children("div"),
+			iMS = that.iMouseSelection,
+			$tbl = that.$tbl;
+		if ($tbl && $tbl.length) {
+			if (pqpanes.h && pqpanes.v) {
+				var $cont_lt = $($div_child[0]),
+					$cont_rt = $($div_child[1]),
+					$cont_lb = $($div_child[2]),
+					$cont_rb = $($div_child[3]);
+				$cont_lt.on("scroll", function(evt) {
+					this.scrollTop = 0;
+					this.scrollLeft = 0
+				});
+				$cont_rt.on("scroll", function(evt) {
+					this.scrollTop = 0;
+					this.scrollLeft = iMS.getScrollLeft()
+				});
+				$cont_lb.on("scroll", function(evt) {
+					this.scrollTop = iMS.getScrollTop();
+					this.scrollLeft = 0
+				});
+				$cont_rb.on("scroll", function(evt) {
+					this.scrollTop = iMS.getScrollTop();
+					this.scrollLeft = iMS.getScrollLeft()
+				})
+			} else {
+				if (pqpanes.v) {
+					var $cont_l = $($div_child[0]),
+						$cont_r = $($div_child[1]);
+					$cont_l.on("scroll", function(evt) {
+						this.scrollTop = iMS.getScrollTop();
+						this.scrollLeft = 0
+					});
+					$cont_r.on("scroll", function(evt) {
+						this.scrollTop = iMS.getScrollTop();
+						this.scrollLeft = iMS.getScrollLeft()
+					})
+				} else {
+					if (pqpanes.h) {
+						var $cont_t = $($div_child[0]),
+							$cont_b = $($div_child[1]);
+						$cont_t.on("scroll", function(evt) {
+							this.scrollTop = 0;
+							this.scrollLeft = iMS.getScrollLeft()
+						});
+						$cont_b.on("scroll", function(evt) {
+							this.scrollTop = iMS.getScrollTop();
+							this.scrollLeft = iMS.getScrollLeft()
+						})
+					} else {
+						$div_child.on("scroll", function(evt) {
+							this.scrollTop = iMS.getScrollTop();
+							this.scrollLeft = iMS.getScrollLeft()
+						})
+					}
+				}
+			}
 		}
 	};
 	_pGenerateView.setPanes = function() {
@@ -1057,13 +1180,17 @@
 			$cont = that.$cont,
 			pqpanes = that.pqpanes,
 			$div_child = $cont.children("div"),
+			iR = that.iRefresh,
 			$tbl = that.$tbl,
 			o = that.options,
 			freezeCols = parseInt(o.freezeCols),
 			initH = that.initH,
 			wd, lft, ht;
 		if ($tbl && $tbl.length) {
-			var wdTbl = $tbl[0].scrollWidth;
+			var flexHeight = o.height === "flex",
+				flexWidth = o.width === "flex",
+				contHt = flexHeight ? "" : iR.getEContHt(),
+				contWd = flexWidth ? "" : iR.getEContWd();
 			if (pqpanes.h && pqpanes.v) {
 				var $cont_lt = $($div_child[0]),
 					$cont_rt = $($div_child[1]),
@@ -1071,81 +1198,84 @@
 					$cont_lb = $($div_child[2]),
 					$tbl_lb = $($tbl[2]),
 					$cont_rb = $($div_child[3]),
-					$tbl_rb = $($tbl[3]);
-				wd = calcWidthCols.call(that, -1, freezeCols);
-				var ht = that.calcHeightFrozenRows();
+					$tbl_rb = $($tbl[3]),
+					wd = calcWidthCols.call(that, -1, freezeCols),
+					ht = that.calcHeightFrozenRows(),
+					htFrozenPane = ht - 1;
 				$cont_lt.css({
 					width: wd,
-					height: ht,
-					zIndex: 2
+					height: htFrozenPane
 				});
 				$cont_rt.css({
 					left: wd,
-					width: wdTbl,
-					height: ht,
-					position: "absolute"
+					width: contWd - wd,
+					height: htFrozenPane
 				});
 				$tbl_rt.css({
 					left: (-1 * wd)
 				});
 				$cont_lb.css({
 					width: wd,
-					zIndex: 1,
-					top: ht,
-					position: "absolute"
+					top: htFrozenPane,
+					height: contHt - htFrozenPane
 				});
 				$tbl_lb.css({
-					top: -ht
+					marginTop: -ht
 				});
 				$cont_rb.css({
 					left: wd,
-					width: wdTbl,
-					zIndex: 1,
-					top: ht,
-					position: "absolute"
+					width: contWd - wd,
+					top: htFrozenPane,
+					height: contHt - htFrozenPane
 				});
 				$tbl_rb.css({
-					top: -ht,
+					marginTop: -ht,
 					left: (-1 * wd)
 				})
 			} else {
 				if (pqpanes.v) {
-					var $cont_l = $($div_child[0]);
-					var $cont_r = $($div_child[1]);
-					var $tbl_r = $($tbl[1]);
-					wd = calcWidthCols.call(that, -1, freezeCols);
-					lft = calcWidthCols.call(that, freezeCols, initH);
+					var $cont_l = $($div_child[0]),
+						$cont_r = $($div_child[1]),
+						$tbl_r = $($tbl[1]),
+						wd = calcWidthCols.call(that, -1, freezeCols),
+						lft = calcWidthCols.call(that, freezeCols, initH);
 					$cont_l.css({
 						width: wd,
-						zIndex: 1
+						height: contHt
 					});
 					$cont_r.css({
 						left: wd,
-						width: wdTbl,
-						position: "absolute"
+						width: contWd - wd,
+						height: contHt
 					});
 					$tbl_r.css({
 						left: (-1 * (lft + wd))
 					})
 				} else {
 					if (pqpanes.h) {
-						var $cont_t = $($div_child[0]);
-						var $cont_b = $($div_child[1]);
-						var $tbl_b = $($tbl[1]);
-						ht = that.calcHeightFrozenRows();
+						var $cont_t = $($div_child[0]),
+							$cont_b = $($div_child[1]),
+							$tbl_b = $($tbl[1]),
+							ht = that.calcHeightFrozenRows(),
+							htFrozenPane = ht - 1;
 						$cont_t.css({
-							height: ht,
-							zIndex: 1
+							height: htFrozenPane,
+							width: contWd
 						});
 						$cont_b.css({
-							width: wdTbl,
-							top: ht,
-							position: "absolute"
+							width: contWd,
+							top: htFrozenPane,
+							height: contHt - htFrozenPane
 						});
 						$tbl_b.css({
-							top: (-1 * ht)
+							marginTop: -ht
 						})
-					} else {}
+					} else {
+						$div_child.css({
+							width: contWd,
+							height: contHt
+						})
+					}
 				}
 			}
 		}
@@ -1175,9 +1305,6 @@
 			TVM = o.treeModel,
 			data = (objP && objP.data) ? objP.data : (GMtrue ? that.dataGM : (that.pdata)),
 			offset = that.rowIndxOffset;
-		if (!objP && (initV == null || finalRow == null)) {
-			return
-		}
 		if (!objP) {
 			that._trigger("beforeTableView", null, {
 				pageData: data,
@@ -1187,6 +1314,9 @@
 				finalH: finalH,
 				colModel: thisColModel
 			})
+		}
+		if (!objP && (initV == null || finalRow == null)) {
+			return
 		}
 		var tblClass = "pq-grid-table ";
 		if (columnBorders) {
@@ -1241,7 +1371,7 @@
 				this._generateTitleRow(GM, rowData, buffer, lastFrozenRow)
 			} else {
 				if (GM && rowData.groupSummary) {
-					this._generateSummaryRow(rowData.data, thisColModel, buffer, lastFrozenRow)
+					this._generateSummaryRow(GM, rowData, thisColModel, buffer, lastFrozenRow)
 				} else {
 					var nestedshow = (rowData.pq_detail && rowData.pq_detail.show);
 					this._generateRow(rowData, rowIndxPage, thisColModel, buffer, objP, lastFrozenRow, nestedshow);
@@ -1282,7 +1412,8 @@
 					dataCell = cellData
 				}
 			}
-		} if (dataCell === "" || dataCell == undefined) {
+		}
+		if (dataCell === "" || dataCell == undefined) {
 			dataCell = "&nbsp;"
 		}
 		var str = "",
@@ -1329,8 +1460,9 @@
 			if (column.align == "center") {
 				cls += " pq-align-center"
 			}
-		} if (colIndx == freezeCols - 1 && columnBorders) {
-			cls += " pq-last-freeze-col"
+		}
+		if (colIndx == freezeCols - 1 && columnBorders) {
+			cls += " pq-last-frozen-col"
 		}
 		var ccls = column.cls;
 		if (ccls) {
@@ -1341,7 +1473,7 @@
 			cellSelection = pq_cellselect[dataIndx]
 		}
 		if (cellSelection) {
-			cls = cls + " pq-cell-select ui-state-highlight"
+			cls = cls + " pq-state-select ui-state-highlight"
 		}
 		var dataCell;
 		if (column.render) {
@@ -1390,7 +1522,7 @@
 	_pGenerateView._generateRow = function(rowData, rowIndx, CM, buffer, objP, lastFrozenRow, nestedshow) {
 		var row_cls = "pq-grid-row";
 		if (lastFrozenRow) {
-			row_cls += " pq-last-freeze-row"
+			row_cls += " pq-last-frozen-row"
 		}
 		if (nestedshow) {
 			row_cls += " pq-detail-master"
@@ -1457,7 +1589,7 @@
 		widgetEventPrefix: "pqgrid"
 	};
 	fn.options = {
-		cancel: "input,textarea,button,select,option,.ui-resizable-handle,div[contenteditable],.pq-draggable",
+		cancel: "input,textarea,button,select,option,.pq-no-capture,.ui-resizable-handle",
 		distance: 3,
 		collapsible: {
 			on: true,
@@ -1485,7 +1617,7 @@
 		editModel: {
 			cellBorderWidth: 0,
 			pressToEdit: true,
-			clicksToEdit: 1,
+			clicksToEdit: 2,
 			filterKeys: true,
 			keyUpDown: true,
 			reInt: /^([\-]?[1-9][0-9]*|[\-]?[0-9]?)$/,
@@ -1540,17 +1672,18 @@
 		scrollModel: {
 			pace: "fast",
 			horizontal: true,
+			lastColumn: "auto",
 			autoFit: false,
 			theme: false
 		},
 		selectionModel: {
-			fireSelectChange: true,
+			fireSelectChange: false,
 			type: "cell",
 			mode: "block"
 		},
 		swipeModel: {
 			on: true,
-			speed: 50,
+			speed: 20,
 			ratio: 0.15,
 			repeat: 20
 		},
@@ -1600,6 +1733,9 @@
 		}
 	};
 	fn._destroy = function() {
+		if (this.loading) {
+			this.xhr.abort()
+		}
 		this._destroyResizable();
 		this._destroyDraggable();
 		this._mouseDestroy();
@@ -1609,6 +1745,7 @@
 		this.element.empty().css("height", "").css("width", "").removeClass("pq-grid ui-widget ui-widget-content ui-corner-all").removeData()
 	};
 	fn.destroy = function() {
+		this._trigger("destroy");
 		this._super();
 		window.clearInterval(this._refreshEditorPosTimer);
 		if (this.autoResizeTimeout) {
@@ -1619,51 +1756,6 @@
 		}
 		$.fragments = {}
 	};
-	fn.decidePanes = function() {
-		this.pqpanes = {
-			v: false,
-			h: false,
-			vH: false
-		};
-		var pqpanes = this.pqpanes,
-			o = this.options,
-			virtualX = o.virtualX,
-			virtualXHeader = o.virtualXHeader,
-			virtualY = o.virtualY,
-			flexHeight = o.height == "flex",
-			flexWidth = o.width == "flex",
-			numberCell = o.numberCell,
-			freezeRows = o.freezeRows,
-			freezeCols = o.freezeCols;
-		if (freezeRows && !flexHeight && (freezeCols || numberCell.show) && !flexWidth) {
-			if (!virtualY) {
-				pqpanes.h = true
-			}
-			if (!virtualX) {
-				pqpanes.v = true;
-				pqpanes.vH = true
-			}
-			if (virtualXHeader === false) {
-				pqpanes.vH = true
-			}
-		} else {
-			if (freezeRows && !flexHeight) {
-				if (!virtualY) {
-					pqpanes.h = true
-				}
-			} else {
-				if ((freezeCols || numberCell.show) && !flexWidth) {
-					if (!virtualX) {
-						pqpanes.v = true;
-						pqpanes.vH = true
-					}
-					if (virtualXHeader === false) {
-						pqpanes.vH = true
-					}
-				}
-			}
-		}
-	};
 	fn.collapse = function(objP) {
 		var that = this,
 			ele = this.element,
@@ -1671,6 +1763,7 @@
 			CP = o.collapsible,
 			$icon = CP.$collapse.children("span"),
 			postCollapse = function() {
+				ele.css("overflow", "hidden");
 				$icon.addClass("ui-icon-circle-triangle-s").removeClass("ui-icon-circle-triangle-n");
 				if (ele.hasClass("ui-resizable")) {
 					ele.resizable("destroy")
@@ -1706,6 +1799,7 @@
 			htCapture = CP.htCapture,
 			$icon = CP.$collapse.children("span"),
 			postExpand = function() {
+				ele.css("overflow", "");
 				CP._collapsed = false;
 				CP.collapsed = false;
 				that._refreshResizable();
@@ -1739,12 +1833,12 @@
 			o = this.options,
 			CP = o.collapsible;
 		if (!CP.$stripe) {
-			var $stripe = $(["<div class='pq-slider-icon' style='z-index:5;' >", "</div>"].join("")).appendTo($top);
+			var $stripe = $(["<div class='pq-slider-icon pq-no-capture'  >", "</div>"].join("")).appendTo($top);
 			CP.$stripe = $stripe
 		}
 		if (CP.on) {
 			if (!CP.$collapse) {
-				CP.$collapse = $(["<div style='float:left;' class='pq-collapse'>", "<span class='ui-icon ui-icon-circle-triangle-n' style='float:left;'></span>", "</div>"].join("")).appendTo(CP.$stripe).mouseover(function(evt) {
+				CP.$collapse = $(["<div style='float:left;margin-left:5px;' class='pq-collapse'>", "<span class='ui-icon ui-icon-circle-triangle-n' style='float:left;'></span>", "</div>"].join("")).appendTo(CP.$stripe).mouseover(function(evt) {
 					$(this).addClass("ui-state-hover")
 				}).mouseout(function(evt) {
 					$(this).removeClass("ui-state-hover")
@@ -1761,7 +1855,8 @@
 				CP.$collapse.remove();
 				delete CP.$collapse
 			}
-		} if (CP.collapsed && !CP._collapsed) {
+		}
+		if (CP.collapsed && !CP._collapsed) {
 			that.collapse({
 				animate: false
 			})
@@ -1771,7 +1866,8 @@
 					animate: false
 				})
 			}
-		} if (CP.toggle) {
+		}
+		if (CP.toggle) {
 			if (!CP.$toggle) {
 				CP.$toggle = $(["<div style='float:left;' class='pq-max'>", "<span class='ui-icon ui-icon-arrow-4-diag' style='float:left;'></span>", "</div>"].join("")).prependTo(CP.$stripe).mouseover(function(evt) {
 					$(this).addClass("ui-state-hover")
@@ -1789,36 +1885,8 @@
 		}
 	};
 	fn._create = function() {
-		var that = this;
-		this.decidePanes();
-		this.setEditorPosTimer();
-		this.iGenerateView = new cGenerateView(this);
-		this.iKeyNav = new cKeyNav(this);
-		this.iRefreshColumn = new cRefreshColumn(this);
-		this.iIsValid = new cIsValid(this);
-		this.rowHeight = 22;
-		this.hidearr = [];
-		this.hidearrHS = [];
-		this.tables = [];
 		var that = this,
 			o = this.options;
-		this.$tbl = null;
-		this._refreshGridWidthAndHeight();
-		this._calcThisColModel();
-		this.iSort = new $.paramquery.cSort(this);
-		this.iSort._refreshSorters();
-		this._initTypeColumns();
-		var element = this.element;
-		element.empty().addClass("pq-grid ui-widget ui-widget-content" + (o.roundCorners ? " ui-corner-all" : "")).append(["<div class='pq-grid-top ui-widget-header", (o.roundCorners ? " ui-corner-top" : ""), "'>", "<div class='pq-grid-title", (o.roundCorners ? " ui-corner-top" : ""), "'>&nbsp;</div>", "</div>", "<div class='pq-grid-inner' >", "<div class='pq-header-outer ui-widget-header'>", "</div>", "<div class='pq-cont-right' >", "<div class='pq-cont' tabindex='0'></div>", "</div>", "</div>", "<div class='pq-grid-bottom ui-widget-header", (o.roundCorners ? " ui-corner-bottom" : ""), "'>", "<div class='pq-grid-footer'>&nbsp;</div>", "</div>"].join(""));
-		this._trigger("render", null, {
-			dataModel: this.options.dataModel,
-			colModel: this.colModel
-		});
-		this.$top = $("div.pq-grid-top", element);
-		this.$title = $("div.pq-grid-title", element);
-		if (!o.showTitle) {
-			this.$title.css("display", "none")
-		}
 		if (!o.collapsible) {
 			o.collapsible = {
 				on: false,
@@ -1831,8 +1899,33 @@
 		if (o.flexWidth) {
 			o.width = "flex"
 		}
+		this.setEditorPosTimer();
+		this.iGenerateView = new cGenerateView(this);
+		this.iRefresh = new $.paramquery.cRefresh(this);
+		this.iKeyNav = new cKeyNav(this);
+		this.iIsValid = new cIsValid(this);
+		this.hidearr = [];
+		this.hidearrHS = [];
+		this.tables = [];
+		this.$tbl = null;
+		this._calcThisColModel();
+		this.iSort = new $.paramquery.cSort(this);
+		this.iSort._refreshSorters();
+		this.iHeader = new $.paramquery.cHeader(this);
+		this._initTypeColumns();
+		var element = this.element;
+		element.empty().addClass("pq-grid ui-widget ui-widget-content" + (o.roundCorners ? " ui-corner-all" : "")).html(["<div class='pq-grid-top ui-widget-header", (o.roundCorners ? " ui-corner-top" : ""), "'>", "<div class='pq-grid-title", (o.roundCorners ? " ui-corner-top" : ""), "'>&nbsp;</div>", "</div>", "<div class='pq-grid-center' >", "<div class='pq-header-outer ui-widget-header'>", "</div>", "<div class='pq-grid-cont-outer' >", "<div class='pq-grid-cont' tabindex='0'></div>", "</div>", "</div>", "<div class='pq-grid-bottom ui-widget-header", (o.roundCorners ? " ui-corner-bottom" : ""), "'>", "<div class='pq-grid-footer'>&nbsp;</div>", "</div>"].join(""));
+		this._trigger("render", null, {
+			dataModel: this.options.dataModel,
+			colModel: this.colModel
+		});
+		this.$top = $("div.pq-grid-top", element);
+		this.$title = $("div.pq-grid-title", element);
+		if (!o.showTitle) {
+			this.$title.css("display", "none")
+		}
 		this.$toolbar = $("div.pq-grid-toolbar", element);
-		this.$grid_inner = $("div.pq-grid-inner", element);
+		this.$grid_inner = $("div.pq-grid-center", element);
 		this.$header_o = $("div.pq-header-outer", this.$grid_inner);
 		if (!o.showTop) {
 			this.$top.css("display", "none")
@@ -1842,11 +1935,10 @@
 			this.$bottom.css("display", "none")
 		}
 		this.$footer = $("div.pq-grid-footer", element);
-		this.$cont_o = $("div.pq-cont-right", this.$grid_inner);
-		this.$cont_fixed = $("div.pq-cont-fixed", this.$grid_inner);
-		var $cont = this.$cont = $("div.pq-cont", this.$grid_inner);
+		this.$cont_o = $(".pq-grid-cont-outer", this.$grid_inner);
+		var $cont = this.$cont = $("div.pq-grid-cont", this.$grid_inner);
 		$(window).bind("resize" + that.eventNamespace + " orientationchange" + that.eventNamespace, function(evt, ui) {
-			that._onWindowResize(evt, ui)
+			that.onWindowResize(evt, ui)
 		});
 		$cont.on("click", "td.pq-grid-cell", function(evt) {
 			if ($.data(evt.target, that.widgetName + ".preventClickEvent") === true) {
@@ -1947,32 +2039,30 @@
 			drag: function(evt, obj) {
 				var virtualY = o.virtualY;
 				if (!virtualY) {
-					var ratio = obj.ratio;
-					that._syncViewWithScrollBarVert(ratio)
+					that.iMouseSelection.syncViewWithScrollBarVert(obj.ratio)
 				}
 			},
 			scroll: function(evt, obj) {
 				var virtualY = o.virtualY;
 				if (virtualY) {
 					that.scrollMode = true;
-					that.setFlexWHCallback(function() {
-						that.iGenerateView.generateView()
-					});
+					var iR = that.iRefresh;
+					iR.calcInitFinal();
+					that.iGenerateView.generateView();
 					var num_eles;
-					if (evt.originalEvent && evt.originalEvent.type == "drag") {
-						num_eles = that._setScrollVNumEles()
-					} else {
-						num_eles = that._setScrollVNumEles(true)
-					} if (num_eles <= 1) {
-						that._setScrollHLength();
-						that._setScrollHVLength()
+					num_eles = iR._setScrollVNumEles();
+					if (num_eles <= 1) {
+						iR.refreshScrollbars()
 					}
 				}
 			}
 		});
 		var prevHScroll = 0;
-		this.$hscroll = $("<div class='pq-hscroll'></div>").appendTo(this.$grid_inner);
-		this.$hscroll.pqScrollBar({
+		var $hscroll = this.$hscroll = $("<div class='pq-hscroll'></div>").appendTo(this.$grid_inner);
+		if (o.height === "flex") {
+			$hscroll.css("position", "relative")
+		}
+		$hscroll.pqScrollBar({
 			direction: "horizontal",
 			pace: scrollModel.pace,
 			theme: scrollModel.theme,
@@ -1981,7 +2071,7 @@
 			drag: function(evt, obj) {
 				var virtualX = o.virtualX;
 				if (!virtualX) {
-					that._syncViewWithScrollBarHor(obj.ratio)
+					that.iMouseSelection.syncViewWithScrollBarHor(obj.ratio)
 				}
 			},
 			scroll: function(evt, obj) {
@@ -1994,12 +2084,13 @@
 					})
 				}
 				if (virtualXHeader === false) {
-					that._syncViewWithScrollBarHorHeader(obj.cur_pos)
+					that.iMouseSelection.syncHeaderViewWithScrollBarHor(obj.cur_pos)
 				}
 			}
 		});
-		element.height("");
-		this.disableSelection();
+		if (!o.selectionModel["native"]) {
+			this.disableSelection()
+		}
 		if (window.opera) {
 			this.$grid_inner.bind("keypress.pq-grid", {
 				that: this
@@ -2017,7 +2108,6 @@
 				}
 			})
 		}
-		this._refreshOptions();
 		this._refreshTitle();
 		this.iRows = new $.paramquery.cRows(this);
 		this.iCells = new $.paramquery.cCells(this);
@@ -2025,6 +2115,7 @@
 		this._initPager();
 		this._refreshResizable();
 		this._refreshDraggable();
+		this.iResizeColumns = new $.paramquery.cResizeColumns(this);
 		this._mouseInit()
 	};
 	fn.toggle = function() {
@@ -2035,8 +2126,10 @@
 		if ($grid.css("position") == "fixed") {
 			var eleObj = this.maxim.eleObj,
 				docObj = this.maxim.docObj;
-			o.height = eleObj.height;
-			o.width = eleObj.width;
+			this.option({
+				height: eleObj.height,
+				width: eleObj.width
+			});
 			$grid.css({
 				position: eleObj.position,
 				left: eleObj.left,
@@ -2064,8 +2157,10 @@
 				margin: $grid.css("margin"),
 				zIndex: $grid.css("zIndex")
 			};
-			o.height = "100%-2";
-			o.width = "100%-2";
+			this.option({
+				height: "100%-2",
+				width: "100%-2"
+			});
 			$grid.css($.extend({
 				position: "fixed",
 				left: 0,
@@ -2127,15 +2222,13 @@
 	};
 	fn._saveDims = function() {
 		var $cont = this.$cont;
-		$cont.data("offsetWidth", $cont[0].offsetWidth);
-		$cont.data("offsetHeight", $cont[0].offsetHeight);
 		var $tblb = this.$tbl;
 		if ($tblb) {
 			for (var i = 0; i < $tblb.length; i++) {
 				var tbl = $tblb[i],
 					$tbl = $(tbl);
-				$tbl.data("offsetHeight", tbl.offsetHeight);
-				$tbl.data("scrollWidth", tbl.scrollWidth)
+				$tbl.data("offsetHeight", Math.round(tbl.offsetHeight));
+				$tbl.data("scrollWidth", Math.round(tbl.scrollWidth))
 			}
 		}
 		var $tblh = this.$tbl_header;
@@ -2143,13 +2236,13 @@
 			for (var i = 0; i < $tblh.length; i++) {
 				var tbl = $tblh[i],
 					$tblParent = $(tbl).parent();
-				$tblParent.data("offsetHeight", tbl.offsetHeight);
-				$tblParent.data("scrollWidth", tbl.scrollWidth)
+				$tblParent.data("offsetHeight", Math.round(tbl.offsetHeight));
+				$tblParent.data("scrollWidth", Math.round(tbl.scrollWidth))
 			}
 		}
 	};
 	fn._mousePQUp = function(evt) {
-		$(document).unbind("mouseup." + this.eventNamespace, this._mousePQUpDelegate);
+		$(document).unbind("mouseup" + this.eventNamespace, this._mousePQUpDelegate);
 		this._trigger("mousePQUp", evt, null)
 	};
 	fn._mouseDown = function(evt) {
@@ -2165,8 +2258,8 @@
 		this._mousePQUpDelegate = function(event) {
 			return that._mousePQUp(event)
 		};
-		$(document).bind("mouseup." + this.eventNamespace, this._mousePQUpDelegate);
-		return this._super.call(this, evt)
+		$(document).bind("mouseup" + this.eventNamespace, this._mousePQUpDelegate);
+		return this._super(evt)
 	};
 	fn._mouseStart = function(evt) {
 		this.blurEditor({
@@ -2186,92 +2279,8 @@
 		}
 		return true
 	};
-	fn._refreshGridWidthAndHeight = function() {
-		var o = this.options,
-			wd, ht, widthPercent = ((o.width + "").indexOf("%") > -1) ? true : false,
-			heightPercent = ((o.height + "").indexOf("%") > -1) ? true : false,
-			element = this.element;
-		if (widthPercent || heightPercent) {
-			var parent = element.parent();
-			if (!parent.length) {
-				return
-			}
-			var wdParent, htParent;
-			if (parent[0] == document.body || element.css("position") == "fixed") {
-				wdParent = $(window).width();
-				htParent = (window.innerHeight ? window.innerHeight : $(window).height())
-			} else {
-				wdParent = parent.width();
-				htParent = parent.height()
-			}
-			var superParent = null,
-				calcOffset = function(val) {
-					var re = /(-|\+)([0-9]+)/;
-					var match = re.exec(val);
-					if (match && match.length == 3) {
-						return parseInt(match[1] + match[2])
-					} else {
-						return 0
-					}
-				}, widthOffset = widthPercent ? calcOffset(o.width) : 0,
-				heightOffset = heightPercent ? calcOffset(o.height) : 0;
-			if (wdParent == 0) {
-				while (parent[0].tagName.toUpperCase() != "BODY") {
-					var newParent = parent.parent();
-					if (newParent[0] == null) {
-						superParent = parent;
-						break
-					} else {
-						parent = newParent
-					}
-				}
-				if (superParent) {
-					var position = superParent.css("position"),
-						left = superParent.css("left"),
-						top = superParent.css("top");
-					superParent.css({
-						position: "absolute",
-						left: "-2000",
-						top: "-2000"
-					}).appendTo($(document.body));
-					parent = element.parent();
-					if (widthPercent) {
-						wdParent = parent.width()
-					}
-					if (heightPercent) {
-						htParent = parent.height()
-					}
-					superParent.css({
-						position: position,
-						left: left,
-						top: top
-					})
-				}
-			}
-			if (widthPercent) {
-				wd = (parseInt(o.width) * wdParent / 100) + widthOffset
-			}
-			if (heightPercent) {
-				ht = (parseInt(o.height) * htParent / 100) + heightOffset
-			}
-		}
-		if (!widthPercent) {
-			wd = o.width
-		}
-		if (!heightPercent) {
-			ht = o.height
-		}
-		if (wd != "auto" && wd < o.minWidth) {
-			wd = o.minWidth
-		}
-		if (ht < o.minHeight) {
-			ht = o.minHeight
-		}
-		element.width(wd);
-		element.height(ht)
-	};
 	var lastParentHeight, lastParentWidth;
-	fn._onWindowResize = function(evt, ui) {
+	fn.onWindowResize = function(evt, ui) {
 		var o = this.options,
 			$grid = this.element,
 			$parent = $grid.parent(),
@@ -2293,12 +2302,14 @@
 		} else {
 			newParentHeight = $parent.height();
 			newParentWidth = $parent.width()
-		} if (lastParentHeight != null && (newParentHeight == lastParentHeight) && newParentWidth == lastParentWidth) {
+		}
+		if (lastParentHeight != null && (newParentHeight == lastParentHeight) && newParentWidth == lastParentWidth) {
 			return
 		} else {
 			lastParentHeight = newParentHeight;
 			lastParentWidth = newParentWidth
-		} if ($.support.touch && o.editModel.indices && $(document.activeElement).is(".pq-editor-focus")) {
+		}
+		if ($.support.touch && o.editModel.indices && $(document.activeElement).is(".pq-editor-focus")) {
 			return
 		}
 		var that = this,
@@ -2337,6 +2348,9 @@
 				num = wheelDelta / 120
 			} else {
 				if (evt.detail) {
+					if (o.height == "flex") {
+						return true
+					}
 					num = evt.detail * -1 / 3
 				}
 			}
@@ -2385,21 +2399,21 @@
 			return
 		}
 		if (that._trigger("cellDblClick", evt, {
-			$td: $td,
-			rowIndxPage: rowIndxPage,
-			rowIndx: rowIndx,
-			colIndx: colIndx,
-			column: that.colModel[colIndx],
-			rowData: that.pdata[rowIndxPage]
-		}) == false) {
+				$td: $td,
+				rowIndxPage: rowIndxPage,
+				rowIndx: rowIndx,
+				colIndx: colIndx,
+				column: that.colModel[colIndx],
+				rowData: that.pdata[rowIndxPage]
+			}) == false) {
 			return false
 		}
 		if (that.options.editModel.clicksToEdit > 1 && this.isEditableRow({
-			rowIndx: rowIndx
-		}) && this.isEditableCell({
-			colIndx: colIndx,
-			rowIndx: rowIndx
-		})) {
+				rowIndx: rowIndx
+			}) && this.isEditableCell({
+				colIndx: colIndx,
+				rowIndx: rowIndx
+			})) {
 			that.editCell({
 				rowIndxPage: rowIndxPage,
 				colIndx: colIndx
@@ -2419,15 +2433,16 @@
 			return
 		}
 		var objP = {
-			rowIndx: rowIndx,
-			evt: evt
-		}, options = this.options;
+				rowIndx: rowIndx,
+				evt: evt
+			},
+			options = this.options;
 		if (that._trigger("rowClick", evt, {
-			$tr: $tr,
-			rowIndxPage: rowIndxPage,
-			rowIndx: rowIndx,
-			rowData: that.pdata[rowIndxPage]
-		}) == false) {
+				$tr: $tr,
+				rowIndxPage: rowIndxPage,
+				rowIndx: rowIndx,
+				rowData: that.pdata[rowIndxPage]
+			}) == false) {
 			return false
 		}
 		return
@@ -2443,11 +2458,11 @@
 		}
 		var options = this.options;
 		if (that._trigger("rowRightClick", evt, {
-			$tr: $tr,
-			rowIndxPage: rowIndxPage,
-			rowIndx: rowIndx,
-			rowData: that.pdata[rowIndxPage]
-		}) == false) {
+				$tr: $tr,
+				rowIndxPage: rowIndxPage,
+				rowIndx: rowIndx,
+				rowData: that.pdata[rowIndxPage]
+			}) == false) {
 			return false
 		}
 	};
@@ -2458,11 +2473,11 @@
 			offset = that.getRowIndxOffset(),
 			rowIndx = rowIndxPage + offset;
 		if (that._trigger("rowDblClick", evt, {
-			$tr: $tr,
-			rowIndxPage: rowIndxPage,
-			rowIndx: rowIndx,
-			rowData: that.pdata[rowIndxPage]
-		}) == false) {
+				$tr: $tr,
+				rowIndxPage: rowIndxPage,
+				rowIndx: rowIndx,
+				rowData: that.pdata[rowIndxPage]
+			}) == false) {
 			return false
 		}
 	};
@@ -2505,7 +2520,8 @@
 					}
 				}
 			}
-		} if (isNaN(val2) || val2 == null) {
+		}
+		if (isNaN(val2) || val2 == null) {
 			if (val == null) {
 				return val
 			} else {
@@ -2532,7 +2548,8 @@
 			dataType = column.dataType,
 			getValue = function(val) {
 				return $.paramquery.getValueFromDataType(val, dataType, true)
-			}, rowData = objP.rowData;
+			},
+			rowData = objP.rowData;
 		if (!rowData) {
 			throw ("rowData required.")
 		}
@@ -2596,29 +2613,37 @@
 												_valid = true
 											}
 										} else {
-											if (type == "regexp") {
-												if ((new RegExp(reqVal)).test(value)) {
+											if (type == "neq") {
+												value = getValue(value);
+												reqVal = getValue(reqVal);
+												if (value !== reqVal) {
 													_valid = true
 												}
 											} else {
-												if (typeof type == "function") {
-													var obj2 = {
-														column: column,
-														value: value,
-														rowData: rowData,
-														msg: msg
-													};
-													var ret = type.call(that.element[0], obj2);
-													if (ret == false) {
-														_valid = false;
-														if (obj2.msg != msg) {
-															msg = obj2.msg
+												if (type == "regexp") {
+													if ((new RegExp(reqVal)).test(value)) {
+														_valid = true
+													}
+												} else {
+													if (typeof type == "function") {
+														var obj2 = {
+															column: column,
+															value: value,
+															rowData: rowData,
+															msg: msg
+														};
+														var ret = type.call(that.element[0], obj2);
+														if (ret == false) {
+															_valid = false;
+															if (obj2.msg != msg) {
+																msg = obj2.msg
+															}
+														} else {
+															_valid = true
 														}
 													} else {
 														_valid = true
 													}
-												} else {
-													_valid = true
 												}
 											}
 										}
@@ -2628,7 +2653,8 @@
 						}
 					}
 				}
-			} if (!_valid) {
+			}
+			if (!_valid) {
 				return {
 					valid: false,
 					msg: msg,
@@ -2661,20 +2687,20 @@
 			ae = document.activeElement;
 		if (objP.checkEditable) {
 			if (that.isEditableCell({
-				rowData: rowData,
-				rowIndx: rowIndx,
-				dataIndx: dataIndx
-			}) == false) {
+					rowData: rowData,
+					rowIndx: rowIndx,
+					dataIndx: dataIndx
+				}) == false) {
 				return {
 					valid: true
 				}
 			}
 		}
 		var objvalid = this._isValidCell({
-			column: column,
-			value: value,
-			rowData: rowData
-		}),
+				column: column,
+				value: value,
+				rowData: rowData
+			}),
 			_valid = objvalid.valid,
 			warn = objvalid.warn,
 			msg = objvalid.msg;
@@ -2686,10 +2712,10 @@
 				style = pq_valid.style
 		} else {
 			if (that.data({
-				rowData: rowData,
-				dataIndx: dataIndx,
-				data: "pq_valid"
-			})) {
+					rowData: rowData,
+					dataIndx: dataIndx,
+					data: "pq_valid"
+				})) {
 				that.removeClass({
 					rowData: rowData,
 					rowIndx: rowIndx,
@@ -2702,7 +2728,8 @@
 					data: "pq_valid"
 				})
 			}
-		} if (allowInvalid || warn) {
+		}
+		if (allowInvalid || warn) {
 			if (!_valid) {
 				that.addClass({
 					rowData: rowData,
@@ -2816,7 +2843,8 @@
 	};
 	_piv.isValid = function(objP) {
 		var that = this.that,
-			objP = objP || {}, allowInvalid = objP.allowInvalid,
+			objP = objP || {},
+			allowInvalid = objP.allowInvalid,
 			checkEditable = objP.checkEditable,
 			allowInvalid = (allowInvalid == null) ? false : allowInvalid,
 			dataIndx = objP.dataIndx;
@@ -2899,9 +2927,9 @@
 							rowData: rowData
 						}).rowIndx;
 						if (that.isEditableRow({
-							rowData: rowData,
-							rowIndx: rowIndx
-						}) == false) {
+								rowData: rowData,
+								rowIndx: rowIndx
+							}) == false) {
 							continue
 						}
 					}
@@ -3094,6 +3122,27 @@
 		}
 		return true
 	};
+	fn.enableSelection = function() {
+		this.element.removeClass("pq-disable-select").off("selectstart" + this.eventNamespace)
+	};
+	fn.disableSelection = function() {
+		this.element.addClass("pq-disable-select").on("selectstart" + this.eventNamespace, function(evt) {
+			var target = evt.target;
+			if (!target) {
+				return
+			}
+			var $target = $(evt.target);
+			if ($target.is("input,textarea,select")) {
+				return true
+			} else {
+				if ($target.closest(".pq-native-select").length) {
+					return true
+				} else {
+					evt.preventDefault()
+				}
+			}
+		})
+	};
 	fn._onCellMouseUp = function(evt) {
 		var that = this;
 		var $td = $(evt.currentTarget);
@@ -3141,22 +3190,22 @@
 		objP.dataIndx = dataIndx;
 		objP.evt = evt;
 		if (that._trigger("cellClick", evt, {
-			$td: $td,
-			rowIndxPage: rowIndxPage,
-			rowIndx: rowIndx,
-			colIndx: colIndx,
-			dataIndx: dataIndx,
-			column: column,
-			rowData: that.pdata[rowIndxPage]
-		}) == false) {
+				$td: $td,
+				rowIndxPage: rowIndxPage,
+				rowIndx: rowIndx,
+				colIndx: colIndx,
+				dataIndx: dataIndx,
+				column: column,
+				rowData: that.pdata[rowIndxPage]
+			}) == false) {
 			return false
 		}
 		if (EM.clicksToEdit == 1 && this.isEditableRow({
-			rowIndx: rowIndx
-		}) && this.isEditableCell({
-			colIndx: colIndx,
-			rowIndx: rowIndx
-		})) {
+				rowIndx: rowIndx
+			}) && this.isEditableCell({
+				colIndx: colIndx,
+				rowIndx: rowIndx
+			})) {
 			that.editCell(objP);
 			return
 		}
@@ -3180,14 +3229,14 @@
 		var column = CM[colIndx],
 			dataIndx = column.dataIndx;
 		if (this._trigger("cellRightClick", evt, {
-			$td: $td,
-			rowIndxPage: rowIndxPage,
-			rowIndx: rowIndx,
-			colIndx: colIndx,
-			dataIndx: dataIndx,
-			column: column,
-			rowData: that.pdata[rowIndxPage]
-		}) == false) {
+				$td: $td,
+				rowIndxPage: rowIndxPage,
+				rowIndx: rowIndx,
+				colIndx: colIndx,
+				dataIndx: dataIndx,
+				column: column,
+				rowData: that.pdata[rowIndxPage]
+			}) == false) {
 			return false
 		}
 	};
@@ -3223,17 +3272,6 @@
 			data: this.pdata,
 			colModel: this.options.colModel
 		}
-	};
-	fn._refreshOptions = function() {
-		this._refreshDataOptions()
-	};
-	fn._refreshDataOptions = function() {};
-	fn.enableSelection = function() {
-		this.$cont.enableSelection()
-	};
-	fn.disableSelection = function() {
-		this.$cont.disableSelection();
-		this.$header_o.find("tr.pq-grid-title-row").disableSelection()
 	};
 	fn._findCellFromEvt = function(evt) {
 		var $targ = $(evt.target);
@@ -3272,12 +3310,15 @@
 					that.remoteRequest({
 						callback: function() {
 							that._onDataAvailable({
-								apply: true
+								apply: true,
+								header: false
 							})
 						}
 					})
 				} else {
-					that.refreshView()
+					that.refreshView({
+						header: false
+					})
 				}
 			},
 			refresh: function(evt) {
@@ -3287,26 +3328,6 @@
 		if (DM.type) {
 			this.$footer.pqPager(obj2)
 		} else {}
-	};
-	fn._refreshHideArrHS = function() {
-		var that = this,
-			CM = this.colModel,
-			hidearrHS = that.hidearrHS,
-			initH = that.initH,
-			finalH = that.finalH,
-			freezeCols = parseInt(this.options.freezeCols);
-		for (var i = 0; i < freezeCols; i++) {
-			hidearrHS[i] = false
-		}
-		for (var i = freezeCols; i < initH; i++) {
-			hidearrHS[i] = true
-		}
-		for (var i = initH; i <= finalH; i++) {
-			hidearrHS[i] = false
-		}
-		for (var i = finalH + 1, len = CM.length; i < len; i++) {
-			hidearrHS[i] = true
-		}
 	};
 	fn.generateLoading = function() {
 		if (this.$loading) {
@@ -3385,7 +3406,8 @@
 					this.pdata = DMdata
 				}
 			}
-		} if (paging == "local" || paging == "remote") {
+		}
+		if (paging == "local" || paging == "remote") {
 			this.rowIndxOffset = (PM.rPP * (PM.curPage - 1))
 		}
 	};
@@ -3683,7 +3705,9 @@
 		} else {
 			if (typeof DM.url == "string") {
 				url = DM.url;
-				var sortQueryString = {}, filterQueryString = {}, pageQueryString = {};
+				var sortQueryString = {},
+					filterQueryString = {},
+					pageQueryString = {};
 				if (DM.sorting == "remote") {
 					var sortingQS = this.getQueryStringSort();
 					if (sortingQS) {
@@ -3720,7 +3744,8 @@
 					pq_datatype: DM.dataType
 				}, filterQueryString, pageQueryString, sortQueryString, postData, postDataOnce)
 			}
-		} if (!url) {
+		}
+		if (!url) {
 			return
 		}
 		this.loading = true;
@@ -3792,17 +3817,6 @@
 			}
 		})
 	};
-	fn.setFlexWHCallback = function(fn) {
-		var that = this;
-		fn.call(that);
-		var o = this.options;
-		if (o.height == "flex") {
-			this._setGridHeightFromTable()
-		}
-		if (o.width == "flex") {
-			this._setGridWidthFromTable()
-		}
-	};
 	fn._refreshTitle = function() {
 		this.$title.html(this.options.title)
 	};
@@ -3811,7 +3825,7 @@
 		var $parent = ele.parent(".pq-wrapper");
 		if ($parent.length && $parent.data("draggable")) {
 			$parent.draggable("destroy");
-			this.$title.removeClass("pq-draggable");
+			this.$title.removeClass("pq-draggable pq-no-capture");
 			ele.unwrap(".pq-wrapper")
 		}
 	};
@@ -3820,7 +3834,7 @@
 			ele = this.element,
 			$title = this.$title;
 		if (o.draggable) {
-			$title.addClass("pq-draggable");
+			$title.addClass("pq-draggable pq-no-capture");
 			var $wrap = ele.parent(".pq-wrapper");
 			if (!$wrap.length) {
 				ele.wrap("<div class='pq-wrapper' />")
@@ -3916,11 +3930,13 @@
 		}
 	};
 	fn.refresh = function(objP) {
-		this._refresh(objP)
+		this.iRefresh._refresh(objP)
 	};
 	fn._refreshDataIndices = function() {
 		var isJSON = (this.getDataType() == "JSON") ? true : false,
-			columns = {}, colIndxs = {}, validations = {};
+			columns = {},
+			colIndxs = {},
+			validations = {};
 		var CM = this.colModel,
 			CMLength = CM.length;
 		for (var i = 0; i < CMLength; i++) {
@@ -3949,60 +3965,6 @@
 		}
 		this.refreshDataFromDataModel();
 		this.refresh(obj)
-	};
-	fn._refresh = function(objP) {
-		objP = objP || {};
-		var header = objP.header,
-			table = objP.table,
-			$grid = this.element;
-		if (!$grid[0].offsetWidth) {
-			return
-		}
-		this.$grid_inner[0].scrollTop = 0;
-		var o = this.options;
-		this.decidePanes();
-		o.collapsible._collapsed = false;
-		var that = this;
-		this._refreshGridWidthAndHeight();
-		this.iRefreshColumn.refreshColumnWidths();
-		this._setScrollHNumEles();
-		this._bufferObj_calcInitFinalH();
-		this._refreshHideArrHS();
-		if (header !== false) {
-			this._createHeader()
-		} else {
-			this._refreshHeader()
-		}
-		this._refreshHeaderSortIcons();
-		this._refreshPager();
-		this._setInnerGridHeight();
-		this._setRightGridHeight();
-		$grid.height("");
-		this.setFlexWHCallback(function() {
-			if (table !== false) {
-				that.iGenerateView.generateView()
-			} else {
-				that._saveDims();
-				that.iGenerateView.scrollView()
-			}
-		});
-		this._refreshScrollbars();
-		this._refreshFreezeLine();
-		this._createCollapse();
-		o.dataModel.postDataOnce = undefined
-	};
-	fn._refreshScrollbars = function(objP) {
-		this._setScrollHLength();
-		this._setScrollVLength();
-		this._setScrollVNumEles(true);
-		this._setScrollHLength();
-		this._setScrollHVLength()
-	};
-	fn._setScrollHVLength = function() {
-		var options = this.options;
-		if (this.$hscroll.is(":hidden") || options.height == "flex" || options.width == "flex") {
-			this.$hvscroll.css("visibility", "hidden")
-		}
 	};
 	fn._refreshPager = function() {
 		var options = this.options,
@@ -4105,19 +4067,26 @@
 	fn._onDataAvailable = function() {};
 	fn._setOption = function(key, value) {
 		var options = this.options;
-		if (key === "height" && value == "flex") {
-			this._super.call(this, key, value);
-			var $vscroll = this.$vscroll;
-			if (value && $vscroll && $vscroll.hasClass("pq-sb-vert")) {
-				if (options.virtualY) {
-					$vscroll.pqScrollBar("option", "cur_pos", 0)
-				} else {
-					$vscroll.pqScrollBar("option", "ratio", 0)
+		if (key === "height") {
+			if (value === "flex") {
+				var $vscroll = this.$vscroll;
+				if (value && $vscroll && $vscroll.hasClass("pq-sb-vert")) {
+					if (options.virtualY) {
+						$vscroll.pqScrollBar("option", "cur_pos", 0)
+					} else {
+						$vscroll.pqScrollBar("option", "ratio", 0)
+					}
+				}
+				this.$hscroll.css("position", "relative")
+			} else {
+				if (options.height === "flex") {
+					this.$hscroll.css("position", "")
 				}
 			}
+			this._super(key, value)
 		} else {
 			if (key === "width" && value == "flex") {
-				this._super.call(this, key, value);
+				this._super(key, value);
 				var $hscroll = this.$hscroll;
 				if (value && $hscroll && $hscroll.hasClass("pq-sb-horiz")) {
 					if (options.virtualX) {
@@ -4128,11 +4097,11 @@
 				}
 			} else {
 				if (key == "title") {
-					this._super.call(this, key, value);
+					this._super(key, value);
 					this._refreshTitle()
 				} else {
 					if (key == "roundCorners") {
-						this._super.call(this, key, value);
+						this._super(key, value);
 						if (value) {
 							this.element.addClass("ui-corner-all");
 							this.$top.addClass("ui-corner-top");
@@ -4146,41 +4115,41 @@
 						if (key == "freezeCols") {
 							value = parseInt(value);
 							if (!isNaN(value) && value >= 0 && value <= this.colModel.length - 2) {
-								this._super.call(this, key, value)
+								this._super(key, value)
 							}
 						} else {
 							if (key == "freezeRows") {
 								value = parseInt(value);
 								if (!isNaN(value) && value >= 0) {
-									this._super.call(this, key, value)
+									this._super(key, value)
 								}
 							} else {
 								if (key == "resizable") {
-									this._super.call(this, key, value);
+									this._super(key, value);
 									this._refreshResizable()
 								} else {
 									if (key == "draggable") {
-										this._super.call(this, key, value);
+										this._super(key, value);
 										this._refreshDraggable()
 									} else {
 										if (key == "scrollModel") {
-											this._super.call(this, key, value)
+											this._super(key, value)
 										} else {
 											if (key == "dataModel") {
-												this._super.call(this, key, value)
+												this._super(key, value)
 											} else {
 												if (key == "pageModel") {
-													this._super.call(this, key, value)
+													this._super(key, value)
 												} else {
 													if (key === "selectionModel") {
-														this._super.call(this, key, value)
+														this._super(key, value)
 													} else {
 														if (key === "colModel" || key == "columnTemplate") {
-															this._super.call(this, key, value);
+															this._super(key, value);
 															this._calcThisColModel()
 														} else {
 															if (key === "disabled") {
-																this._super.call(this, key, value);
+																this._super(key, value);
 																if (value === true) {
 																	this._disable()
 																} else {
@@ -4188,15 +4157,15 @@
 																}
 															} else {
 																if (key === "numberCell") {
-																	this._super.call(this, key, value);
-																	this.decidePanes()
+																	this._super(key, value);
+																	this.iRefresh.decidePanes()
 																} else {
 																	if (key === "strLoading") {
-																		this._super.call(this, key, value);
+																		this._super(key, value);
 																		this._refreshLoadingString()
 																	} else {
 																		if (key === "showTop") {
-																			this._super.call(this, key, value);
+																			this._super(key, value);
 																			if (value === true) {
 																				this.$top.css("display", "")
 																			} else {
@@ -4204,7 +4173,7 @@
 																			}
 																		} else {
 																			if (key === "showTitle") {
-																				this._super.call(this, key, value);
+																				this._super(key, value);
 																				if (value === true) {
 																					this.$title.css("display", "")
 																				} else {
@@ -4212,7 +4181,7 @@
 																				}
 																			} else {
 																				if (key === "showToolbar") {
-																					this._super.call(this, key, value);
+																					this._super(key, value);
 																					if (value === true) {
 																						this.$toolbar.css("display", "")
 																					} else {
@@ -4220,24 +4189,24 @@
 																					}
 																				} else {
 																					if (key == "toolbar") {
-																						this._super.call(this, key, value);
+																						this._super(key, value);
 																						this.$toolbar.remove();
-																						this._super.call(this, key, value);
+																						this._super(key, value);
 																						this._createToolbar()
 																					} else {
 																						if (key === "collapsible") {
-																							this._super.call(this, key, value);
+																							this._super(key, value);
 																							this._createCollapse()
 																						} else {
 																							if (key === "showBottom") {
-																								this._super.call(this, key, value);
+																								this._super(key, value);
 																								if (value === true) {
 																									this.$bottom.css("display", "")
 																								} else {
 																									this.$bottom.css("display", "none")
 																								}
 																							} else {
-																								this._super.call(this, key, value)
+																								this._super(key, value)
 																							}
 																						}
 																					}
@@ -4260,9 +4229,6 @@
 				}
 			}
 		}
-	};
-	fn._setOptions = function() {
-		this._super.apply(this, arguments)
 	};
 	fn._generateCellRowOutline = function() {
 		var o = this.options,
@@ -4349,32 +4315,6 @@
 			}
 		}, 200)
 	};
-	fn._onHeaderCellClick = function(colIndx, evt) {
-		var that = this,
-			column = that.colModel[colIndx],
-			thisOptions = this.options,
-			DM = thisOptions.dataModel,
-			dataIndx = column.dataIndx,
-			dataType = column.dataType;
-		if (that._trigger("headerCellClick", evt, {
-			column: column,
-			colIndx: colIndx,
-			dataIndx: dataIndx
-		}) === false) {
-			return
-		}
-		if (!thisOptions.sortable) {
-			return
-		}
-		if (column.sortable == false) {
-			return
-		}
-		this.sort({
-			colIndx: colIndx,
-			column: column,
-			dataIndx: dataIndx
-		})
-	};
 	fn._selectRow = function(rowIndx, evt) {
 		this.selectRow(rowIndx, evt)
 	};
@@ -4452,7 +4392,8 @@
 					tbl = $tbl[0]
 				}
 			}
-		} if (tbl) {
+		}
+		if (tbl) {
 			return $(tbl)
 		}
 	};
@@ -4464,57 +4405,17 @@
 		this.$vscroll.pqScrollBar("option", "cur_pos", curPos).pqScrollBar("scroll")
 	};
 	fn.scrollRow = function(obj) {
-		var thisOptions = this.options;
-		if (!this.pdata || obj.rowIndxPage >= this.pdata.length) {
+		var o = this.options;
+		if (!this.pdata || obj.rowIndxPage >= this.pdata.length || o.height === "flex") {
 			return false
 		}
-		if (thisOptions.virtualY) {
-			this._scrollRowVirtualY(obj)
+		if (o.virtualY) {
+			this._scrollRowVirtual(obj)
 		} else {
-			this._scrollRowNonVirtualY(obj)
+			this.iMouseSelection.scrollRowNonVirtual(obj)
 		}
 	};
-	fn._scrollRowNonVirtualY = function(obj) {
-		var thisOptions = this.options,
-			rowIndxPage = obj.rowIndxPage,
-			nested = (this.iHierarchy ? true : false),
-			rowIndx = obj.rowIndx,
-			contHt = this.$cont.data("offsetHeight") - this._getScollBarHorizontalHeight(),
-			rowIndxPage = (rowIndxPage == null) ? (rowIndx - this.rowIndxOffset) : rowIndxPage,
-			freezeRows = parseInt(thisOptions.freezeRows);
-		if (rowIndxPage < freezeRows) {
-			return
-		}
-		var $tbl = this.get$Tbl(rowIndxPage),
-			$tr = this.getRow({
-				rowIndxPage: rowIndxPage
-			}),
-			tr = $tr[0];
-		if (!tr) {
-			return
-		}
-		var offset1 = tr.offsetTop + parseInt($tbl.css("marginTop")),
-			trHt = tr.offsetHeight;
-		if (nested) {
-			var $tr_next = $tr.next("tr.pq-detail-child");
-			if ($tr_next && $tr_next.length) {
-				trHt += $tr_next[0].offsetHeight
-			}
-		}
-		var offset2 = tr.offsetTop + $tbl[0].offsetTop;
-		if (tr.offsetTop < (-1 * $tbl[0].offsetTop)) {
-			var marginTop = (-1 * tr.offsetTop) - parseInt($tbl.css("top"));
-			$tbl.css("marginTop", marginTop);
-			this._syncScrollBarVert()
-		} else {
-			if (offset1 + trHt >= contHt) {
-				var marginTop = contHt - trHt - tr.offsetTop;
-				$tbl.css("marginTop", marginTop);
-				this._syncScrollBarVert()
-			}
-		}
-	};
-	fn._scrollRowVirtualY = function(obj) {
+	fn._scrollRowVirtual = function(obj) {
 		var thisOptions = this.options,
 			rowIndxPage = obj.rowIndxPage,
 			nested = (this.iHierarchy ? true : false),
@@ -4550,9 +4451,9 @@
 			var td_bottom = tr.offsetTop + tr.offsetHeight,
 				htCont = this.$cont[0].offsetHeight,
 				marginTop = tbl_marginTop,
-				htSB = this._getScollBarHorizontalHeight(),
+				htSB = this._getSBHeight(),
 				$tr_prev = $tr_first.prev("tr");
-			if ($tr_prev.hasClass("pq-row-hidden") || $tr_prev.hasClass("pq-last-freeze-row")) {
+			if ($tr_prev.hasClass("pq-row-hidden") || $tr_prev.hasClass("pq-last-frozen-row")) {
 				return
 			} else {
 				if (td_bottom > htCont - htSB - marginTop) {
@@ -4562,7 +4463,7 @@
 						indx = 0;
 					var $tr_next;
 					if (freezeRows) {
-						$tr_next = $trs.filter("tr.pq-last-freeze-row").last().next();
+						$tr_next = $trs.filter("tr.pq-last-frozen-row").last().next();
 						if ($tr_next.length == 0) {
 							$tr_next = $trs.filter("tr.pq-row-hidden").next()
 						}
@@ -4603,70 +4504,6 @@
 			}
 		}
 	};
-	fn.getTableForVertScroll = function() {
-		var that = this,
-			pqpanes = that.pqpanes,
-			$tbl = that.$tbl;
-		if (!$tbl || !$tbl.length) {
-			return
-		}
-		if (pqpanes.h && pqpanes.v) {
-			$tbl = $([$tbl[2], $tbl[3]])
-		} else {
-			if (pqpanes.v) {
-				$tbl = $([$tbl[0], $tbl[1]])
-			} else {
-				if (pqpanes.h) {
-					$tbl = $($tbl[1])
-				}
-			}
-		}
-		return $tbl
-	};
-	fn.getTableForHorScroll = function() {
-		var that = this,
-			pqpanes = that.pqpanes,
-			tbl = [],
-			$tbl = that.$tbl;
-		if (!$tbl || !$tbl.length) {
-			return
-		}
-		if (pqpanes.h && pqpanes.v) {
-			tbl.push($tbl[1], $tbl[3])
-		} else {
-			if (pqpanes.v) {
-				tbl.push($tbl[1])
-			} else {
-				if (pqpanes.h) {
-					tbl.push($tbl[0], $tbl[1])
-				} else {
-					tbl.push($tbl[0])
-				}
-			}
-		} if (this.tables.length) {
-			var $tbl2 = this.tables[0].$tbl;
-			if (pqpanes.v) {
-				tbl.push($tbl2[1])
-			} else {
-				tbl.push($tbl2[0])
-			}
-		}
-		return $(tbl)
-	};
-	fn.getTableHeaderForHorScroll = function() {
-		var that = this,
-			pqpanes = that.pqpanes,
-			$tbl = that.$tbl_header;
-		if (!$tbl || !$tbl.length) {
-			return
-		}
-		if (pqpanes.vH) {
-			$tbl = $($tbl[1])
-		} else {
-			$tbl = $($tbl[0])
-		}
-		return $tbl.parent()
-	};
 	fn.blurEditor = function(objP) {
 		if (this.$div_focus) {
 			var $editor = this.$div_focus.find(".pq-editor-focus");
@@ -4676,187 +4513,6 @@
 				}
 			} else {
 				return $editor.triggerHandler("blur", objP)
-			}
-		}
-	};
-	fn._syncViewWithScrollBarVert = function(ratio) {
-		if (ratio == null) {
-			return
-		}
-		var that = this,
-			$tbl = that.getTableForVertScroll();
-		if (!$tbl || !$tbl.length) {
-			return
-		}
-		var o = this.options;
-		if (o.editModel.indices) {
-			this.blurEditor({
-				force: true
-			})
-		}
-		var tblHt = $tbl.data("offsetHeight"),
-			contHt = that.$cont.data("offsetHeight") - that._getScollBarHorizontalHeight(),
-			excess = tblHt - contHt,
-			marginTop = excess * ratio,
-			marginTop = (-1 * marginTop) - 1;
-		if (!tblHt || !contHt) {
-			if (o.debug) {
-				throw "_syncViewWithScrollBarVert !tblHt || !contHt"
-			}
-		}
-		if (marginTop > -1) {
-			marginTop = -1
-		}
-		$tbl.css({
-			marginTop: marginTop
-		})
-	};
-	fn._syncViewWithScrollBarHor = function(ratio) {
-		if (ratio == null) {
-			return
-		}
-		var that = this,
-			$tbl = that.getTableForHorScroll();
-		var $tbl_h = that.getTableHeaderForHorScroll();
-		if (!$tbl && !$tbl_h) {
-			return
-		}
-		var o = this.options;
-		if (o.editModel.indices) {
-			this.blurEditor({
-				force: true
-			})
-		}
-		var $tbl_r = $tbl ? $tbl : $tbl_h,
-			tblWd = $tbl_r.data("scrollWidth"),
-			contWd = that.$cont.data("offsetWidth") - that._getSBWidth(),
-			excess = tblWd - contWd,
-			marginLeft = excess * ratio,
-			marginLeft = (-1 * marginLeft);
-		if (!tblWd || !contWd) {
-			return
-		}
-		if (marginLeft > 0) {
-			marginLeft = 0
-		}
-		if ($tbl) {
-			$tbl.css("marginLeft", marginLeft)
-		}
-		if ($tbl_h) {
-			$tbl_h.css("marginLeft", marginLeft)
-		}
-	};
-	fn._syncViewWithScrollBarHorHeader = function(cur_pos) {
-		if (cur_pos == null) {
-			return
-		}
-		var that = this,
-			$tbl_h = that.getTableHeaderForHorScroll();
-		if (!$tbl_h) {
-			return
-		}
-		var o = this.options,
-			freezeCols = o.freezeCols;
-		if (o.editModel.indices) {
-			this.blurEditor({
-				force: true
-			})
-		}
-		var $tbl_r = $tbl_h,
-			tblWd = $tbl_r.data("scrollWidth"),
-			contWd = that.$cont.data("offsetWidth") - that._getSBWidth(),
-			marginLeft = calcWidthCols.call(this, freezeCols, cur_pos + freezeCols),
-			marginLeft = (-1 * marginLeft);
-		if (!tblWd || !contWd) {
-			return
-		}
-		if (marginLeft > 0) {
-			marginLeft = 0
-		}
-		$tbl_h.css("marginLeft", marginLeft)
-	};
-	fn._syncScrollBarVert = function() {
-		var that = this,
-			$tbl = that.getTableForVertScroll();
-		if (!$tbl || !$tbl.length) {
-			return
-		}
-		var tblHt = $tbl.data("offsetHeight"),
-			contHt = that.$cont.data("offsetHeight") - that._getScollBarHorizontalHeight(),
-			excess = tblHt - contHt,
-			marginTop = (-1 * parseInt($tbl.css("marginTop"))),
-			ratio = (marginTop - 1) / (excess - 1);
-		if (ratio >= 0 && ratio <= 1) {
-			if (that.$vscroll.hasClass("pq-sb-vert")) {
-				that.$vscroll.pqScrollBar("option", "ratio", ratio)
-			}
-		}
-	};
-	fn._syncScrollBarHor = function() {
-		var that = this,
-			$tbl = that.getTableForHorScroll(),
-			$tbl_h = that.getTableHeaderForHorScroll();
-		if (!$tbl && !$tbl_h) {
-			return
-		}
-		var $tbl_r = $tbl ? $tbl : $tbl_h;
-		var tblWd = $tbl_r.data("scrollWidth"),
-			contWd = that.$cont.data("offsetWidth") - that._getSBWidth(),
-			excess = tblWd - contWd,
-			marginLeft = (-1 * parseInt($tbl_r.css("marginLeft"))),
-			ratio = (marginLeft / excess);
-		if (ratio >= 0 && ratio <= 1) {
-			if (that.$hscroll.hasClass("pq-sb-horiz")) {
-				that.$hscroll.pqScrollBar("option", "ratio", ratio)
-			}
-		}
-	};
-	fn._scrollColumnNonVirtual = function(objP) {
-		var colIndx = objP.colIndx,
-			colIndx = (colIndx == null) ? this.getColIndx({
-				dataIndx: objP.dataIndx
-			}) : colIndx,
-			freezeCols = this.options.freezeCols;
-		if (colIndx < freezeCols) {
-			return
-		}
-		var td_right = this._calcRightEdgeCol(colIndx).width,
-			td_left = this._calcRightEdgeCol(colIndx - 1).width,
-			wdFrozen = this._calcRightEdgeCol(freezeCols - 1).width,
-			wdSB = this._getSBWidth(),
-			$tbl = this.getTableForHorScroll(),
-			$tbl_h = this.getTableHeaderForHorScroll(),
-			contWd = this.$cont[0].offsetWidth - wdSB,
-			marginLeft, offsetLeft;
-		if ($tbl) {
-			marginLeft = parseInt($tbl.css("marginLeft"));
-			offsetLeft = $tbl[0].offsetLeft
-		} else {
-			if ($tbl_h) {
-				marginLeft = parseInt($tbl_h.css("marginLeft"));
-				offsetLeft = $tbl_h[0].offsetLeft - wdFrozen
-			} else {
-				return
-			}
-		} if (td_right + marginLeft > contWd) {
-			marginLeft = (contWd - td_right);
-			if ($tbl) {
-				$tbl.css("marginLeft", marginLeft)
-			}
-			if ($tbl_h) {
-				$tbl_h.css("marginLeft", marginLeft)
-			}
-			this._syncScrollBarHor()
-		} else {
-			if (td_left < (-1 * offsetLeft)) {
-				marginLeft = (-1 * td_left) + wdFrozen;
-				if ($tbl) {
-					$tbl.css("marginLeft", marginLeft)
-				}
-				if ($tbl_h) {
-					$tbl_h.css("marginLeft", marginLeft)
-				}
-				this._syncScrollBarHor()
 			}
 		}
 	};
@@ -4905,10 +4561,13 @@
 	fn.scrollColumn = function(objP) {
 		var o = this.options,
 			virtualX = o.virtualX;
+		if (o.width === "flex") {
+			return false
+		}
 		if (virtualX) {
 			return this._scrollColumnVirtual(objP)
 		} else {
-			return this._scrollColumnNonVirtual(objP)
+			return this.iMouseSelection.scrollColumnNonVirtual(objP)
 		}
 	};
 	fn.selection = function(obj) {
@@ -4979,8 +4638,8 @@
 				rowIndx = (rowIndx == null) ? rowIndxPage + offset : rowIndx
 		}
 		var colIndx = (obj.colIndx == null && obj.dataIndx !== undefined) ? this.getColIndx({
-			dataIndx: obj.dataIndx
-		}) : obj.colIndx,
+				dataIndx: obj.dataIndx
+			}) : obj.colIndx,
 			evt = obj.evt;
 		if (rowIndx < 0 || colIndx < 0 || colIndx >= this.colModel.length) {
 			return false
@@ -5028,10 +4687,17 @@
 			oldVal;
 		if (rowData == null) {
 			return null
-		} else {
-			oldVal = rowData[dataIndx]
-		} if (rowIndxPage != null) {
+		}
+		if (rowIndxPage != null) {
 			var newVal = this.getEditCellData();
+			if ($.isPlainObject(newVal)) {
+				oldVal = {};
+				for (var key in newVal) {
+					oldVal[key] = rowData[key]
+				}
+			} else {
+				oldVal = rowData[dataIndx]
+			}
 			if (newVal == "<br>") {
 				newVal = ""
 			}
@@ -5053,12 +4719,18 @@
 				return false
 			}
 			if (1 == 1) {
-				var newRow = {};
-				newRow[dataIndx] = newVal;
+				var newRow = {},
+					refresh = false;
+				if ($.isPlainObject(newVal)) {
+					newRow = newVal;
+					refresh = true
+				} else {
+					newRow[dataIndx] = newVal
+				}
 				var ret = this.updateRow({
 					row: newRow,
 					rowIndx: rowIndx,
-					refresh: false,
+					refresh: refresh,
 					silent: true,
 					source: "edit",
 					checkEditable: false
@@ -5069,7 +4741,7 @@
 				this._trigger("cellSave", evt, objCell);
 				var that = this;
 				if (o.height == "flex") {
-					that._setGridHeightFromTable();
+					that.iRefresh.setContAndGridHeightFromTable();
 					that._fixIEFooterIssue()
 				} else {
 					if (objP) {
@@ -5143,9 +4815,9 @@
 					throw ("assert failed: oldRow and rowData required while update")
 				}
 				if (rowCheckEditable && options.editable !== true && that.isEditableRow({
-					rowIndx: rowIndx,
-					rowData: rowData
-				}) === false) {
+						rowIndx: rowIndx,
+						rowData: rowData
+					}) === false) {
 					continue
 				}
 			} else {
@@ -5153,7 +4825,8 @@
 					rowListFinal.push(rowListObj);
 					continue
 				}
-			} if (type == "add") {
+			}
+			if (type == "add") {
 				for (var j = 0, lenj = CM.length; j < lenj; j++) {
 					var column = CM[j],
 						dataIndx = column.dataIndx;
@@ -5165,10 +4838,10 @@
 					colIndx = colIndxs[dataIndx];
 				if (column) {
 					if (rowCheckEditable && column.editable != null && (that.isEditableCell({
-						rowIndx: rowIndx,
-						colIndx: colIndx,
-						dataIndx: dataIndx
-					}) === false)) {
+							rowIndx: rowIndx,
+							colIndx: colIndx,
+							dataIndx: dataIndx
+						}) === false)) {
 						delete newRow[dataIndx];
 						continue
 					}
@@ -5268,14 +4941,15 @@
 						var rowIndxPage = rowIndx - offset,
 							indx = (paging == "remote") ? rowIndxPage : rowIndx;
 						data.splice(indx, 0, newRow)
-					} if (paging == "remote") {
+					}
+					if (paging == "remote") {
 						PM.totalRecords++
 					}
 				} else {
 					if (type == "delete") {
 						var rowIndxObj = that.getRowIndx({
-							rowData: rowData
-						}),
+								rowData: rowData
+							}),
 							uf = rowIndxObj.uf,
 							rowIndx = rowIndxObj.rowIndx;
 						if (track) {
@@ -5302,13 +4976,13 @@
 		return true
 	};
 	fn._fixTableViewPort = function() {
+		this.iGenerateView.setPanes();
 		var ele = this.element[0];
 		ele.scrollTop = 0;
 		ele.scrollLeft = 0;
 		var header = this.$header_o[0];
 		header.scrollLeft = 0;
-		header.scrollTop = 0;
-		this.iGenerateView.setPanes()
+		header.scrollTop = 0
 	};
 	fn._fixIEFooterIssue = function() {
 		$(".pq-grid-footer").css({
@@ -5340,7 +5014,7 @@
 			this.refreshCell(obj)
 		}
 		this._fixTableViewPort();
-		this._refreshScrollbars();
+		this.iRefresh.refreshScrollbars();
 		this._trigger("refreshColumn", null, {
 			dataModel: this.options.dataModel,
 			colModel: CM,
@@ -5386,7 +5060,7 @@
 			$td.replaceWith(tdStr);
 			if (!skip) {
 				this._fixTableViewPort();
-				this._refreshScrollbars();
+				this.iRefresh.refreshScrollbars();
 				this._trigger("refreshCell", null, {
 					dataModel: this.options.dataModel,
 					colModel: CM,
@@ -5425,11 +5099,11 @@
 			return null
 		}
 		var buffer = [];
-		that.iGenerateView.refreshRow(rowIndxPage, CM, buffer);
+		that.iGenerateView.refreshRow(rowIndxPage, CM, buffer, null, null, (rowData.pq_detail && rowData.pq_detail.show));
 		var trStr = buffer.join("");
 		$trOld.replaceWith(trStr);
 		this._fixTableViewPort();
-		this._refreshScrollbars();
+		this.iRefresh.refreshScrollbars();
 		if (refreshFocus) {
 			var $trNew = this.getRow({
 				all: true,
@@ -5478,9 +5152,6 @@
 		var cont = this.$cont[0];
 		cont.scrollLeft = 0;
 		cont.scrollTop = 0
-	};
-	fn.getData = function() {
-		return this.pdata
 	};
 	fn.getViewPortRowsIndx = function() {
 		return {
@@ -5610,8 +5281,8 @@
 				return false
 			} else {
 				if (this.blurEditor({
-					evt: evt
-				}) === false) {
+						evt: evt
+					}) === false) {
 					return false
 				}
 				this.quitEditMode({
@@ -5643,6 +5314,10 @@
 		var edtype = editor.type,
 			edSelect = (objP.select == null) ? editor.select : objP.select,
 			edInit = editor.init,
+			ed_valueIndx = editor.valueIndx,
+			ed_dataMap = editor.dataMap,
+			ed_mapIndices = editor.mapIndices,
+			ed_mapIndices = ed_mapIndices ? ed_mapIndices : {},
 			edcls = editor.cls ? editor.cls : "",
 			cls = "pq-editor-focus " + edcls,
 			cls2 = cls + " pq-cell-editor ",
@@ -5702,14 +5377,15 @@
 								attr: attrSelect,
 								prepend: editor.prepend,
 								labelIndx: editor.labelIndx,
-								valueIndx: editor.valueIndx,
-								groupIndx: editor.groupIndx
+								valueIndx: ed_valueIndx,
+								groupIndx: editor.groupIndx,
+								dataMap: ed_dataMap
 							})
 						} else {
 							inp = "<input class='" + cls2 + "' " + attr + " " + style + " type=text name='" + dataIndx + "' />"
 						}
 					}
-					$(inp).appendTo($cell).width(cellWd).val(cellData)
+					$(inp).appendTo($cell).width(cellWd).val((edtype == "select" && ed_valueIndx != null && (ed_mapIndices[ed_valueIndx] || this.columns[ed_valueIndx])) ? (ed_mapIndices[ed_valueIndx] ? rowData[ed_mapIndices[ed_valueIndx]] : rowData[ed_valueIndx]) : cellData)
 				} else {
 					inp = "<div contenteditable='true' tabindx='0' " + styleCE + " " + attr + " class='pq-editor-default " + cls + "'></div>";
 					$cell.html(inp);
@@ -5717,7 +5393,8 @@
 					contentEditable = true
 				}
 			}
-		} if (typeof edInit == "function") {
+		}
+		if (typeof edInit == "function") {
 			edInit.call(that.element[0], objCall)
 		}
 		var that = this;
@@ -5805,9 +5482,9 @@
 			that._blurEditMode = true;
 			var silent = (force || saveOnBlur || !validateOnBlur);
 			if (!that.saveEditCell({
-				evt: evt,
-				silent: silent
-			})) {
+					evt: evt,
+					silent: silent
+				})) {
 				if (!force && validateOnBlur) {
 					that._deleteBlurEditMode();
 					return false
@@ -5888,11 +5565,10 @@
 			}) : colIndx,
 			$tbl = (obj.all) ? this.$tbl : this.get$Tbl(rowIndxPage, colIndx),
 			$td;
-		if ($tbl != undefined) {
-			var $td = $tbl.children().children("tr[pq-row-indx=" + rowIndxPage + "]").children("td[pq-col-indx=" + colIndx + "]");
-			if ($td.length == 0) {
-				return null
-			}
+		if ($tbl && $tbl.length) {
+			$td = $tbl.children().children("tr[pq-row-indx=" + rowIndxPage + "]").children("td[pq-col-indx=" + colIndx + "]")
+		} else {
+			$td = $()
 		}
 		return $td
 	};
@@ -5941,6 +5617,10 @@
 			ceditor = column.editor,
 			geditor = o.editor,
 			editor = ceditor ? $.extend({}, geditor, ceditor) : geditor,
+			ed_valueIndx = editor.valueIndx,
+			ed_labelIndx = editor.labelIndx,
+			ed_mapIndices = editor.mapIndices,
+			ed_mapIndices = ed_mapIndices ? ed_mapIndices : {},
 			dataIndx = column.dataIndx,
 			$div_focus = this.$div_focus,
 			$cell = $div_focus.children(".pq-editor-inner"),
@@ -5949,6 +5629,7 @@
 		if (typeof getData == "function") {
 			dataCell = editor.getData.call(this.element[0], {
 				$cell: $cell,
+				rowData: obj.rowData,
 				dataIndx: dataIndx,
 				rowIndx: rowIndx,
 				rowIndxPage: rowIndxPage,
@@ -5969,7 +5650,27 @@
 				} else {
 					var $ed = $cell.find('*[name="' + dataIndx + '"]');
 					if ($ed && $ed.length) {
-						dataCell = $ed.val()
+						if (edtype == "select" && ed_valueIndx != null) {
+							if (!ed_mapIndices[ed_valueIndx] && !this.columns[ed_valueIndx]) {
+								dataCell = $ed.val()
+							} else {
+								dataCell = {};
+								dataCell[(ed_mapIndices[ed_valueIndx]) ? ed_mapIndices[ed_valueIndx] : ed_valueIndx] = $ed.val();
+								dataCell[(ed_mapIndices[ed_labelIndx]) ? ed_mapIndices[ed_labelIndx] : ed_labelIndx] = $ed.find("option:selected").text();
+								var dataMap = editor.dataMap;
+								if (dataMap) {
+									var jsonMap = $ed.find("option:selected").data("map");
+									if (jsonMap) {
+										for (var k = 0; k < dataMap.length; k++) {
+											var key = dataMap[k];
+											dataCell[(ed_mapIndices[key]) ? ed_mapIndices[key] : key] = jsonMap[key]
+										}
+									}
+								}
+							}
+						} else {
+							dataCell = $ed.val()
+						}
 					} else {
 						var $ed = $cell.find(".pq-editor-focus");
 						if ($ed && $ed.length) {
@@ -6056,15 +5757,11 @@
 					ui.dataIndx = dataIndx;
 					if (this.hasClass(ui)) {
 						var cell = {
-							rowData: rowData,
+							rowData: ui.rowData,
 							dataIndx: dataIndx,
-							colIndx: j
+							colIndx: j,
+							rowIndx: ui.rowIndx
 						};
-						if (remotePaging) {
-							cell.rowIndx = (i + offset)
-						} else {
-							cell.rowIndx = i
-						}
 						cells.push(cell)
 					}
 				}
@@ -6074,11 +5771,21 @@
 		}
 		if (obj.rowIndx != null || obj.rowIndxPage != null || obj.rowData != null) {
 			obj.rowData = obj.rowData || this.getRowData(obj);
+			if (obj.rowIndx == null) {
+				obj.rowIndx = this.getRowIndx({
+					rowData: rowData
+				})
+			}
 			getCellsByClass(obj)
 		} else {
 			for (var i = 0, len = data.length; i < len; i++) {
 				var rowData = data[i];
 				obj.rowData = rowData;
+				if (remotePaging) {
+					obj.rowIndx = (i + offset)
+				} else {
+					obj.rowIndx = i
+				}
 				getCellsByClass(obj)
 			}
 		}
@@ -6274,7 +5981,8 @@
 					for (var key in rowattr) {
 						attrs.push(key)
 					}
-				} if (!attrlen || $.isEmptyObject(rowattr)) {
+				}
+				if (!attrlen || $.isEmptyObject(rowattr)) {
 					delete rowData.pq_rowattr
 				}
 			}
@@ -6300,7 +6008,8 @@
 					for (var key in a) {
 						attrs.push(key)
 					}
-				} if (!attrlen || $.isEmptyObject(a)) {
+				}
+				if (!attrlen || $.isEmptyObject(a)) {
 					delete cellattr[dataIndx]
 				}
 			}
@@ -6627,9 +6336,9 @@
 	};
 	fn.rowNextSelect = function() {
 		var sel = this.selection({
-			type: "row",
-			method: "getSelection"
-		}),
+				type: "row",
+				method: "getSelection"
+			}),
 			rowIndx, rowIndxPage, offset = this.rowIndxOffset;
 		if (sel && sel[0]) {
 			rowIndx = sel[0].rowIndx;
@@ -6646,9 +6355,9 @@
 	};
 	fn.rowPrevSelect = function() {
 		var sel = this.selection({
-			type: "row",
-			method: "getSelection"
-		}),
+				type: "row",
+				method: "getSelection"
+			}),
 			rowIndx, rowIndxPage, offset = this.rowIndxOffset;
 		if (sel && sel[0]) {
 			rowIndx = sel[0].rowIndx;
@@ -6857,8 +6566,8 @@
 		var $header = $(evt.target).closest(".pq-grid-header");
 		if ($header.length > 0) {
 			if (this._trigger("headerKeyDown", evt, {
-				dataModel: this.options.dataModel
-			}) == false) {
+					dataModel: this.options.dataModel
+				}) == false) {
 				return false
 			} else {
 				return true
@@ -6869,8 +6578,8 @@
 				return false
 			}
 			if (this._trigger("keyDown", evt, {
-				dataModel: this.options.dataModel
-			}) == false) {
+					dataModel: this.options.dataModel
+				}) == false) {
 				return false
 			}
 		}
@@ -6889,8 +6598,8 @@
 			colIndx = objP.colIndx;
 		that._blurEditMode = true;
 		if (that.saveEditCell({
-			evt: evt
-		}) === false || !that.pdata) {
+				evt: evt
+			}) === false || !that.pdata) {
 			if (!that.pdata) {
 				that.quitEditMode(evt)
 			}
@@ -6935,7 +6644,8 @@
 					colIndx: colIndx
 				})
 			}
-		} if (objP.edit !== false) {
+		}
+		if (objP.edit !== false) {
 			that._editCell({
 				rowIndxPage: rowIndxPage,
 				colIndx: colIndx
@@ -6952,7 +6662,8 @@
 		var that = this.that,
 			o = that.options;
 		var EMIndx = o.editModel.indices,
-			objP = objP ? objP : {}, FK = objP.FK,
+			objP = objP ? objP : {},
+			FK = objP.FK,
 			column = EMIndx.column,
 			allowedKeys = ["Backspace", "Left", "Right", "Up", "Down", "Del", "Home", "End"],
 			dataType = column.dataType;
@@ -6985,7 +6696,8 @@
 	_pKeyNav._keyUpInEdit = function(evt, objP) {
 		var that = this.that,
 			o = that.options,
-			objP = objP ? objP : {}, FK = objP.FK,
+			objP = objP ? objP : {},
+			FK = objP.FK,
 			EM = o.editModel,
 			EMIndices = EM.indices;
 		that._trigger("editorKeyUp", evt, $.extend({}, EMIndices));
@@ -7165,7 +6877,8 @@
 					rowLastSel = that.iRows.getFocusSelection({
 						old: false
 					})
-				} if (rowLastSel == null) {
+				}
+				if (rowLastSel == null) {
 					return
 				}
 				var rowIndx = rowLastSel.rowIndx,
@@ -7174,10 +6887,10 @@
 					return
 				}
 				if (that._trigger("rowKeyDown", evt, {
-					rowData: that.pdata[rowIndxPage],
-					rowIndx: rowIndx,
-					rowIndxPage: rowIndxPage
-				}) == false) {
+						rowData: that.pdata[rowIndxPage],
+						rowIndx: rowIndx,
+						rowIndxPage: rowIndxPage
+					}) == false) {
 					return false
 				}
 			} else {
@@ -7190,7 +6903,8 @@
 						cellLastSel = that.iCells.getFocusSelection({
 							old: false
 						})
-					} if (cellLastSel == null) {
+					}
+					if (cellLastSel == null) {
 						return
 					}
 					var obj = cellLastSel,
@@ -7204,13 +6918,13 @@
 						return
 					}
 					if (that._trigger("cellKeyDown", evt, {
-						rowData: that.pdata[rowIndxPage],
-						rowIndx: rowIndx,
-						rowIndxPage: rowIndxPage,
-						colIndx: colIndx,
-						dataIndx: dataIndx,
-						column: CM[colIndx]
-					}) == false) {
+							rowData: that.pdata[rowIndxPage],
+							rowIndx: rowIndx,
+							rowIndxPage: rowIndxPage,
+							colIndx: colIndx,
+							dataIndx: dataIndx,
+							column: CM[colIndx]
+						}) == false) {
 						return false
 					}
 					if (evt.cancelBubble) {
@@ -7220,7 +6934,8 @@
 					return
 				}
 			}
-		} if (keyCode == keyCodes.LEFT) {
+		}
+		if (keyCode == keyCodes.LEFT) {
 			var obj = this._decrIndx(rowIndxPage, colIndx);
 			if (obj) {
 				rowIndx = obj.rowIndxPage + offset;
@@ -7436,10 +7151,8 @@
 		var that = this.that,
 			$tbl = that.$tbl,
 			$trs = $tbl.children("tbody").children("tr.pq-grid-row").not(".pq-group-row,.pq-summary-row"),
-			htCont = that.$cont[0].offsetHeight,
 			marginTop = parseInt($tbl.css("marginTop")),
-			htSB = that._getScollBarHorizontalHeight(),
-			htContR = htCont - htSB - marginTop;
+			htContR = that.iRefresh.getEContHt() - marginTop;
 		for (var i = $trs.length - 1; i >= 0; i--) {
 			var tr = $trs[i];
 			if (tr.offsetTop < htContR) {
@@ -7455,7 +7168,7 @@
 	};
 	_pKeyNav.pageNonVirtual = function(rowIndxPage, type) {
 		var that = this.that,
-			contHt = that.$cont[0].offsetHeight - that._getScollBarHorizontalHeight();
+			contHt = that.$cont[0].offsetHeight - that._getSBHeight();
 		var $tr = that.getRow({
 			rowIndxPage: rowIndxPage
 		});
@@ -7509,9 +7222,10 @@
 				rowIndxPage = this.pageNonVirtual(rowIndxPage, "nextAll")
 			} else {
 				if (ratio < 1) {
-					var contHt = that.$cont.data("offsetHeight") - that._getScollBarHorizontalHeight();
-					that.iMouseSelection.updateTableY(-1 * contHt);
-					that._syncScrollBarVert()
+					var contHt = that.iRefresh.getEContHt(),
+						iMS = that.iMouseSelection;
+					iMS.updateTableY(-1 * contHt);
+					iMS.syncScrollBarVert()
 				}
 			}
 		}
@@ -7540,9 +7254,10 @@
 				rowIndxPage = this.pageNonVirtual(rowIndxPage, "prevAll")
 			} else {
 				if (ratio > 0) {
-					var contHt = that.$cont[0].offsetHeight - that._getScollBarHorizontalHeight();
-					that.iMouseSelection.updateTableY(contHt);
-					that._syncScrollBarVert()
+					var contHt = that.iRefresh.getEContHt(),
+						iMS = that.iMouseSelection;
+					iMS.updateTableY(contHt);
+					iMS.syncScrollBarVert()
 				}
 			}
 		}
@@ -7560,7 +7275,7 @@
 		if ($trs.length) {
 			var $tr, tr;
 			if (freezeRows) {
-				$tr = $trs.filter("tr.pq-last-freeze-row");
+				$tr = $trs.filter("tr.pq-last-frozen-row");
 				if ($tr.length) {
 					$tr = $tr.next()
 				}
@@ -7568,7 +7283,8 @@
 				if ($trs.length >= 2) {
 					$tr = $($trs[1])
 				}
-			} if ($tr && $tr.length) {
+			}
+			if ($tr && $tr.length) {
 				var rowIndxPage = that.getRowIndx({
 					$tr: $tr
 				}).rowIndxPage;
@@ -7603,152 +7319,11 @@
 		}
 		return num_hidden
 	};
-	fn._setScrollHLength = function() {
-		var options = this.options;
-		if (!options.scrollModel.horizontal) {
-			this.$hscroll.css("visibility", "hidden");
-			this.$hvscroll.css("visibility", "hidden");
-			return
-		} else {
-			this.$hscroll.css("visibility", "");
-			this.$hvscroll.css("visibility", "")
-		}
-		var wd = this.$cont[0].offsetWidth;
-		var thisColModel = this.colModel;
-		var wdSB = this._getSBWidth();
-		if (wdSB == 0) {
-			this.$hscroll.css("right", 0)
-		} else {
-			this.$hscroll.css("right", "")
-		}
-		wd -= wdSB;
-		this.$hscroll.pqScrollBar("option", "length", wd)
+	fn._getSBHeight = function() {
+		return this.iRefresh.getSBHeight()
 	};
-	fn._setScrollHNumEles = function() {
-		var options = this.options,
-			SM = options.scrollModel,
-			num_eles = 0;
-		if (options.width != "flex") {
-			if (SM.lastColumn == "fullScroll") {
-				num_eles = this.colModel.length - options.freezeCols - this._calcNumHiddenUnFrozens()
-			} else {
-				num_eles = this.calcColsOutsideCont(this.colModel) + 1
-			}
-		}
-		this.$hscroll.pqScrollBar("option", "num_eles", num_eles)
-	};
-	fn.calcColsOutsideCont = function(model) {
-		var numberCell = this.options.numberCell,
-			tbl = (this.$tbl) ? this.$tbl[this.$tbl.length - 1] : null,
-			tblWd = tbl ? tbl.scrollWidth : 0,
-			freezeCols = this.options.freezeCols,
-			contWd = this.$cont[0].offsetWidth - this._getSBWidth();
-		tblWd = 0;
-		if (numberCell.show) {
-			tblWd += numberCell.outerWidth
-		}
-		for (var i = 0; i < model.length; i++) {
-			var column = model[i];
-			if (!column.hidden) {
-				tblWd += column.outerWidth
-			}
-		}
-		var wd = 0,
-			noCols = 0;
-		var tblremainingWidth = tblWd;
-		if (tblremainingWidth > contWd) {
-			noCols++
-		}
-		for (i = freezeCols; i < model.length; i++) {
-			column = model[i];
-			if (!column.hidden) {
-				wd += column.outerWidth;
-				tblremainingWidth = tblWd - wd;
-				if (tblremainingWidth > contWd) {
-					noCols++
-				} else {
-					break
-				}
-			}
-		}
-		return noCols
-	};
-	fn._getScollBarHorizontalHeight = function() {
-		var htSB = 17,
-			$hscroll = this.$hscroll;
-		if ($hscroll.css("visibility") == "hidden" || this.options.scrollModel.horizontal == false || $hscroll.css("display") == "none") {
-			htSB = 0
-		}
-		return htSB
-	};
-	fn._getSBWidth = function() {
-		var wdSB = 17,
-			$vscroll = this.$vscroll;
-		if (this.initV == null || $vscroll.css("visibility") == "hidden" || this.options.height == "flex" || $vscroll.css("display") == "none") {
-			wdSB = 0
-		}
-		return wdSB
-	};
-	fn._setScrollVNumEles = function(fullRefresh) {
-		var that = this,
-			$vscroll = this.$vscroll,
-			nested = (this.iHierarchy ? true : false),
-			options = $vscroll.pqScrollBar("option"),
-			num_eles = parseInt(options.num_eles),
-			cur_pos = parseInt(options.cur_pos),
-			thisOptions = this.options;
-		var htSB = this._getScollBarHorizontalHeight(),
-			htCont = this.$cont[0].offsetHeight,
-			htView = htCont - htSB + 1,
-			GM = thisOptions.groupModel,
-			data = (GM) ? this.dataGM : this.pdata;
-		var totalVisibleRows = data ? this.totalVisibleRows : 0;
-		var tbl, $tbl, htTbl = 0;
-		if (this.$tbl && this.$tbl.length > 0) {
-			tbl = this.$tbl[this.$tbl.length - 1];
-			htTbl = tbl.offsetHeight;
-			$tbl = $(tbl)
-		}
-		if (htTbl > 0 && htTbl > htView) {
-			var $trs = $tbl.children().children("tr");
-			var ht = 0,
-				visibleRows = 0;
-			for (var i = 0; i < $trs.length; i++) {
-				var tr = $trs[i];
-				ht += tr.offsetHeight;
-				if (ht >= htView) {
-					if (nested && $(tr).hasClass("pq-detail-child")) {
-						visibleRows--;
-						visibleRows = (visibleRows > 1) ? (visibleRows - 1) : 1
-					} else {
-						visibleRows = (visibleRows > 1) ? (visibleRows - 1) : 0
-					}
-					break
-				} else {
-					if (nested) {
-						if ($(tr).hasClass("pq-detail-child") == false) {
-							visibleRows++
-						}
-					} else {
-						visibleRows++
-					}
-				}
-			}
-			if (visibleRows == 0) {
-				visibleRows = $trs.length - 1
-			}
-			num_eles = totalVisibleRows - visibleRows + 1
-		} else {
-			num_eles = cur_pos + 1
-		} if (num_eles > totalVisibleRows) {
-			num_eles = totalVisibleRows
-		}
-		if (fullRefresh) {
-			that.$vscroll.pqScrollBar("option", "num_eles", num_eles)
-		} else {
-			that.$vscroll.pqScrollBar("setNumEles", num_eles)
-		}
-		return num_eles
+	fn._getSBWidth = function(obj) {
+		return this.iRefresh.getSBWidth()
 	};
 	fn._getFirstVisibleRowIndxPage = function(data) {
 		for (var i = 0, len = data.length; i < len; i++) {
@@ -7801,185 +7376,6 @@
 			}
 		}
 		return j
-	};
-	fn._getTotalVisibleRows = function(cur_pos, freezeRows, rows, data) {
-		var tvRows = 0,
-			dataLength = (data) ? data.length : 0,
-			initV = freezeRows,
-			finalV = 0,
-			visible = 0,
-			lastFrozenRow = null,
-			initFound = false,
-			finalFound = false,
-			nesting = (this.iHierarchy) ? true : false,
-			o = this.options,
-			DTMoff = o.detailModel.offset,
-			htTotal = 0,
-			rowHeight = 22,
-			htCont = nesting ? this.$cont[0].offsetHeight : undefined;
-		if (data == null || dataLength == 0) {
-			return {
-				initV: lastFrozenRow,
-				finalV: lastFrozenRow,
-				tvRows: tvRows,
-				lastFrozenRow: lastFrozenRow
-			}
-		}
-		for (var i = 0, len = ((dataLength > freezeRows) ? freezeRows : dataLength); i < len; i++) {
-			var rowData = data[i],
-				hidden = rowData.pq_hidden;
-			if (!hidden) {
-				lastFrozenRow = i;
-				tvRows++;
-				if (nesting) {
-					var cellData = rowData.pq_detail;
-					if (cellData && cellData.show) {
-						var ht = (cellData.height || 0);
-						if (ht > DTMoff) {
-							ht = DTMoff
-						}
-						htTotal += ht + rowHeight
-					} else {
-						htTotal += rowHeight
-					}
-				}
-			}
-		}
-		if (dataLength < freezeRows) {
-			return {
-				initV: lastFrozenRow,
-				finalV: lastFrozenRow,
-				tvRows: tvRows,
-				lastFrozenRow: lastFrozenRow
-			}
-		}
-		rows = rows - tvRows;
-		for (var i = freezeRows, len = dataLength; i < len; i++) {
-			var rowData = data[i],
-				hidden = rowData.pq_hidden;
-			if (!initFound) {
-				if (hidden) {
-					initV++
-				} else {
-					if (visible == cur_pos) {
-						initFound = true;
-						finalV = initV;
-						visible = 0
-					} else {
-						initV++;
-						visible++
-					}
-				}
-			} else {
-				if (!finalFound) {
-					if (hidden) {
-						finalV++
-					} else {
-						if (visible == rows) {
-							finalFound = true
-						} else {
-							finalV++;
-							visible++
-						}
-					}
-				}
-			} if (!hidden) {
-				tvRows++;
-				if (nesting && initFound) {
-					var cellData = rowData.pq_detail;
-					if (cellData && cellData.show) {
-						var ht = (cellData.height || 0);
-						if (ht > DTMoff) {
-							ht = DTMoff
-						}
-						htTotal += ht + rowHeight
-					} else {
-						htTotal += rowHeight
-					} if (htTotal > htCont) {
-						finalFound = true
-					}
-				}
-			}
-		}
-		if (initV >= dataLength) {
-			initV = dataLength - 1
-		}
-		if (finalV < initV) {
-			finalV = initV
-		}
-		return {
-			initV: initV,
-			finalV: finalV,
-			tvRows: tvRows,
-			lastFrozenRow: lastFrozenRow
-		}
-	};
-	fn._setScrollVLength = function() {
-		var cont_ht = this.$cont.height();
-		var htSB = this._getScollBarHorizontalHeight();
-		this.$vscroll.css("bottom", htSB);
-		var len = (cont_ht - htSB);
-		this.$vscroll.pqScrollBar("option", "length", len);
-		return
-	};
-	fn._setInnerGridHeight = function() {
-		var options = this.options;
-		if (options.height == "flex") {
-			return
-		}
-		var ht = (this.element.height() - ((options.showTop) ? this.$top[0].offsetHeight : 0) - this.$bottom[0].offsetHeight);
-		this.$grid_inner.height(ht + "px")
-	};
-	fn._setRightGridHeight = function() {
-		var options = this.options,
-			$header = this.$header,
-			ht_hd = 0;
-		if ($header) {
-			ht_hd = $header[0].offsetHeight;
-			this.$header_o.height(ht_hd - 2)
-		} else {
-			this.$header_o.height(0)
-		} if (options.height == "flex") {
-			return
-		}
-		this.$vscroll.css("visibility", "");
-		if (this.$tbl) {
-			this.$tbl.css("marginBottom", 0)
-		}
-		var ht = (this.element.height() - this.$header_o[0].offsetHeight - ((options.showTop) ? this.$top[0].offsetHeight : 0) - this.$bottom[0].offsetHeight);
-		var ht_contFixed = 0;
-		this.$cont.height((ht - ht_contFixed) + "px")
-	};
-	fn._setGridHeightFromTable = function() {
-		var htTbl = 0;
-		var htSB = this._getScollBarHorizontalHeight(),
-			$tbl = this.$tbl;
-		if ($tbl && $tbl.length) {
-			htTbl = ($tbl[0].offsetHeight - 1);
-			$tbl.css("marginBottom", htSB)
-		} else {
-			htTbl = 22
-		}
-		var htCombined = htTbl + htSB;
-		this.$cont.height("");
-		this.element.height("");
-		this.$grid_inner.height("");
-		this.$vscroll.css("visibility", "hidden")
-	};
-	fn._setGridWidthFromTable = function() {
-		var tbl_width;
-		var wdSB = this._getSBWidth();
-		if (this.$tbl && this.$tbl[0] && this.$tbl[0].scrollWidth > 0) {
-			tbl_width = this.$tbl[0].scrollWidth;
-			this.element.width((tbl_width + wdSB) + "px")
-		} else {
-			tbl_width = calcWidthCols.call(this, -1, this.colModel.length);
-			this.element.width((tbl_width) + "px")
-		}
-	};
-	fn._bufferObj_minRowsPerGrid = function() {
-		var ht = this.$cont[0].offsetHeight;
-		return Math.ceil(ht / this.rowHeight)
 	};
 	fn._calcCurPosFromRowIndxPage = function(rowIndxPage) {
 		var thisOptions = this.options,
@@ -8037,112 +7433,6 @@
 			return cur_pos
 		}
 	};
-	fn._bufferObj_calcInitFinal = function() {
-		var thisOptions = this.options,
-			virtualY = thisOptions.virtualY,
-			freezeRows = thisOptions.freezeRows,
-			flexHeight = thisOptions.height == "flex",
-			GM = thisOptions.groupModel,
-			GMtrue = (GM) ? true : false,
-			data = GMtrue ? this.dataGM : this.pdata,
-			TVM = thisOptions.treeModel;
-		if (data == null || data.length == 0) {
-			var objTVR = this._getTotalVisibleRows(cur_pos, freezeRows, noRowsInView, data);
-			this.totalVisibleRows = objTVR.tvRows;
-			this.initV = objTVR.initV;
-			this.finalV = objTVR.finalV;
-			this.lastFrozenRow = objTVR.lastFrozenRow
-		} else {
-			if (!virtualY) {
-				var objTVR = this._getTotalVisibleRows(0, freezeRows, noRowsInView, data);
-				this.lastFrozenRow = objTVR.lastFrozenRow;
-				this.totalVisibleRows = objTVR.tvRows;
-				this.initV = 0;
-				this.finalV = data.length - 1;
-				return
-			} else {
-				var options = this.$vscroll.pqScrollBar("option"),
-					cur_pos = parseInt(options.cur_pos);
-				if (isNaN(cur_pos) || cur_pos < 0) {
-					throw ("cur_pos NA")
-				}
-				this.scrollCurPos = cur_pos;
-				var noRowsInView = this._bufferObj_minRowsPerGrid();
-				this.pageSize = noRowsInView;
-				var objTVR = this._getTotalVisibleRows(cur_pos, freezeRows, noRowsInView, data);
-				this.totalVisibleRows = objTVR.tvRows;
-				this.initV = objTVR.initV;
-				this.lastFrozenRow = objTVR.lastFrozenRow;
-				if (flexHeight) {
-					this.finalV = data.length - 1
-				} else {
-					this.finalV = objTVR.finalV
-				}
-			}
-		}
-	};
-	fn._bufferObj_calcInitFinalH = function() {
-		var options = this.options,
-			virtualX = options.virtualX,
-			CM = this.colModel,
-			CMLength = CM.length;
-		if (!virtualX) {
-			this.initH = 0;
-			this.finalH = CMLength - 1;
-			return
-		}
-		if (options.virtualXHeader === false) {
-			this.initHH = 0;
-			this.finalHH = CMLength - 1
-		}
-		var cur_pos = parseInt(this.$hscroll.pqScrollBar("option", "cur_pos")),
-			freezeCols = parseInt(options.freezeCols),
-			flexWidth = options.width == "flex",
-			initH = freezeCols,
-			indx = 0;
-		for (var i = freezeCols; i < CMLength; i++) {
-			if (CM[i].hidden) {
-				initH++
-			} else {
-				if (indx == cur_pos) {
-					break
-				} else {
-					initH++;
-					indx++
-				}
-			}
-		}
-		if (initH > CMLength - 1) {
-			initH = CMLength - 1
-		}
-		this.initH = initH;
-		if (flexWidth || !virtualX) {
-			this.finalH = CMLength - 1
-		} else {
-			var wd = calcWidthCols.call(this, -1, freezeCols),
-				wdCont = this.$cont[0].offsetWidth - this._getSBWidth();
-			for (var i = initH; i < CMLength; i++) {
-				var column = CM[i];
-				if (!column.hidden) {
-					var wdCol = column.outerWidth;
-					if (!wdCol) {
-						if (options.debug) {
-							throw ("outerwidth N/A")
-						}
-					}
-					wd += wdCol;
-					if (wd > wdCont) {
-						break
-					}
-				}
-			}
-			var finalH = i;
-			if (finalH > CMLength - 1) {
-				finalH = CMLength - 1
-			}
-			this.finalH = finalH
-		}
-	};
 	var calcWidthCols = function(colIndx1, colIndx2, _direct) {
 		var wd = 0,
 			o = this.options,
@@ -8162,9 +7452,8 @@
 		}
 		if (_direct) {
 			for (var i = colIndx1; i < colIndx2; i++) {
-				var column = CM[i],
-					hidden = column.hidden;
-				if (!hidden) {
+				var column = CM[i];
+				if (column && !column.hidden) {
 					if (!column._width) {
 						throw ("assert failed")
 					}
@@ -8174,7 +7463,7 @@
 		} else {
 			for (var i = colIndx1; i < colIndx2; i++) {
 				var column = CM[i];
-				if (!column.hidden) {
+				if (column && !column.hidden) {
 					wd += column.outerWidth
 				}
 			}
@@ -8186,12 +7475,10 @@
 		var $tbl = this.$tbl,
 			ht = 0;
 		if ($tbl && $tbl.length) {
-			var $tr = $($tbl[0]).find("tr.pq-last-freeze-row");
+			var $tr = $($tbl[0]).find("tr.pq-last-frozen-row");
 			if ($tr && $tr.length) {
 				var tr = $tr[0];
 				ht = tr.offsetTop + tr.offsetHeight
-			} else {
-				ht = 0
 			}
 		}
 		return ht
@@ -8217,74 +7504,6 @@
 			width: wd,
 			cols: cols
 		}
-	};
-	fn._refreshFreezeLine = function() {
-		var thisOptions = this.options,
-			numberCell = thisOptions.numberCell,
-			$container = this.$cont_o,
-			freezeCols = thisOptions.freezeCols;
-		if (this.$freezeLine) {
-			this.$freezeLine.remove()
-		}
-		if (freezeCols) {
-			var lft = calcWidthCols.call(this, -1, (freezeCols)) - 1;
-			if (isNaN(lft) || lft == 0) {} else {
-				if (lft > 0 && numberCell.show && lft == numberCell.width) {} else {
-					this.$freezeLine = $("<div class='pq-grid-vert-freezeline' ></div>").appendTo($container);
-					var ht = $container[0].offsetHeight;
-					this.$freezeLine.css({
-						height: ht,
-						left: lft
-					})
-				}
-			}
-		}
-	};
-	fn._getDragHelper = function(evt) {
-		var o = this.options,
-			freezeCols = parseInt(o.freezeCols),
-			$target = $(evt.currentTarget);
-		this.$cl = $("<div class='pq-grid-drag-bar'></div>").appendTo(this.$grid_inner);
-		this.$clleft = $("<div class='pq-grid-drag-bar'></div>").appendTo(this.$grid_inner);
-		var indx = parseInt($target.attr("pq-grid-col-indx"));
-		var ht = this.$grid_inner.outerHeight();
-		this.$cl.height(ht);
-		this.$clleft.height(ht);
-		var ele = $("td[pq-grid-col-indx=" + indx + "]", this.$header)[0];
-		var lft = ele.offsetLeft;
-		if (this.pqpanes.vH) {
-			if (indx >= freezeCols) {
-				lft += this.$header[1].offsetLeft
-			}
-		} else {
-			lft += this.$header[0].offsetLeft
-		}
-		this.$clleft.css({
-			left: lft
-		});
-		lft = lft + ele.offsetWidth;
-		this.$cl.css({
-			left: lft
-		})
-	};
-	fn._setDragLimits = function(colIndx) {
-		if (colIndx < 0) {
-			return
-		}
-		var that = this,
-			CM = this.colModel,
-			column = CM[colIndx],
-			o = this.options,
-			numberCell = o.numberCell,
-			$head = that.$header_left;
-		if (colIndx >= o.freezeCols && that.pqpanes.vH) {
-			$head = that.$header_right
-		}
-		var $pQuery_col = $head.find("td[pq-grid-col-indx='" + colIndx + "']");
-		var cont_left = $pQuery_col.offset().left + column._minWidth;
-		var cont_right = cont_left + column._maxWidth - column._minWidth;
-		var $pQuery_drag = $head.find("div.pq-grid-col-resize-handle[pq-grid-col-indx=" + colIndx + "]");
-		$pQuery_drag.draggable("option", "containment", [cont_left, 0, cont_right, 0])
 	};
 	fn.nestedCols = function(colMarr, _depth, _hidden) {
 		var len = colMarr.length;
@@ -8445,11 +7664,907 @@
 		this.assignRowSpan();
 		this._refreshDataIndices()
 	};
-	var cRefreshColumn = function(that) {
+	fn._createHeader = function() {
+		this.iHeader.createHeader()
+	};
+	fn.createTable = function(objP) {
+		this.iGenerateView.generateView(objP);
+		this.iRefresh.setContAndHeaderHeight();
+		this.iGenerateView.setPanes();
+		this.iRefresh.refreshScrollbars()
+	};
+	$.widget("paramquery._pqGrid", $.ui.mouse, fn)
+})(jQuery);
+(function($) {
+	var calcWidthCols = $.paramquery.pqgrid.calcWidthCols;
+	var fn = $.paramquery._pqGrid.prototype;
+	fn.getHeaderColumnFromTD = function($td) {
+		var colIndx = $td.attr("pq-col-indx"),
+			rowIndx = $td.attr("pq-row-indx"),
+			column;
+		if (colIndx != null && rowIndx != null) {
+			colIndx = parseInt(colIndx);
+			rowIndx = parseInt(rowIndx);
+			column = this.headerCells[rowIndx][colIndx]
+		}
+		var leaf = true;
+		if (!column || (column.colModel && column.colModel.length)) {
+			leaf = false
+		}
+		return {
+			column: column,
+			colIndx: colIndx,
+			rowIndx: rowIndx,
+			leaf: leaf
+		}
+	};
+
+	function cHeader(that) {
+		this.that = that
+	}
+	$.paramquery.cHeader = cHeader;
+	var _p = cHeader.prototype;
+	_p.createHeader = function() {
+		var that = this.that,
+			self = this,
+			o = that.options,
+			hwrap = o.hwrap,
+			pqpanes = that.pqpanes,
+			freezeCols = parseInt(o.freezeCols),
+			numberCell = o.numberCell,
+			thisColModel = that.colModel,
+			depth = that.depth,
+			virtualX = o.virtualX,
+			virtualXHeader = o.virtualXHeader,
+			initH = (virtualXHeader === false) ? that.initHH : that.initH,
+			finalH = (virtualXHeader === false) ? that.finalHH : that.finalH,
+			headerCells = that.headerCells,
+			hidearrHS = that.hidearrHS,
+			$header = that.$header,
+			$header_o = that.$header_o;
+		if (finalH == null) {
+			throw ("finalH required for _createHeader")
+		}
+		if (o.showHeader === false) {
+			if ($header) {
+				$header.empty()
+			}
+			$header_o.css("display", "none");
+			return
+		} else {
+			$header_o.css("display", "")
+		}
+		var tblClass = "pq-grid-header-table ";
+		if (hwrap) {
+			tblClass += "pq-wrap "
+		} else {
+			tblClass += "pq-no-wrap "
+		}
+		var buffer = ["<table class='" + tblClass + "' cellpadding=0 cellspacing=0 >"];
+		if (depth >= 1) {
+			buffer.push("<tr>");
+			if (numberCell.show) {
+				buffer.push("<td style='width:" + (numberCell.width + 1) + "px;' ></td>")
+			}
+			for (var col = 0; col <= finalH; col++) {
+				if (col < initH && col >= freezeCols && virtualX) {
+					col = initH;
+					if (col > finalH) {
+						throw ("initH>finalH")
+					}
+				}
+				var column = thisColModel[col];
+				if (column.hidden) {
+					continue
+				}
+				var wd = column.outerWidth;
+				buffer.push("<td style='width:" + wd + "px;' pq-col-indx=" + col + "></td>")
+			}
+			buffer.push("</tr>")
+		}
+		var const_cls = "pq-grid-col ";
+		for (var row = 0; row < depth; row++) {
+			buffer.push("<tr class='pq-grid-title-row'>");
+			if (row == 0 && numberCell.show) {
+				buffer.push(["<td pq-col-indx='-1' class='pq-grid-number-col' rowspan='", depth, "'>", "<div class='pq-td-div'>", numberCell.title ? numberCell.title : "&nbsp;", "</div></td>"].join(""))
+			}
+			for (var col = 0; col <= finalH; col++) {
+				if (col < initH && col >= freezeCols && virtualX) {
+					col = initH;
+					if (col > finalH) {
+						throw ("initH>finalH");
+						break
+					}
+				}
+				self.createHeaderCell(row, col, headerCells, buffer, const_cls, freezeCols, initH, depth)
+			}
+			buffer.push("</tr>")
+		}
+		that.ovCreateHeader(buffer, const_cls);
+		buffer.push("</table>");
+		var str = buffer.join("");
+		$header_o.empty();
+		if (pqpanes.vH) {
+			$header_o.append(["<span class='pq-grid-header pq-grid-header-left ui-state-default'>", str, "</span>", "<span class='pq-grid-header ui-state-default'>", str, "</span>"].join(""))
+		} else {
+			$header_o.append(["<span class='pq-grid-header ui-state-default'>", str, "</span>"].join(""))
+		}
+		var $header = that.$header = $(".pq-grid-header", $header_o);
+		that.$tbl_header = $header.children("table");
+		var wd = calcWidthCols.call(that, -1, freezeCols);
+		var $header_left = that.$header_left = $($header[0]);
+		if (pqpanes.vH) {
+			var $header_left = that.$header_left = $($header[0]);
+			var $header_right = that.$header_right = $($header[1]);
+			$header_left.css({
+				width: wd,
+				zIndex: 1
+			});
+			var lft = calcWidthCols.call(that, freezeCols, initH);
+			$header_right.css({
+				left: (-1 * lft) + "px"
+			})
+		}
+		$header.click(function(evt) {
+			return self._onHeaderClick(evt)
+		});
+		self._refreshResizeColumn(initH, finalH, thisColModel);
+		that._trigger("refreshHeader", null, null)
+	};
+	_p._onHeaderClick = function(evt) {
+		var that = this.that,
+			self = this,
+			colIndx;
+		if (that.iDragColumns && that.iDragColumns.status != "stop") {
+			return
+		}
+		var $target = $(evt.target);
+		var $td = $target.closest("td.pq-grid-col");
+		if ($td.length) {
+			evt.stopImmediatePropagation();
+			var obj = that.getHeaderColumnFromTD($td);
+			colIndx = obj.colIndx;
+			if (obj.leaf == false) {
+				return
+			}
+		} else {
+			return
+		}
+		return self._onHeaderCellClick(colIndx, evt)
+	};
+	_p.createHeaderCell = function(row, col, headerCells, buffer, const_cls, freezeCols, initH, depth) {
+		var column = headerCells[row][col],
+			colSpan = column.colSpan,
+			halign = column.halign,
+			align = column.align,
+			title = column.title,
+			title = title ? title : "";
+		if (row > 0 && column == headerCells[row - 1][col]) {
+			return
+		} else {
+			if (col > 0 && column == headerCells[row][col - 1]) {
+				return
+			}
+		}
+		if (column.hidden) {
+			return
+		}
+		var cls = const_cls;
+		if (halign != null) {
+			cls += " pq-align-" + halign
+		} else {
+			if (align != null) {
+				cls += " pq-align-" + align
+			}
+		}
+		if (col == freezeCols - 1 && depth == 1) {
+			cls += " pq-last-frozen-col"
+		}
+		if (col <= freezeCols - 1) {
+			cls += " pq-left-col"
+		} else {
+			if (col >= initH) {
+				cls += " pq-right-col"
+			}
+		}
+		var ccls = column.cls;
+		if (ccls) {
+			cls = cls + " " + ccls
+		}
+		var colIndx = "";
+		if (column.colModel == null || column.colModel.length == 0) {
+			cls += " pq-grid-col-leaf"
+		}
+		var rowIndxDD = "pq-row-indx=" + row;
+		var colIndxDD = "pq-col-indx=" + col;
+		buffer.push(["<td ", colIndx, " ", colIndxDD, " ", rowIndxDD, " ", " class='", cls, "' rowspan=", column.rowSpan, " colspan=", colSpan, ">", "<div class='pq-td-div'>", title, "<span class='pq-col-sort-icon'>&nbsp;</span></div></td>"].join(""))
+	};
+	_p._onHeaderCellClick = function(colIndx, evt) {
+		var that = this.that,
+			column = that.colModel[colIndx],
+			o = that.options,
+			dataIndx = column.dataIndx;
+		if (that._trigger("headerCellClick", evt, {
+				column: column,
+				colIndx: colIndx,
+				dataIndx: dataIndx
+			}) === false) {
+			return
+		}
+		if (!o.sortable) {
+			return
+		}
+		if (column.sortable == false) {
+			return
+		}
+		that.sort({
+			colIndx: colIndx,
+			column: column,
+			dataIndx: dataIndx
+		})
+	};
+	_p._refreshResizeColumn = function(initH, finalH, model) {
+		var that = this.that,
+			options = that.options,
+			FMficon = options.filterModel.ficon ? true : false,
+			numberCell = options.numberCell,
+			freezeCols = parseInt(options.freezeCols),
+			buffer1 = [],
+			buffer2 = [],
+			pqpanes_vH = that.pqpanes.vH,
+			lftCol = 0,
+			lft = 0;
+		if (numberCell.show) {
+			lftCol = numberCell.outerWidth;
+			if (numberCell.resizable) {
+				lft = lftCol - 5;
+				buffer1.push("<div pq-col-indx='-1' style='left:", lft, "px;'", " class='pq-grid-col-resize-handle'>&nbsp;</div>")
+			}
+		}
+		for (var i = 0; i <= finalH; i++) {
+			if (i < initH && i >= freezeCols) {
+				i = initH;
+				if (i > finalH) {
+					throw ("initH>finalH")
+				}
+			}
+			var column = model[i];
+			if (column.hidden) {
+				continue
+			}
+			var cficon = column.ficon,
+				ficon = (cficon || (cficon == null && FMficon)),
+				buffer = buffer1;
+			lftCol += column.outerWidth;
+			if ((column.resizable !== false) || ficon) {
+				if (pqpanes_vH && i >= freezeCols) {
+					buffer = buffer2
+				}
+				lft = lftCol - 5;
+				buffer.push("<div pq-col-indx='", i, "' style='left:", lft, "px;'", " class='pq-grid-col-resize-handle'>&nbsp;</div>")
+			}
+		}
+		if (buffer2.length) {
+			that.$header_right.append(buffer2.join(""))
+		}
+		that.$header_left.append(buffer1.join(""))
+	};
+	_p.refreshHeaderSortIcons = function() {
+		var that = this.that,
+			sorters = that.iSort.sorters;
+		var $header = that.$header;
+		if (!$header) {
+			return
+		}
+		var $tds = $header.find(".pq-grid-col-leaf");
+		$tds.removeClass("pq-col-sort-asc pq-col-sort-desc ui-state-active");
+		$header.find(".pq-col-sort-icon").removeClass("ui-icon ui-icon-triangle-1-n ui-icon-triangle-1-s");
+		for (var i = 0; i < sorters.length; i++) {
+			var sorter = sorters[i],
+				dataIndx = sorter.dataIndx,
+				colIndx = that.getColIndx({
+					dataIndx: dataIndx
+				}),
+				dir = sorter.dir,
+				addClass = "ui-state-active pq-col-sort-" + (dir == "up" ? "asc" : "desc"),
+				cls2 = "ui-icon ui-icon-triangle-1-" + (dir == "up" ? "n" : "s");
+			$header.find(".pq-grid-col-leaf[pq-col-indx=" + colIndx + "]").addClass(addClass);
+			$header.find(".pq-grid-col-leaf[pq-col-indx=" + colIndx + "] .pq-col-sort-icon").addClass(cls2)
+		}
+	};
+	var cResizeColumns = function(that) {
+		this.that = that;
+		var self = this;
+		that.$header_o.on({
+			mousedown: function(evt) {
+				if (!evt.pq_composed) {
+					var $target = $(evt.target);
+					self.setDraggables(evt);
+					evt.pq_composed = true;
+					var e = $.Event("mousedown", evt);
+					$target.trigger(e)
+				}
+			}
+		}, ".pq-grid-col-resize-handle")
+	};
+	$.paramquery.cResizeColumns = cResizeColumns;
+	var _pResizeColumns = cResizeColumns.prototype;
+	_pResizeColumns.setDraggables = function(evt) {
+		var $div = $(evt.target),
+			that = this.that,
+			self = this;
+		var drag_left, drag_new_left, cl_left;
+		$div.draggable({
+			axis: "x",
+			helper: function(evt, ui) {
+				var $target = $(evt.target),
+					indx = parseInt($target.attr("pq-col-indx"));
+				self._setDragLimits(indx);
+				self._getDragHelper(evt, ui);
+				return $target
+			},
+			start: function(evt, ui) {
+				drag_left = ui.position.left;
+				cl_left = parseInt(self.$cl[0].style.left)
+			},
+			drag: function(evt, ui) {
+				drag_new_left = ui.position.left;
+				var dx = (drag_new_left - drag_left);
+				self.$cl[0].style.left = cl_left + dx + "px"
+			},
+			stop: function(evt, ui) {
+				return self.resizeStop(evt, ui, drag_left)
+			}
+		})
+	};
+	_pResizeColumns._getDragHelper = function(evt) {
+		var that = this.that,
+			o = that.options,
+			freezeCols = parseInt(o.freezeCols),
+			$target = $(evt.target);
+		this.$cl = $("<div class='pq-grid-drag-bar'></div>").appendTo(that.$grid_inner);
+		this.$clleft = $("<div class='pq-grid-drag-bar'></div>").appendTo(that.$grid_inner);
+		var indx = parseInt($target.attr("pq-col-indx"));
+		var ht = that.$grid_inner.outerHeight();
+		this.$cl.height(ht);
+		this.$clleft.height(ht);
+		var ele = $("td[pq-col-indx=" + indx + "]", that.$header)[0];
+		var lft = ele.offsetLeft;
+		if (that.pqpanes.vH) {
+			if (indx >= freezeCols) {
+				lft += that.$header[1].offsetLeft
+			}
+		} else {
+			lft += that.$header[0].offsetLeft
+		}
+		this.$clleft.css({
+			left: lft
+		});
+		lft = lft + ele.offsetWidth;
+		this.$cl.css({
+			left: lft
+		})
+	};
+	_pResizeColumns._setDragLimits = function(colIndx) {
+		if (colIndx < 0) {
+			return
+		}
+		var that = this.that,
+			CM = that.colModel,
+			column = CM[colIndx],
+			o = that.options,
+			numberCell = o.numberCell,
+			$head = that.$header_left;
+		if (colIndx >= o.freezeCols && that.pqpanes.vH) {
+			$head = that.$header_right
+		}
+		var $pQuery_col = $head.find("td[pq-col-indx='" + colIndx + "']");
+		var cont_left = $pQuery_col.offset().left + column._minWidth;
+		var cont_right = cont_left + column._maxWidth - column._minWidth;
+		var $pQuery_drag = $head.find("div.pq-grid-col-resize-handle[pq-col-indx=" + colIndx + "]");
+		$pQuery_drag.draggable("option", "containment", [cont_left, 0, cont_right, 0])
+	};
+	_pResizeColumns.resizeStop = function(evt, ui, drag_left) {
+		var that = this.that,
+			CM = that.colModel,
+			thisOptions = that.options,
+			self = this,
+			numberCell = thisOptions.numberCell;
+		self.$clleft.remove();
+		self.$cl.remove();
+		var drag_new_left = ui.position.left;
+		var dx = (drag_new_left - drag_left);
+		var $target = $(ui.helper),
+			colIndx = parseInt($target.attr("pq-col-indx")),
+			column;
+		if (colIndx == -1) {
+			column = null;
+			var oldWidth = parseInt(numberCell.width),
+				newWidth = oldWidth + dx;
+			numberCell.width = newWidth
+		} else {
+			column = CM[colIndx];
+			var oldWidth = parseInt(column.width),
+				newWidth = oldWidth + dx;
+			column.width = newWidth;
+			column._resized = true
+		}
+		that.refresh();
+		that._trigger("columnResize", evt, {
+			colIndx: colIndx,
+			column: column,
+			dataIndx: (column ? column.dataIndx : null),
+			oldWidth: oldWidth,
+			newWidth: column ? column.width : numberCell.width
+		})
+	};
+	var cDragColumns = function(that) {
+		this.that = that;
+		this.$drag_helper = null;
+		var dragColumns = that.options.dragColumns,
+			topIcon = dragColumns.topIcon,
+			bottomIcon = dragColumns.bottomIcon,
+			self = this;
+		this.status = "stop";
+		this.$arrowTop = $("<div class='pq-arrow-down ui-icon " + topIcon + "'></div>").appendTo(that.element);
+		this.$arrowBottom = $("<div class='pq-arrow-up ui-icon " + bottomIcon + "' ></div>").appendTo(that.element);
+		this.hideArrows();
+		if (dragColumns && dragColumns.enabled) {
+			that.$header_o.on("mousedown", "td.pq-grid-col", function(evt, ui) {
+				if ($(evt.target).is("input,select,textarea")) {
+					return
+				}
+				if (!evt.pq_composed) {
+					self.setDraggables(evt, ui);
+					evt.pq_composed = true;
+					var e = $.Event("mousedown", evt);
+					$(evt.target).trigger(e)
+				}
+			})
+		}
+	};
+	$.paramquery.cDragColumns = cDragColumns;
+	var _pDragColumns = cDragColumns.prototype;
+	_pDragColumns.showFeedback = function($td, leftDrop) {
+		var that = this.that;
+		var td = $td[0];
+		var offParent = td.offsetParent.offsetParent;
+		var left = td.offsetLeft + offParent.offsetLeft + ((!leftDrop) ? td.offsetWidth : 0) - 8;
+		var top = that.$grid_inner[0].offsetTop + td.offsetTop - 16;
+		var top2 = that.$grid_inner[0].offsetTop + that.$header[0].offsetHeight;
+		this.$arrowTop.css({
+			left: left,
+			top: top,
+			display: ""
+		});
+		this.$arrowBottom.css({
+			left: left,
+			top: top2,
+			display: ""
+		})
+	};
+	_pDragColumns.showArrows = function() {
+		this.$arrowTop.show();
+		this.$arrowBottom.show()
+	};
+	_pDragColumns.hideArrows = function() {
+		this.$arrowTop.hide();
+		this.$arrowBottom.hide()
+	};
+	_pDragColumns.updateDragHelper = function(accept) {
+		var that = this.that,
+			dragColumns = that.options.dragColumns,
+			acceptIcon = dragColumns.acceptIcon,
+			rejectIcon = dragColumns.rejectIcon,
+			$drag_helper = this.$drag_helper;
+		if (!$drag_helper) {
+			return
+		}
+		if (accept) {
+			$drag_helper.children("span.pq-drag-icon").addClass(acceptIcon).removeClass(rejectIcon);
+			$drag_helper.removeClass("ui-state-error")
+		} else {
+			$drag_helper.children("span.pq-drag-icon").removeClass(acceptIcon).addClass(rejectIcon);
+			$drag_helper.addClass("ui-state-error")
+		}
+	};
+	_pDragColumns.setDraggables = function(evt, ui) {
+		var $td = $(evt.currentTarget),
+			that = this.that,
+			dragColumns = that.options.dragColumns,
+			rejectIcon = dragColumns.rejectIcon,
+			self = this;
+		if ($td.hasClass("ui-draggable")) {
+			return
+		}
+		var obj = that.getHeaderColumnFromTD($td);
+		if (obj.leaf === false) {
+			return
+		}
+		$td.draggable({
+			distance: 10,
+			cursorAt: {
+				top: -18,
+				left: -10
+			},
+			zIndex: "1000",
+			appendTo: that.element,
+			revert: "invalid",
+			helper: function() {
+				var $this = $(this);
+				self.status = "helper";
+				self.setDroppables($this);
+				that.$header.find(".pq-grid-col-resize-handle").hide();
+				var colIndx = $this.attr("pq-col-indx");
+				var rowIndx = $this.attr("pq-row-indx");
+				$this.droppable("destroy");
+				var column = that.headerCells[rowIndx][colIndx];
+				var $drag_helper = $("<div class='pq-col-drag-helper ui-widget-content ui-corner-all' ><span class='pq-drag-icon ui-icon " + rejectIcon + "'></span>" + column.title + "</div>");
+				self.$drag_helper = $drag_helper;
+				return $drag_helper[0]
+			},
+			drag: function(evt, ui) {
+				self.status = "drag";
+				var $td = $("td.pq-drop-hover", that.$header);
+				if ($td.length > 0) {
+					self.showArrows();
+					self.updateDragHelper(true);
+					var wd = $td.width();
+					var lft = evt.clientX - $td.offset().left + $(document).scrollLeft();
+					if (lft < wd / 2) {
+						self.leftDrop = true;
+						self.showFeedback($td, true)
+					} else {
+						self.leftDrop = false;
+						self.showFeedback($td, false)
+					}
+				} else {
+					self.hideArrows();
+					if (that.$toolbar.hasClass("pq-drop-hover")) {
+						self.updateDragHelper(true)
+					} else {
+						self.updateDragHelper()
+					}
+				}
+			},
+			stop: function(evt, ui) {
+				self.status = "stop";
+				that.$header.find(".pq-grid-col-resize-handle").show();
+				self.hideArrows()
+			}
+		})
+	};
+	_pDragColumns._columnIndexOf = function(colModel, column) {
+		for (var i = 0, len = colModel.length; i < len; i++) {
+			if (colModel[i] == column) {
+				return i
+			}
+		}
+		return -1
+	};
+	_pDragColumns.setDroppables = function($td) {
+		var that = this.that,
+			self = this;
+		var objDrop = {
+			hoverClass: "pq-drop-hover ui-state-highlight",
+			tolerance: "pointer",
+			drop: function(evt, ui) {
+				if (self.dropPending) {
+					return
+				}
+				var colIndxDrag = parseInt(ui.draggable.attr("pq-col-indx")),
+					rowIndxDrag = parseInt(ui.draggable.attr("pq-row-indx")),
+					$this = $(this),
+					colIndxDrop = parseInt($this.attr("pq-col-indx")),
+					rowIndxDrop = parseInt($this.attr("pq-row-indx"));
+				var optCM = that.options.colModel,
+					headerCells = that.headerCells,
+					columnDrag = headerCells[rowIndxDrag][colIndxDrag],
+					colModelDrag, colModelDrop;
+				if (rowIndxDrag == 0) {
+					colModelDrag = optCM
+				} else {
+					colModelDrag = headerCells[rowIndxDrag - 1][colIndxDrag].colModel
+				}
+				if (rowIndxDrop == 0) {
+					colModelDrop = optCM
+				} else {
+					colModelDrop = headerCells[rowIndxDrop - 1][colIndxDrop].colModel
+				}
+				var columnDrop = headerCells[rowIndxDrop][colIndxDrop],
+					indxDrag = self._columnIndexOf(colModelDrag, columnDrag),
+					column = colModelDrag.splice(indxDrag, 1)[0];
+				var indxDrop = self._columnIndexOf(colModelDrop, columnDrop);
+				var decr = (self.leftDrop) ? 1 : 0;
+				colModelDrop.splice(indxDrop + 1 - decr, 0, column);
+				self.dropPending = true;
+				window.setTimeout(function() {
+					that._calcThisColModel();
+					that.refresh();
+					self.dropPending = false
+				}, 0)
+			}
+		};
+		var $tds = that.$header_left.find("td.pq-left-col"),
+			$tds2 = (that.pqpanes.v || that.pqpanes.vH) ? that.$header_right.find("td.pq-right-col") : that.$header_left.find("td.pq-right-col");
+		$tds = $tds.add($tds2);
+		$tds.each(function(i, td) {
+			var $td = $(td);
+			if ($td.hasClass("ui-droppable")) {
+				return
+			}
+			$td.droppable(objDrop)
+		});
+		return
+	}
+})(jQuery);
+(function($) {
+	function cHierarchy(that) {
+		var self = this;
+		this.that = that;
+		this.type = "detail";
+		this.refreshComplete = true;
+		this.detachView = false;
+		var widgetEventPrefix = that.widgetEventPrefix.toLowerCase(),
+			eventNamespace = that.eventNamespace;
+		that.element.on(widgetEventPrefix + "cellclick" + eventNamespace, function(evt, ui) {
+			if (self.belongs(evt)) {
+				return self.toggle(evt, ui)
+			}
+		}).on(widgetEventPrefix + "cellkeydown" + eventNamespace, function(evt, ui) {
+			if (self.belongs(evt) && evt.keyCode == $.ui.keyCode.ENTER) {
+				return self.toggle(evt, ui)
+			}
+		}).on(widgetEventPrefix + "refresh" + eventNamespace, function(evt, ui) {
+			if (self.belongs(evt)) {
+				return self.aftertable()
+			}
+		}).on(widgetEventPrefix + "beforetableview" + eventNamespace, function(evt, ui) {
+			if (self.belongs(evt)) {
+				return self.beforeTableView(evt, ui)
+			}
+		}).on(widgetEventPrefix + "tablewidthchange" + eventNamespace, function(evt, ui) {
+			if (self.belongs(evt)) {
+				return self.tableWidthChange(evt, ui)
+			}
+		})
+	}
+	$.paramquery.cHierarchy = cHierarchy;
+	var _pHierarchy = cHierarchy.prototype = new $.paramquery.cClass;
+	_pHierarchy.tableWidthChange = function() {
+		if (!this.refreshComplete) {
+			return
+		}
+		this.refreshComplete = false;
+		var that = this.that,
+			$tds = that.$tbl.children("tbody").children("tr.pq-detail-child").children("td.pq-detail-child");
+		for (var i = 0, tdLen = $tds.length; i < tdLen; i++) {
+			var td = $tds[i],
+				$td = $(td);
+			var $grids = $td.find(".pq-grid");
+			for (var j = 0, gridLen = $grids.length; j < gridLen; j++) {
+				var $grid = $($grids[j]);
+				if ($grid.is(":visible")) {
+					$grid.pqGrid("onWindowResize")
+				}
+			}
+		}
+		this.refreshComplete = true
+	};
+	_pHierarchy.aftertable = function($trs) {
+		var that = this.that,
+			initDetail = that.options.detailModel.init,
+			data = that.pdata;
+		if (!this.refreshComplete) {
+			return
+		}
+		this.refreshComplete = false;
+		$trs = $trs ? $trs : that.$tbl.children("tbody").children("tr.pq-detail-child");
+		for (var i = 0, trLen = $trs.length; i < trLen; i++) {
+			var tr = $trs[i],
+				$tr = $(tr),
+				rowIndxPage = $tr.attr("pq-row-indx"),
+				rowData = data[rowIndxPage],
+				newCreate = false,
+				$detail = rowData.pq_detail.child;
+			if (!$detail) {
+				if (typeof initDetail == "function") {
+					newCreate = true;
+					$detail = initDetail.call(that.element[0], {
+						rowData: rowData
+					});
+					rowData.pq_detail.child = $detail;
+					rowData.pq_detail.height = 25
+				}
+			}
+			var $td = $tr.children("td.pq-detail-child");
+			$td.append($detail);
+			var $grids = $td.find(".pq-grid");
+			for (var j = 0, gridLen = $grids.length; j < gridLen; j++) {
+				var $grid = $($grids[j]);
+				if (newCreate) {
+					if ($grid.hasClass("pq-pending-refresh") && $grid.is(":visible")) {
+						$grid.removeClass("pq-pending-refresh");
+						$grid.pqGrid("refresh")
+					}
+				} else {
+					if ($grid.is(":visible")) {
+						$grid.pqGrid("onWindowResize")
+					}
+				}
+			}
+		}
+		this.refreshComplete = true;
+		this.detachView = false
+	};
+	_pHierarchy.beforeTableView = function(evt, ui) {
+		if (!this.detachView) {
+			this.detachInitView();
+			this.detachView = true
+		}
+	};
+	_pHierarchy.detachInitView = function($trs) {
+		var that = this.that,
+			$tbl = that.$tbl;
+		if (!$tbl || !$tbl.length) {
+			return
+		}
+		$trs = $trs ? $trs : $tbl.children("tbody").children("tr.pq-detail-child");
+		for (var i = 0; i < $trs.length; i++) {
+			var tr = $trs[i],
+				$tr = $(tr),
+				$child = $tr.children("td.pq-detail-child").children();
+			$child.detach()
+		}
+	};
+	_pHierarchy.toggle = function(evt, ui) {
+		var that = this.that,
+			column = ui.column,
+			rowData = ui.rowData,
+			rowIndx = ui.rowIndx,
+			type = this.type;
+		if (column && column.type === type) {
+			var dataIndx = "pq_detail",
+				obj = {
+					rowIndx: rowIndx,
+					focus: true
+				};
+			if (rowData[dataIndx] == null) {
+				that.rowExpand(obj)
+			} else {
+				if (rowData[dataIndx]["show"] === false) {
+					that.rowExpand(obj)
+				} else {
+					this.rowCollapse(obj)
+				}
+			}
+		}
+	};
+	_pHierarchy.rowExpand = function(objP) {
+		this.normalize(objP);
+		var that = this.that,
+			o = that.options,
+			rowData = objP.rowData,
+			rowIndx = objP.rowIndx,
+			rowIndxPage = objP.rowIndxPage,
+			detM = o.detailModel,
+			dataIndx = "pq_detail";
+		if (rowData == null) {
+			return
+		}
+		if (that._trigger("beforeRowExpand", null, objP) === false) {
+			return false
+		}
+		if (rowData[dataIndx] == null) {
+			rowData[dataIndx] = {
+				show: true
+			}
+		} else {
+			if (rowData[dataIndx]["show"] === false) {
+				rowData[dataIndx]["show"] = true
+			}
+		}
+		if (!detM.cache) {
+			this.rowInvalidate(objP)
+		}
+		that.refreshRow({
+			rowIndx: rowIndx
+		});
+		var buffer = [];
+		that.iGenerateView._generateDetailRow(rowData, rowIndxPage, that.colModel, buffer, null, false);
+		var $tr = that.getRow({
+			rowIndxPage: rowIndxPage
+		});
+		$tr.after(buffer.join(""));
+		this.aftertable($tr.next());
+		if (objP.focus) {
+			that.getCell({
+				rowIndx: rowIndx,
+				dataIndx: dataIndx
+			}).attr("tabindex", "0").focus()
+		}
+		if (objP.scrollRow) {
+			this.scrollRow({
+				rowIndx: rowIndx
+			})
+		}
+	};
+	_pHierarchy.rowInvalidate = function(objP) {
+		var that = this.that,
+			rowData = that.getRowData(objP),
+			dataIndx = "pq_detail",
+			pq_detail = rowData[dataIndx],
+			$temp = pq_detail ? pq_detail.child : null;
+		if ($temp) {
+			$temp.remove();
+			rowData[dataIndx]["child"] = null;
+			rowData[dataIndx]["height"] = 0
+		}
+	};
+	_pHierarchy.normalize = function(objP) {
+		var that = this.that,
+			rowI = objP.rowIndx,
+			rowIP = objP.rowIndxPage,
+			rowIO = that.rowIndxOffset;
+		objP.rowIndx = rowI == null ? (rowIP + rowIO) : rowI;
+		objP.rowIndxPage = rowIP == null ? (rowI - rowIO) : rowIP;
+		objP.rowData = that.getRowData(objP)
+	};
+	_pHierarchy.rowCollapse = function(objP) {
+		this.normalize(objP);
+		var that = this.that,
+			o = that.options,
+			rowData = objP.rowData,
+			rowIndx = objP.rowIndx,
+			rowIndxPage = objP.rowIndxPage,
+			detM = o.detailModel,
+			dataIndx = "pq_detail";
+		if (rowData == null || rowData[dataIndx] == null) {
+			return
+		} else {
+			if (rowData[dataIndx]["show"] === true) {
+				if (!detM.cache) {
+					this.rowInvalidate(objP)
+				}
+				rowData[dataIndx]["show"] = false;
+				if (o.virtualY) {
+					that.refresh()
+				} else {
+					var $tr = that.getRow({
+						rowIndxPage: rowIndxPage
+					}).next("tr.pq-detail-child");
+					if ($tr.length) {
+						this.detachInitView($tr);
+						$tr.remove();
+						that.refreshRow({
+							rowIndx: rowIndx
+						})
+					}
+					if (objP.focus) {
+						that.getCell({
+							rowIndx: rowIndx,
+							dataIndx: dataIndx
+						}).attr("tabindex", "0").focus()
+					}
+				}
+				if (objP.scrollRow) {
+					var rowIndx = objP.rowIndx;
+					this.scrollRow({
+						rowIndx: rowIndx
+					})
+				}
+			}
+		}
+	}
+})(jQuery);
+(function($) {
+	var calcWidthCols = $.paramquery.pqgrid.calcWidthCols;
+	var cRefresh = function(that) {
 		this.that = that
 	};
-	var _pRefreshColumn = cRefreshColumn.prototype;
-	_pRefreshColumn._computeOuterWidths = function() {
+	$.paramquery.cRefresh = cRefresh;
+	var _pRefresh = cRefresh.prototype;
+	_pRefresh._computeOuterWidths = function() {
 		var that = this.that,
 			o = that.options,
 			columnBorders = o.columnBorders,
@@ -8466,16 +8581,15 @@
 			numberCell.outerWidth = numberCell.width + 1
 		}
 	};
-	_pRefreshColumn.autoFit = function() {
+	_pRefresh.autoFit = function() {
 		var that = this.that,
 			o = that.options,
 			cbWidth = o.columnBorders ? 1 : 0,
 			CM = that.colModel,
-			$cont = that.$cont,
 			CMLength = CM.length;
 		var wdAllCols = calcWidthCols.call(that, -1, CMLength, true);
-		var wdCont = $cont[0].offsetWidth - that._getSBWidth();
-		if (wdAllCols != wdCont) {
+		var wdCont = this.contWd - this.getSBWidth();
+		if (wdAllCols !== wdCont) {
 			var diff = wdAllCols - wdCont,
 				columnResized, availWds = [];
 			for (var i = 0; i < CMLength; i++) {
@@ -8549,15 +8663,14 @@
 			}
 		}
 	};
-	_pRefreshColumn.autoLastColumn = function() {
+	_pRefresh.autoLastColumn = function() {
 		var that = this.that,
 			o = that.options,
 			cbWidth = o.columnBorders ? 1 : 0,
 			CM = that.colModel,
 			CMLength = CM.length,
 			freezeCols = o.freezeCols,
-			$cont = that.$cont,
-			wdCont = $cont[0].offsetWidth - that._getSBWidth(),
+			wdCont = this.contWd - this.getSBWidth(),
 			wd1 = calcWidthCols.call(that, -1, freezeCols, true);
 		var rem = wdCont - wd1,
 			_found = false,
@@ -8601,33 +8714,31 @@
 		}
 		lastColumn.width = lastColumn._width = wd
 	};
-	_pRefreshColumn.numericVal = function(width, totalWidth) {
+	_pRefresh.numericVal = function(width, totalWidth) {
+		var val;
 		if ((width + "").indexOf("%") > -1) {
-			return (parseInt(width) * totalWidth / 100)
+			val = (parseInt(width) * totalWidth / 100)
 		} else {
-			return parseInt(width)
+			val = parseInt(width)
 		}
+		return Math.round(val)
 	};
-	_pRefreshColumn.refreshColumnWidths = function() {
+	_pRefresh.refreshColumnWidths = function() {
 		var that = this.that,
 			o = that.options,
 			numberCell = o.numberCell,
-			flexWidth = o.width == "flex",
+			flexWidth = o.width === "flex",
 			columnBorders = o.columnBorders,
 			cbWidth = columnBorders ? 1 : 0,
 			CM = that.colModel,
 			SM = o.scrollModel,
 			SMLastColumn = SM.lastColumn,
 			autoFit = SM.autoFit,
-			$cont = that.$cont,
+			contWd = this.contWd,
 			CMLength = CM.length,
-			sbWidth = that._getSBWidth(),
+			sbWidth = this.getSBWidth(),
 			minColWidth = o._minColWidth,
 			maxColWidth = o._maxColWidth;
-		if (!$cont || !$cont[0].offsetWidth) {
-			return
-		}
-		var contWd = $cont[0].offsetWidth;
 		var numberCellWidth = 0;
 		if (numberCell.show) {
 			if (numberCell.width < numberCell.minWidth) {
@@ -8636,11 +8747,11 @@
 			numberCell.outerWidth = numberCell.width + 1;
 			numberCellWidth = numberCell.outerWidth
 		}
-		var availWidth = contWd - sbWidth - numberCellWidth,
+		var availWidth = flexWidth ? null : (contWd - sbWidth - numberCellWidth),
 			minColWidth = Math.floor(this.numericVal(minColWidth, availWidth)),
 			maxColWidth = Math.ceil(this.numericVal(maxColWidth, availWidth)),
 			rem = 0;
-		if (availWidth < 5 || isNaN(availWidth)) {
+		if (!flexWidth && availWidth < 5 || isNaN(availWidth)) {
 			if (o.debug) {
 				throw ("availWidth N/A")
 			}
@@ -8679,345 +8790,900 @@
 					if (colWidth) {
 						wd = parseInt(colWidth)
 					}
-				} if (wd < colMinWidth) {
+				}
+				if (wd < colMinWidth) {
 					wd = colMinWidth
 				} else {
-					if (wd > colMaxWidth) {
+					if (!flexWidth && wd > colMaxWidth) {
 						wd = colMaxWidth
 					}
 				}
 				column._width = wd
 			} else {
 				column._width = colMinWidth
-			} if (!colWidthPercent) {
+			}
+			if (!colWidthPercent) {
 				column.width = column._width
 			}
 			column._minWidth = colMinWidth;
-			column._maxWidth = colMaxWidth
+			column._maxWidth = flexWidth ? 1000 : colMaxWidth
 		}
-		if ($cont && flexWidth == false) {
+		if (flexWidth === false) {
 			if (autoFit) {
 				this.autoFit()
 			}
-			if (SMLastColumn == "auto") {
+			if (SMLastColumn === "auto" && o.virtualX) {
 				this.autoLastColumn()
 			}
 		}
 		this._computeOuterWidths()
 	};
-	fn._createHeader = function() {
-		var that = this,
-			o = this.options,
-			hwrap = o.hwrap,
-			freezeCols = parseInt(o.freezeCols),
+	_pRefresh.estRowsInViewPort = function() {
+		var noRows = Math.ceil(this.contHt / this.rowHt);
+		this.that.pageSize = noRows;
+		return noRows
+	};
+	_pRefresh._refreshFrozenLine = function() {
+		var that = this.that,
+			o = that.options,
 			numberCell = o.numberCell,
-			thisColModel = this.colModel,
-			depth = this.depth,
-			virtualX = o.virtualX,
-			virtualXHeader = o.virtualXHeader,
-			initH = (virtualXHeader === false) ? that.initHH : that.initH,
-			finalH = (virtualXHeader === false) ? that.finalHH : that.finalH,
-			headerCells = this.headerCells,
-			hidearrHS = this.hidearrHS,
-			$header = this.$header,
-			$header_o = this.$header_o;
-		if (finalH == null) {
-			throw ("finalH required for _createHeader")
+			$container = that.$cont_o,
+			freezeCols = o.freezeCols;
+		if (that.$freezeLine) {
+			that.$freezeLine.remove()
 		}
-		if (o.showHeader === false) {
-			if ($header) {
-				$header.empty()
+		if (freezeCols) {
+			var lft = calcWidthCols.call(that, -1, (freezeCols)) - 1;
+			if (isNaN(lft) || lft === 0) {} else {
+				if (lft > 0 && numberCell.show && lft === numberCell.width) {} else {
+					that.$freezeLine = $(["<div class='pq-grid-vert-frozen-line' ", " style = 'height:100%;top:0;left:", lft, "px;' >", "</div>"].join("")).appendTo($container)
+				}
 			}
-			$header_o.css("display", "none");
-			return
-		} else {
-			$header_o.css("display", "")
 		}
-		var tblClass = "pq-grid-header-table ";
-		if (hwrap) {
-			tblClass += "pq-wrap "
-		} else {
-			tblClass += "pq-no-wrap "
+	};
+	_pRefresh._refreshHideArrHS = function() {
+		var that = this.that,
+			CM = that.colModel,
+			hidearrHS = that.hidearrHS,
+			initH = that.initH,
+			finalH = that.finalH,
+			freezeCols = parseInt(that.options.freezeCols);
+		for (var i = 0; i < freezeCols; i++) {
+			hidearrHS[i] = false
 		}
-		var buffer = ["<table class='" + tblClass + "' cellpadding=0 cellspacing=0 >"];
-		if (depth >= 1) {
-			buffer.push("<tr>");
-			if (numberCell.show) {
-				buffer.push("<td style='width:" + (numberCell.width + 1) + "px;' ></td>")
-			}
-			for (var col = 0; col <= finalH; col++) {
-				if (col < initH && col >= freezeCols && virtualX) {
-					col = initH;
-					if (col > finalH) {
-						throw ("initH>finalH")
+		for (var i = freezeCols; i < initH; i++) {
+			hidearrHS[i] = true
+		}
+		for (var i = initH; i <= finalH; i++) {
+			hidearrHS[i] = false
+		}
+		for (var i = finalH + 1, len = CM.length; i < len; i++) {
+			hidearrHS[i] = true
+		}
+	};
+	_pRefresh._setScrollVNumEles = function() {
+		var that = this.that,
+			$vscroll = that.$vscroll,
+			o = that.options;
+		if (o.height === "flex") {
+			$vscroll.pqScrollBar("option", "num_eles", 0);
+			return 0
+		}
+		var nested = (that.iHierarchy ? true : false),
+			options = $vscroll.pqScrollBar("option"),
+			num_eles = parseInt(options.num_eles),
+			cur_pos = parseInt(options.cur_pos),
+			htSB = this.getSBHeight(),
+			htCont = this.contHt,
+			htView = htCont - htSB + 1,
+			GM = o.groupModel,
+			data = (GM) ? that.dataGM : that.pdata;
+		var totalVisibleRows = data ? that.totalVisibleRows : 0;
+		var tbl, $tbl, htTbl = 0;
+		if (that.$tbl && that.$tbl.length > 0) {
+			tbl = that.$tbl[that.$tbl.length - 1];
+			htTbl = tbl.offsetHeight;
+			$tbl = $(tbl)
+		}
+		if (htTbl > 0 && htTbl > htView) {
+			var $trs = $tbl.children().children("tr");
+			var ht = 0,
+				visibleRows = 0;
+			for (var i = 0; i < $trs.length; i++) {
+				var tr = $trs[i];
+				ht += tr.offsetHeight;
+				if (ht >= htView) {
+					if (nested && $(tr).hasClass("pq-detail-child")) {
+						visibleRows--;
+						visibleRows = (visibleRows > 1) ? (visibleRows - 1) : 1
+					} else {
+						visibleRows = (visibleRows > 1) ? (visibleRows - 1) : 0
+					}
+					break
+				} else {
+					if (nested) {
+						if ($(tr).hasClass("pq-detail-child") === false) {
+							visibleRows++
+						}
+					} else {
+						visibleRows++
 					}
 				}
-				var column = thisColModel[col];
-				if (column.hidden) {
-					continue
-				}
-				var wd = column.outerWidth;
-				buffer.push("<td style='width:" + wd + "px;' pq-col-indx=" + col + "></td>")
 			}
-			buffer.push("</tr>")
+			if (visibleRows === 0) {
+				visibleRows = $trs.length - 1
+			}
+			num_eles = totalVisibleRows - visibleRows + 1
+		} else {
+			num_eles = cur_pos + 1
 		}
-		var const_cls = "pq-grid-col ";
-		for (var row = 0; row < depth; row++) {
-			buffer.push("<tr class='pq-grid-title-row'>");
-			if (row == 0 && numberCell.show) {
-				buffer.push(["<td pq-grid-col-indx='-1' class='pq-grid-number-col' rowspan='", depth, "'>", "<div class='pq-td-div'>", numberCell.title ? numberCell.title : "&nbsp;", "</div></td>"].join(""))
+		if (num_eles > totalVisibleRows) {
+			num_eles = totalVisibleRows
+		}
+		$vscroll.pqScrollBar("option", "num_eles", num_eles);
+		return num_eles
+	};
+	_pRefresh._setScrollVLength = function() {
+		var that = this.that,
+			o = that.options;
+		if (o.height !== "flex") {
+			var htSB = this.getSBHeight(),
+				len = this.contHt - htSB;
+			that.$vscroll.css("bottom", htSB).pqScrollBar("option", "length", len)
+		}
+	};
+	_pRefresh.setContAndHeaderHeight = function() {
+		var that = this.that,
+			options = that.options,
+			$header = that.$header,
+			htHD0, htHD1, htHD;
+		if ($header && $header.length) {
+			if ($header.length > 1) {
+				htHD0 = $header[0].offsetHeight;
+				htHD1 = $header[1].offsetHeight;
+				htHD = Math.max(htHD0, htHD1);
+				if (htHD0 !== htHD1) {
+					var $tr0 = $($header[0]).find(".pq-grid-header-search-row"),
+						$tr1 = $($header[1]).find(".pq-grid-header-search-row");
+					$tr0.css("height", "");
+					$tr1.css("height", "");
+					htHD0 = $header[0].offsetHeight;
+					htHD1 = $header[1].offsetHeight;
+					htHD = Math.max(htHD0, htHD1);
+					if (htHD0 < htHD) {
+						$tr0.height($tr1[0].offsetHeight - 1)
+					} else {
+						$tr1.height($tr0[0].offsetHeight - 1)
+					}
+				}
+			} else {
+				htHD0 = $header[0].offsetHeight;
+				htHD = htHD0
 			}
-			for (var col = 0; col <= finalH; col++) {
-				if (col < initH && col >= freezeCols && virtualX) {
-					col = initH;
-					if (col > finalH) {
-						throw ("initH>finalH");
+			that.$header_o.height(htHD - 2);
+			this.headerHt = htHD
+		} else {
+			that.$header_o.height(0);
+			this.headerHt = 0
+		}
+		if (options.height !== "flex") {
+			var ht = (this.height - that.$header_o[0].offsetHeight - ((options.showTop) ? that.$top[0].offsetHeight : 0) - that.$bottom[0].offsetHeight);
+			that.$cont.height(ht);
+			this.contHt = ht
+		}
+	};
+	_pRefresh.setContAndGridHeightFromTable = function() {
+		var htTbl = 0,
+			that = this.that;
+		var htSB = this.getSBHeight(),
+			$tbl = that.$tbl;
+		if ($tbl && $tbl.length) {
+			htTbl = $($tbl[0]).data("offsetHeight")
+		} else {
+			htTbl = 23
+		}
+		this.contHt = htTbl + htSB - 1;
+		that.$cont.height("");
+		that.element.height("");
+		that.$grid_inner.height("")
+	};
+	_pRefresh.setContAndGridWidthFromTable = function() {
+		var that = this.that,
+			wdTbl = calcWidthCols.call(that, -1, that.colModel.length),
+			$grid = that.element,
+			wdSB = this.getSBWidth();
+		this.contWd = wdTbl + wdSB;
+		$grid.width(this.contWd + "px")
+	};
+	_pRefresh.getTotalVisibleRows = function(cur_pos, freezeRows, data) {
+		var that = this.that,
+			rowsVP = this.estRowsInViewPort(),
+			tvRows = 0,
+			dataLength = (data) ? data.length : 0,
+			initV = freezeRows,
+			finalV = 0,
+			visible = 0,
+			lastFrozenRow = null,
+			initFound = false,
+			finalFound = false,
+			nesting = (that.iHierarchy) ? true : false,
+			o = that.options,
+			DTMoff = o.detailModel.offset,
+			htTotal = 0,
+			rowHeight = this.rowHt,
+			htCont = nesting ? that.$cont[0].offsetHeight : undefined;
+		if (data == null || dataLength == 0) {
+			return {
+				initV: null,
+				finalV: null,
+				tvRows: tvRows,
+				lastFrozenRow: null
+			}
+		}
+		for (var i = 0, len = ((dataLength > freezeRows) ? freezeRows : dataLength); i < len; i++) {
+			var rowData = data[i],
+				hidden = rowData.pq_hidden;
+			if (!hidden) {
+				lastFrozenRow = i;
+				tvRows++;
+				if (nesting) {
+					var cellData = rowData.pq_detail;
+					if (cellData && cellData.show) {
+						var ht = (cellData.height || 0);
+						if (ht > DTMoff) {
+							ht = DTMoff
+						}
+						htTotal += ht + rowHeight
+					} else {
+						htTotal += rowHeight
+					}
+				}
+			}
+		}
+		if (dataLength < freezeRows) {
+			return {
+				initV: lastFrozenRow,
+				finalV: lastFrozenRow,
+				tvRows: tvRows,
+				lastFrozenRow: lastFrozenRow
+			}
+		}
+		if (dataLength > 10000 && o.groupModel == null) {
+			finalV = cur_pos + rowsVP;
+			if (finalV >= dataLength) {
+				finalV = dataLength - 1
+			}
+			return {
+				initV: cur_pos + freezeRows,
+				finalV: finalV,
+				tvRows: dataLength,
+				lastFrozenRow: lastFrozenRow
+			}
+		}
+		rowsVP = rowsVP - tvRows;
+		for (var i = freezeRows, len = dataLength; i < len; i++) {
+			var rowData = data[i],
+				hidden = rowData.pq_hidden;
+			if (!initFound) {
+				if (hidden) {
+					initV++
+				} else {
+					if (visible === cur_pos) {
+						initFound = true;
+						finalV = initV;
+						visible = 0
+					} else {
+						initV++;
+						visible++
+					}
+				}
+			} else {
+				if (!finalFound) {
+					if (hidden) {
+						finalV++
+					} else {
+						if (visible === rowsVP) {
+							finalFound = true
+						} else {
+							finalV++;
+							visible++
+						}
+					}
+				}
+			}
+			if (!hidden) {
+				tvRows++;
+				if (nesting && initFound) {
+					var cellData = rowData.pq_detail;
+					if (cellData && cellData.show) {
+						var ht = (cellData.height || 0);
+						if (ht > DTMoff) {
+							ht = DTMoff
+						}
+						htTotal += ht + rowHeight
+					} else {
+						htTotal += rowHeight
+					}
+					if (htTotal > htCont) {
+						finalFound = true
+					}
+				}
+			}
+		}
+		if (initV >= dataLength) {
+			initV = dataLength - 1
+		}
+		if (finalV < initV) {
+			finalV = initV
+		}
+		return {
+			initV: initV,
+			finalV: finalV,
+			tvRows: tvRows,
+			lastFrozenRow: lastFrozenRow
+		}
+	};
+	_pRefresh.calcInitFinal = function() {
+		var that = this.that,
+			o = that.options,
+			virtualY = o.virtualY,
+			freezeRows = o.freezeRows,
+			flexHeight = o.height === "flex",
+			GM = o.groupModel,
+			GMtrue = (GM) ? true : false,
+			data = GMtrue ? that.dataGM : that.pdata,
+			TVM = o.treeModel;
+		if (data == null || data.length === 0) {
+			var objTVR = this.getTotalVisibleRows(cur_pos, freezeRows, data);
+			that.totalVisibleRows = objTVR.tvRows;
+			that.initV = objTVR.initV;
+			that.finalV = objTVR.finalV;
+			that.lastFrozenRow = objTVR.lastFrozenRow
+		} else {
+			if (!virtualY) {
+				var objTVR = this.getTotalVisibleRows(0, freezeRows, data);
+				that.lastFrozenRow = objTVR.lastFrozenRow;
+				that.totalVisibleRows = objTVR.tvRows;
+				that.initV = 0;
+				that.finalV = data.length - 1;
+				return
+			} else {
+				var options = that.$vscroll.pqScrollBar("option"),
+					cur_pos = parseInt(options.cur_pos);
+				if (isNaN(cur_pos) || cur_pos < 0) {
+					throw ("cur_pos NA")
+				}
+				that.scrollCurPos = cur_pos;
+				var objTVR = this.getTotalVisibleRows(cur_pos, freezeRows, data);
+				that.totalVisibleRows = objTVR.tvRows;
+				that.initV = objTVR.initV;
+				that.lastFrozenRow = objTVR.lastFrozenRow;
+				if (flexHeight) {
+					that.finalV = data.length - 1
+				} else {
+					that.finalV = objTVR.finalV
+				}
+			}
+		}
+	};
+	_pRefresh.calcInitFinalH = function() {
+		var that = this.that,
+			o = that.options,
+			virtualX = o.virtualX,
+			CM = that.colModel,
+			CMLength = CM.length;
+		if (!virtualX) {
+			that.initH = 0;
+			that.finalH = CMLength - 1;
+			return
+		}
+		if (o.virtualXHeader === false) {
+			that.initHH = 0;
+			that.finalHH = CMLength - 1
+		}
+		var cur_pos = parseInt(that.$hscroll.pqScrollBar("option", "cur_pos")),
+			freezeCols = parseInt(o.freezeCols),
+			flexWidth = o.width === "flex",
+			initH = freezeCols,
+			indx = 0;
+		for (var i = freezeCols; i < CMLength; i++) {
+			if (CM[i].hidden) {
+				initH++
+			} else {
+				if (indx === cur_pos) {
+					break
+				} else {
+					initH++;
+					indx++
+				}
+			}
+		}
+		if (initH > CMLength - 1) {
+			initH = CMLength - 1
+		}
+		that.initH = initH;
+		if (flexWidth || !virtualX) {
+			that.finalH = CMLength - 1
+		} else {
+			var wd = calcWidthCols.call(that, -1, freezeCols),
+				wdCont = this.getEContWd();
+			for (var i = initH; i < CMLength; i++) {
+				var column = CM[i];
+				if (!column.hidden) {
+					var wdCol = column.outerWidth;
+					if (!wdCol) {
+						if (o.debug) {
+							throw ("outerwidth N/A")
+						}
+					}
+					wd += wdCol;
+					if (wd > wdCont) {
 						break
 					}
 				}
-				this._createHeaderCell(row, col, headerCells, buffer, const_cls, freezeCols, initH, depth)
 			}
-			buffer.push("</tr>")
+			var finalH = i;
+			if (finalH > CMLength - 1) {
+				finalH = CMLength - 1
+			}
+			that.finalH = finalH
 		}
-		this.ovCreateHeader(buffer, const_cls);
-		buffer.push("</table>");
-		var str = buffer.join("");
-		$header_o.empty();
-		if (this.pqpanes.vH) {
-			$header_o.append(["<span class='pq-grid-header pq-grid-header-left ui-state-default'>", str, "</span>", "<span class='pq-grid-header ui-state-default'>", str, "</span>"].join(""))
-		} else {
-			$header_o.append(["<span class='pq-grid-header ui-state-default'>", str, "</span>"].join(""))
-		}
-		var $header = this.$header = $(".pq-grid-header", $header_o);
-		this.$tbl_header = $header.children("table");
-		var wd = calcWidthCols.call(this, -1, freezeCols);
-		var $header_left = this.$header_left = $($header[0]);
-		if (this.pqpanes.vH) {
-			var $header_left = this.$header_left = $($header[0]);
-			var $header_right = this.$header_right = $($header[1]);
-			$header_left.css({
-				width: wd,
-				zIndex: 10
-			});
-			var lft = calcWidthCols.call(this, freezeCols, initH);
-			$header_right.css({
-				left: (-1 * lft) + "px"
-			})
-		}
-		$header.click(function(evt) {
-			return that._onHeaderClick(evt)
-		});
-		this._refreshResizeColumn(initH, finalH, thisColModel);
-		this._trigger("refreshHeader", null, null)
 	};
-	fn._onHeaderClick = function(evt) {
-		var that = this;
-		if (that.iDragColumns && that.iDragColumns.status != "stop") {
-			return
+	_pRefresh._calcOffset = function(val) {
+		var re = /(-|\+)([0-9]+)/;
+		var match = re.exec(val);
+		if (match && match.length === 3) {
+			return parseInt(match[1] + match[2])
+		} else {
+			return 0
 		}
-		var $target = $(evt.target),
-			$div = $target.closest(".pq-g-ficon");
-		if ($div.length) {
-			var colIndx = $div.attr("pq-col-indx");
-			evt.stopImmediatePropagation();
-			return that.iHeaderIconSearch.createDOM(colIndx, $div, evt)
-		}
-		var $td = $target.closest("td.pq-grid-col");
-		if ($td.length) {
-			evt.stopImmediatePropagation();
-			var colIndx = $td.attr("pq-grid-col-indx");
-			if (colIndx == null) {
+	};
+	_pRefresh.refreshGridWidthAndHeight = function() {
+		var that = this.that,
+			o = that.options,
+			wd, ht, widthPercent = ((o.width + "").indexOf("%") > -1) ? true : false,
+			heightPercent = ((o.height + "").indexOf("%") > -1) ? true : false,
+			element = that.element;
+		if (widthPercent || heightPercent) {
+			var parent = element.parent();
+			if (!parent.length) {
 				return
 			}
-		} else {
-			return
-		}
-		return that._onHeaderCellClick(colIndx, evt)
-	};
-	fn._createHeaderCell = function(row, col, headerCells, buffer, const_cls, freezeCols, initH, depth) {
-		var column = headerCells[row][col],
-			colSpan = column.colSpan,
-			halign = column.halign,
-			align = column.align,
-			title = column.title,
-			title = title ? title : "";
-		if (row > 0 && column == headerCells[row - 1][col]) {
-			return
-		} else {
-			if (col > 0 && column == headerCells[row][col - 1]) {
-				return
+			var wdParent, htParent;
+			if (parent[0] == document.body || element.css("position") == "fixed") {
+				wdParent = $(window).width();
+				htParent = (window.innerHeight ? window.innerHeight : $(window).height())
+			} else {
+				wdParent = parent.width();
+				htParent = parent.height()
 			}
-		} if (column.hidden) {
-			return
-		}
-		var cls = const_cls;
-		if (halign != null) {
-			cls += " pq-align-" + halign
-		} else {
-			if (align != null) {
-				cls += " pq-align-" + align
-			}
-		} if (col == freezeCols - 1 && depth == 1) {
-			cls += " pq-last-freeze-col"
-		}
-		if (col <= freezeCols - 1) {
-			cls += " pq-left-col"
-		} else {
-			if (col >= initH) {
-				cls += " pq-right-col"
-			}
-		}
-		var ccls = column.cls;
-		if (ccls) {
-			cls = cls + " " + ccls
-		}
-		var colIndx = "",
-			dataIndx = "";
-		if (column.colModel == null || column.colModel.length == 0) {
-			colIndx = "pq-grid-col-indx='" + col + "'"
-		}
-		var rowIndxDD = "pq-row-indx=" + row;
-		var colIndxDD = "pq-col-indx=" + col;
-		buffer.push(["<td ", colIndx, " ", colIndxDD, " ", rowIndxDD, " ", dataIndx, " class='", cls, "' rowspan=", column.rowSpan, " colspan=", colSpan, ">", "<div class='pq-td-div'>", title, "<span class='pq-col-sort-icon'>&nbsp;</span></div></td>"].join(""))
-	};
-	fn._refreshHeader = function() {
-		var CM = this.colModel,
-			initH = this.initH,
-			finalH = this.finalH,
-			$tr = $("table.pq-grid-header-table tr:first");
-		for (var i = initH; i <= finalH; i++) {
-			var $td = $tr.find("td[pq-col-indx=" + i + "]"),
-				column = CM[i];
-			$td.width(column.outerWidth)
-		}
-	};
-	fn.ovCreateHeader = function() {};
-	fn._refreshResizeColumn = function(initH, finalH, model) {
-		var that = this,
-			options = this.options,
-			virtualX = options.virtualX,
-			FMficon = options.filterModel.ficon ? true : false,
-			numberCell = options.numberCell,
-			hd_ht = that.$header.height(),
-			freezeCols = parseInt(options.freezeCols),
-			buffer1 = [],
-			buffer2 = [];
-		if (numberCell.show && numberCell.resizable) {
-			var pq_col = that.$header_left.find("td.pq-grid-number-col")[0];
-			lft = parseInt(pq_col.offsetLeft) + (pq_col.offsetWidth - 10);
-			buffer1.push("<div pq-grid-col-indx='-1' style='left:", lft, "px;height:", hd_ht, "px;' class='pq-grid-col-resize-handle'>&nbsp;</div>")
-		}
-		for (var i = 0; i <= finalH; i++) {
-			if (i < initH && i >= freezeCols) {
-				i = initH;
-				if (i > finalH) {
-					throw ("initH>finalH")
+			var superParent = null,
+				calcOffset = this._calcOffset,
+				widthOffset = widthPercent ? calcOffset(o.width) : 0,
+				heightOffset = heightPercent ? calcOffset(o.height) : 0;
+			if (wdParent == 0) {
+				while (parent[0].tagName.toUpperCase() != "BODY") {
+					var newParent = parent.parent();
+					if (newParent[0] == null) {
+						superParent = parent;
+						break
+					} else {
+						parent = newParent
+					}
+				}
+				if (superParent) {
+					var position = superParent.css("position"),
+						left = superParent.css("left"),
+						top = superParent.css("top");
+					superParent.css({
+						position: "absolute",
+						left: "-2000",
+						top: "-2000"
+					}).appendTo($(document.body));
+					parent = element.parent();
+					if (widthPercent) {
+						wdParent = parent.width()
+					}
+					if (heightPercent) {
+						htParent = parent.height()
+					}
+					superParent.css({
+						position: position,
+						left: left,
+						top: top
+					})
 				}
 			}
+			if (widthPercent) {
+				wd = (parseInt(o.width) * wdParent / 100) + widthOffset
+			}
+			if (heightPercent) {
+				ht = (parseInt(o.height) * htParent / 100) + heightOffset
+			}
+		}
+		if (!widthPercent) {
+			wd = o.width
+		}
+		if (!heightPercent) {
+			ht = o.height
+		}
+		if (parseFloat(wd) == wd) {
+			wd = (wd < o.minWidth) ? o.minWidth : wd;
+			element.width(wd)
+		} else {
+			if (wd === "auto") {
+				element.width(wd)
+			}
+		}
+		if (parseFloat(ht) == ht) {
+			ht = (ht < o.minHeight) ? o.minHeight : ht;
+			element.height(ht)
+		}
+		this.width = (parseFloat(wd) == wd) ? Math.round(wd) : ((wd === "auto") ? Math.round(element.width()) : null);
+		this.height = (parseFloat(ht) == ht) ? Math.round(ht) : null
+	};
+	_pRefresh.decidePanes = function() {
+		var that = this.that,
+			pqpanes = that.pqpanes = {
+				v: false,
+				h: false,
+				vH: false
+			},
+			o = that.options,
+			virtualX = o.virtualX,
+			virtualXHeader = o.virtualXHeader,
+			virtualY = o.virtualY,
+			flexHeight = o.height == "flex",
+			flexWidth = o.width == "flex",
+			numberCell = o.numberCell,
+			freezeRows = o.freezeRows,
+			freezeCols = o.freezeCols;
+		if (freezeRows && !flexHeight && (freezeCols || numberCell.show) && !flexWidth) {
+			if (!virtualY) {
+				pqpanes.h = true
+			}
+			if (!virtualX) {
+				pqpanes.v = true;
+				pqpanes.vH = true
+			}
+			if (virtualXHeader === false) {
+				pqpanes.vH = true
+			}
+		} else {
+			if (freezeRows && !flexHeight) {
+				if (!virtualY) {
+					pqpanes.h = true
+				}
+			} else {
+				if ((freezeCols || numberCell.show) && !flexWidth) {
+					if (!virtualX) {
+						pqpanes.v = true;
+						pqpanes.vH = true
+					}
+					if (virtualXHeader === false) {
+						pqpanes.vH = true
+					}
+				}
+			}
+		}
+	};
+	_pRefresh._storeColumnWidths = function(full) {
+		var that = this.that,
+			CM = that.colModel,
+			vH = false,
+			initH = (full || vH) ? 0 : that.initH,
+			finalH = (full || vH) ? CM.length - 1 : that.finalH,
+			CMOld = [];
+		for (var i = initH; i <= finalH; i++) {
+			CMOld[i] = {
+				outerWidth: CM[i].outerWidth
+			}
+		}
+		return CMOld
+	};
+	_pRefresh._isColumnWidthChanged = function(CMOld) {
+		var that = this.that,
+			CM = that.colModel,
+			vH = false,
+			initH = vH ? 0 : that.initH,
+			finalH = vH ? CM.length - 1 : that.finalH;
+		for (var i = initH; i <= finalH; i++) {
+			if (CM[i].outerWidth !== CMOld[i].outerWidth) {
+				return true
+			}
+		}
+		return false
+	};
+	_pRefresh.refreshScrollbars = function() {
+		var that = this.that,
+			o = that.options,
+			flexHeight = o.height === "flex",
+			flexWidth = o.width === "flex";
+		if ((!flexHeight && !this.contHt) || (!flexWidth && !this.contWd) || that.totalVisibleRows === null) {
+			return
+		}
+		var num_eles = this._setScrollVNumEles(true),
+			vscroll = (num_eles > 1) ? true : false;
+		if (!flexHeight && vscroll !== this.vscroll) {
+			this.vscroll = vscroll;
+			if (o.scrollModel.autoFit || o.virtualX) {
+				var CMOld = this._storeColumnWidths();
+				this.refreshColumnWidths();
+				if (this._isColumnWidthChanged(CMOld)) {
+					this.ignoreTResize = true;
+					this._refreshTableWidths(CMOld, {
+						table: true,
+						header: true
+					});
+					delete this.ignoreTResize;
+					if (o.virtualX) {
+						this.setContAndHeaderHeight();
+						that.iGenerateView.setPanes();
+						num_eles = this._setScrollVNumEles(true), vscroll = (num_eles > 1) ? true : false;
+						this.vscroll = vscroll
+					}
+				}
+				CMOld = null
+			}
+		}
+		num_eles = this._setScrollHNumEles();
+		this.hscroll = (num_eles > 1) ? true : false;
+		this._setScrollHLength();
+		this._setScrollVLength();
+		this._setScrollHVLength()
+	};
+	_pRefresh._setScrollHVLength = function() {
+		var that = this.that;
+		if (!this.vscroll || !this.hscroll) {
+			that.$hvscroll.css("visibility", "hidden")
+		}
+	};
+	_pRefresh._setScrollHLength = function() {
+		var that = this.that,
+			$hscroll = that.$hscroll,
+			$hvscroll = that.$hvscroll,
+			options = that.options;
+		if (!options.scrollModel.horizontal) {
+			$hscroll.css("visibility", "hidden");
+			$hvscroll.css("visibility", "hidden");
+			return
+		} else {
+			$hscroll.css("visibility", "");
+			$hvscroll.css("visibility", "")
+		}
+		var contWd = this.contWd,
+			wdSB = this.getSBWidth();
+		$hscroll.css("right", (wdSB === 0 ? 0 : ""));
+		$hscroll.pqScrollBar("option", "length", (contWd - wdSB))
+	};
+	_pRefresh.estVscroll = function() {
+		var that = this.that;
+		if (that.totalVisibleRows == null || this.contHt == null) {
+			throw ("failed")
+		}
+		var vscroll = true;
+		if ((that.totalVisibleRows * this.rowHt) < this.contHt) {
+			vscroll = false
+		}
+		this.vscroll = vscroll
+	};
+	_pRefresh.getSBWidth = function() {
+		if (this.that.options.height === "flex") {
+			return 0
+		}
+		if (this.vscroll == null) {
+			this.estVscroll()
+		}
+		return this.vscroll ? 17 : 0
+	};
+	_pRefresh.estHscroll = function() {
+		var that = this.that;
+		if (this.contWd == null) {
+			throw ("failed")
+		}
+		var hscroll = false;
+		var num_eles = this.calcColsOutsideCont(that.colModel) + 1;
+		if (num_eles > 1) {
+			hscroll = true
+		}
+		this.hscroll = hscroll
+	};
+	_pRefresh.getSBHeight = function() {
+		if (this.that.options.width === "flex") {
+			return 0
+		}
+		if (this.hscroll == null) {
+			this.estHscroll()
+		}
+		return this.hscroll ? 17 : 0
+	};
+	_pRefresh.getEContHt = function() {
+		if (this.contHt == null) {
+			throw ("contHt N/A")
+		}
+		return this.contHt - this.getSBHeight()
+	};
+	_pRefresh.getEContWd = function() {
+		if (this.contWd == null) {
+			throw ("contWd N/A")
+		}
+		return this.contWd - this.getSBWidth()
+	};
+	_pRefresh.calcColsOutsideCont = function(model) {
+		var that = this.that,
+			o = that.options,
+			numberCell = o.numberCell,
+			freezeCols = o.freezeCols,
+			contWd = this.contWd - this.getSBWidth();
+		var tblWd = 0;
+		if (numberCell.show) {
+			tblWd += numberCell.outerWidth
+		}
+		for (var i = 0; i < model.length; i++) {
 			var column = model[i];
+			if (!column.hidden) {
+				tblWd += column.outerWidth
+			}
+		}
+		var wd = 0,
+			noCols = 0;
+		var tblremainingWidth = Math.round(tblWd);
+		if (tblremainingWidth > contWd) {
+			noCols++
+		}
+		for (i = freezeCols; i < model.length; i++) {
+			column = model[i];
+			if (!column.hidden) {
+				wd += column.outerWidth;
+				tblremainingWidth = tblWd - wd;
+				if (tblremainingWidth > contWd) {
+					noCols++
+				} else {
+					break
+				}
+			}
+		}
+		return noCols
+	};
+	_pRefresh._setScrollHNumEles = function() {
+		var that = this.that,
+			options = that.options,
+			CM = that.colModel,
+			SM = options.scrollModel,
+			num_eles = 0;
+		if (options.width !== "flex") {
+			if (SM.lastColumn === "fullScroll") {
+				num_eles = CM.length - options.freezeCols - that._calcNumHiddenUnFrozens()
+			} else {
+				num_eles = this.calcColsOutsideCont(CM) + 1
+			}
+		}
+		that.$hscroll.pqScrollBar("option", "num_eles", num_eles);
+		return num_eles
+	};
+	_pRefresh.init = function() {
+		var that = this.that,
+			o = that.options;
+		this.hscroll = this.vscroll = this.contHt = this.contWd = null;
+		that.initH = that.initV = that.finalH = that.finalV = null;
+		that.totalVisibleRows = that.lastFrozenRow = null;
+		this.rowHt = 22 + (o.rowBorders ? 1 : 0);
+		this.headerHt = 0
+	};
+	_pRefresh.initContHtAndWidth = function() {
+		var that = this.that,
+			o = that.options;
+		if (o.width !== "flex") {
+			this.contWd = this.width
+		}
+		if (o.height !== "flex") {
+			this.contHt = (this.height - (o.showHeader ? this.rowHt : 0) - (o.showTop ? that.$top[0].offsetHeight : 0) - (o.showBottom ? that.$bottom[0].offsetHeight : 0))
+		}
+	};
+	_pRefresh._refresh = function(objP) {
+		objP = objP || {};
+		var that = this.that,
+			header = objP.header,
+			table = objP.table,
+			$grid = that.element;
+		if (!$grid[0].offsetWidth) {
+			$grid.addClass("pq-pending-refresh");
+			return
+		}
+		that.iMouseSelection.resetMargins();
+		this.init();
+		that.$grid_inner[0].scrollTop = 0;
+		var o = that.options;
+		this.decidePanes();
+		o.collapsible._collapsed = false;
+		this.refreshGridWidthAndHeight();
+		this.initContHtAndWidth();
+		this.calcInitFinal();
+		if (header === false || table === false) {
+			var CMOld = this._storeColumnWidths(true)
+		}
+		this.refreshColumnWidths();
+		this.calcInitFinalH();
+		this._refreshHideArrHS();
+		if (header !== false) {
+			that._createHeader()
+		} else {
+			if (this._isColumnWidthChanged(CMOld)) {
+				this._refreshTableWidths(CMOld, {
+					header: true
+				})
+			}
+		}
+		that._refreshHeaderSortIcons();
+		that._refreshPager();
+		this.setContAndHeaderHeight();
+		if (table !== false) {
+			that.iGenerateView.generateView()
+		} else {
+			this._refreshTableWidths(CMOld, {
+				table: true
+			});
+			that._saveDims();
+			that.iGenerateView.scrollView()
+		}
+		this.refreshScrollbars();
+		if (o.height == "flex") {
+			this.setContAndGridHeightFromTable()
+		}
+		if (o.width == "flex") {
+			this.setContAndGridWidthFromTable()
+		}
+		this._refreshFrozenLine();
+		that._createCollapse();
+		o.dataModel.postDataOnce = undefined
+	};
+	_pRefresh._refreshTableWidths = function(CMOld, objP) {
+		var that = this.that,
+			CM = that.colModel,
+			$tbl_header = that.$tbl_header,
+			header = (objP.header && $tbl_header),
+			$tbl = that.$tbl,
+			table = (objP.table && $tbl),
+			initH = that.initH,
+			finalH = that.finalH,
+			$tr = header ? $tbl_header.find("tr:nth-child(1):first") : null,
+			$draggables = header ? that.$header.find("div.pq-grid-col-resize-handle") : null,
+			$tr2 = table ? $tbl.find(".pq-row-hidden:first") : null,
+			$td, $td2, _bodyTableChanged = false,
+			incr = 0;
+		for (var i = initH; i <= finalH; i++) {
+			var column = CM[i],
+				columnOld = CMOld[i];
 			if (column.hidden) {
 				continue
 			}
-			var cficon = column.ficon,
-				ficon = (cficon || (cficon == null && FMficon)),
-				$head, buffer = buffer1,
-				pq_col, lftCol, lft;
-			if ((column.resizable !== false) || ficon) {
-				$head = that.$header_left;
-				if (this.pqpanes.vH && i >= freezeCols) {
-					$head = that.$header_right;
-					buffer = buffer2
+			var oldWidth = columnOld.outerWidth,
+				outerwidth = column.outerWidth;
+			if (outerwidth !== oldWidth) {
+				if (header) {
+					$td = $tr.find("td[pq-col-indx=" + i + "]");
+					$td.width(outerwidth)
 				}
-				pq_col = $head.find("td[pq-grid-col-indx=" + i + "]")[0];
-				lftCol = parseInt(pq_col.offsetLeft);
-				lft = lftCol + (pq_col.offsetWidth - 5)
+				if ($tr2) {
+					$td2 = $tr2.find("td[pq-col-indx=" + i + "]");
+					if ($td2.length) {
+						_bodyTableChanged = true;
+						$td2.width(outerwidth)
+					}
+				}
 			}
-			if (column.resizable !== false) {
-				buffer.push("<div pq-grid-col-indx='", i, "' style='left:", lft, "px;height:", hd_ht, "px;' class='pq-grid-col-resize-handle'>&nbsp;</div>")
+			incr += outerwidth - oldWidth;
+			if (header && incr !== 0) {
+				var $draggable = $draggables.filter("[pq-col-indx=" + i + "]"),
+					oldLeft = parseInt($draggable.css("left"));
+				$draggable.css("left", oldLeft + incr)
 			}
 		}
-		that.$header_left.append(buffer1.join(""));
-		if (buffer2.length) {
-			that.$header_right.append(buffer2.join(""))
+		if (_bodyTableChanged) {
+			that._trigger("tableWidthChange")
 		}
-		var drag_left, drag_new_left, cl_left;
-		var $pQuery_handles = that.$header.find(".pq-grid-col-resize-handle").draggable({
-			axis: "x",
-			helper: function(evt, ui) {
-				var $target = $(evt.target);
-				var indx = parseInt($target.attr("pq-grid-col-indx"));
-				that._setDragLimits(indx);
-				that._getDragHelper(evt, ui);
-				return $target
-			},
-			start: function(evt, ui) {
-				drag_left = ui.position.left;
-				cl_left = parseInt(that.$cl[0].style.left)
-			},
-			drag: function(evt, ui) {
-				drag_new_left = ui.position.left;
-				var dx = (drag_new_left - drag_left);
-				that.$cl[0].style.left = cl_left + dx + "px"
-			},
-			stop: function(evt, ui) {
-				return that._refreshResizeColumnStop(evt, ui, model, drag_left)
-			}
-		})
-	};
-	fn._refreshResizeColumnStop = function(evt, ui, model, drag_left) {
-		var that = this,
-			thisOptions = this.options,
-			numberCell = thisOptions.numberCell;
-		that.$clleft.remove();
-		that.$cl.remove();
-		var drag_new_left = ui.position.left;
-		var dx = (drag_new_left - drag_left);
-		var $target = $(ui.helper),
-			colIndx = parseInt($target.attr("pq-grid-col-indx")),
-			column;
-		if (colIndx == -1) {
-			column = null;
-			var oldWidth = parseInt(numberCell.width);
-			var newWidth = oldWidth + dx;
-			numberCell.width = newWidth
-		} else {
-			column = model[colIndx];
-			var oldWidth = parseInt(column.width);
-			var newWidth = oldWidth + dx;
-			column.width = newWidth;
-			column._resized = true
-		}
-		that.refresh();
-		that._trigger("columnResize", evt, {
-			colIndx: colIndx,
-			column: column,
-			dataIndx: (column ? column.dataIndx : null),
-			oldWidth: oldWidth,
-			newWidth: column ? column.width : numberCell.width
-		})
-	};
-	fn._refreshHeaderSortIcons = function() {
-		var DM = this.options.dataModel;
-		if (DM.sortIndx == undefined) {
-			return
-		}
-		var $header = this.$header;
-		var $pQuery_cols = $header.find(".pq-grid-col");
-		$pQuery_cols.removeClass("pq-col-sort-asc pq-col-sort-desc ui-state-active");
-		$header.find(".pq-col-sort-icon").removeClass("ui-icon ui-icon-triangle-1-n ui-icon-triangle-1-s");
-		var sortIndx = DM.sortIndx;
-		var colIndx = this.getColIndx({
-			dataIndx: sortIndx
-		});
-		var addClass = "ui-state-active pq-col-sort-" + (DM.sortDir == "up" ? "asc" : "desc");
-		var cls2 = "ui-icon ui-icon-triangle-1-" + (DM.sortDir == "up" ? "n" : "s");
-		$header.find(".pq-grid-col[pq-grid-col-indx=" + colIndx + "]").addClass(addClass);
-		$header.find(".pq-grid-col[pq-grid-col-indx=" + colIndx + "] .pq-col-sort-icon").addClass(cls2)
-	};
-	fn.createTable = function(objP) {
-		this.iGenerateView.generateView(objP)
-	};
-	$.widget("paramquery._pqGrid", $.ui.mouse, fn)
+		that._saveDims()
+	}
 })(jQuery);
 (function($) {
 	var cClass = $.paramquery.cClass;
@@ -9043,235 +9709,14 @@
 			}
 		}
 	};
-	fn.inViewPort = function($tdr) {
-		var that = this,
-			cont = that.$cont[0],
-			htCont = cont.offsetHeight - that._getScollBarHorizontalHeight(),
-			wdCont = cont.offsetWidth - that._getSBWidth() + 1,
-			tdr = $tdr[0],
-			$tbl = $(tdr.offsetParent),
-			marginTop = parseInt($tbl.css("marginTop")),
-			marginLeft = parseInt($tbl.css("marginLeft"));
-		if (htCont >= (tdr.offsetTop + tdr.offsetHeight + marginTop)) {
-			if (tdr.nodeName.toUpperCase() == "TD") {
-				if (wdCont >= (tdr.offsetLeft + tdr.offsetWidth + marginLeft)) {
-					return true
-				}
-			} else {
-				return true
-			}
-		}
-	};
-
-	function cHierarchy(that) {
-		var self = this;
-		this.that = that;
-		this.type = "detail";
-		this.refreshComplete = true;
-		this.detachView = false;
-		var widgetEventPrefix = that.widgetEventPrefix.toLowerCase(),
-			eventNamespace = that.eventNamespace;
-		that.element.on(widgetEventPrefix + "cellclick" + eventNamespace, function(evt, ui) {
-			if (self.belongs(evt)) {
-				return self.cellClick(evt, ui)
-			}
-		});
-		that.element.on(widgetEventPrefix + "cellkeydown" + eventNamespace, function(evt, ui) {
-			if (self.belongs(evt) && evt.keyCode == $.ui.keyCode.ENTER) {
-				return self.cellClick(evt, ui)
-			}
-		});
-		that.element.on(widgetEventPrefix + "aftertable" + eventNamespace, function(evt, ui) {
-			if (self.belongs(evt)) {
-				return self.aftertable(evt, ui)
-			}
-		});
-		that.element.on(widgetEventPrefix + "beforetableview" + eventNamespace, function(evt, ui) {
-			if (self.belongs(evt)) {
-				return self.beforeTableView(evt, ui)
-			}
-		});
-		that.element.on(widgetEventPrefix + "beforerefreshdata" + eventNamespace, function(evt, ui) {
-			if (self.belongs(evt)) {
-				return self.beforeRefreshData(evt, ui)
-			}
-		})
-	}
-	var _pHierarchy = cHierarchy.prototype = new cClass;
-	_pHierarchy.aftertable = function(evt, ui) {
-		var that = this.that,
-			initDetail = that.options.detailModel.init,
-			data = that.pdata;
-		if (!this.refreshComplete) {
-			return
-		}
-		this.refreshComplete = false;
-		var $trs = that.$tbl.children("tbody").children("tr.pq-detail-child");
-		for (var i = 0; i < $trs.length; i++) {
-			var tr = $trs[i],
-				$tr = $(tr),
-				rowIndxPage = $tr.attr("pq-row-indx"),
-				rowData = data[rowIndxPage],
-				$grid = rowData.pq_detail["child"];
-			if (!$grid) {
-				if (typeof initDetail == "function") {
-					$grid = initDetail.call(that.element[0], {
-						rowData: rowData
-					});
-					rowData.pq_detail["child"] = $grid
-				}
-			}
-			var $header = $grid.find(".pq-header-outer");
-			$tr.children("td.pq-detail-child").append($grid);
-			if ($header.height() == 0) {
-				try {
-					$grid.pqGrid("refresh")
-				} catch (ex) {}
-			}
-		}
-		this.refreshComplete = true;
-		this.detachView = false
-	};
-	_pHierarchy.beforeTableView = function(evt, ui) {
-		if (!this.detachView) {
-			this.detachInitView(evt, ui)
-		}
-	};
-	_pHierarchy.beforeRefreshData = function(evt, ui) {
-		if (!this.detachView) {
-			this.detachInitView(evt, ui)
-		}
-	};
-	_pHierarchy.detachInitView = function(evt, ui) {
-		var that = this.that,
-			data = that.pdata;
-		if (!data || !data.length) {
-			return
-		}
-		var $trs = that.$tbl.children("tbody").children("tr.pq-grid-row");
-		var prevRI, $temp, htTemp;
-		for (var i = 0; i < $trs.length; i++) {
-			var tr = $trs[i],
-				$tr = $(tr),
-				rowIndxPage = $tr.attr("pq-row-indx"),
-				rowData = data[rowIndxPage];
-			if (rowIndxPage == null || rowIndxPage == prevRI) {
-				continue
-			} else {
-				prevRI = rowIndxPage
-			} if (rowData.pq_detail) {
-				$temp = null;
-				htTemp = 0;
-				if (rowData.pq_detail["child"]) {
-					var $next = $tr.next();
-					if ($next.hasClass("pq-detail-child")) {
-						var $child = $next.children("td.pq-detail-child").children();
-						if ($child.length) {
-							htTemp = $child[0].offsetHeight;
-							$temp = $child.detach()
-						}
-					}
-				}
-				if ($temp && $temp.length) {
-					rowData.pq_detail["child"] = $temp;
-					rowData.pq_detail["height"] = htTemp
-				}
-			}
-		}
-		this.detachView = true
-	};
-	_pHierarchy.cellClick = function(evt, ui) {
-		var that = this.that,
-			column = ui.column,
-			rowData = ui.rowData,
-			rowIndx = ui.rowIndx,
-			type = this.type;
-		if (column && column.type === type) {
-			var dataIndx = "pq_detail";
-			if (rowData[dataIndx] == null) {
-				that.rowExpand({
-					rowIndx: rowIndx,
-					scrollRow: true
-				})
-			} else {
-				if (rowData[dataIndx]["show"] === false) {
-					that.rowExpand({
-						rowIndx: rowIndx,
-						scrollRow: true
-					})
-				} else {
-					that.rowCollapse({
-						rowIndx: rowIndx,
-						scrollRow: true
-					})
-				}
-			}
-		}
-	};
 	fn.rowExpand = function(objP) {
-		var rowData = this.getRowData(objP),
-			detM = this.options.detailModel,
-			dataIndx = "pq_detail";
-		if (rowData == null) {
-			return
-		}
-		if (rowData[dataIndx] == null) {
-			rowData[dataIndx] = {
-				show: true
-			}
-		} else {
-			if (rowData[dataIndx]["show"] === false) {
-				rowData[dataIndx]["show"] = true
-			}
-		} if (!detM.cache) {
-			var $temp = rowData[dataIndx]["child"];
-			if ($temp) {
-				$temp.remove();
-				rowData[dataIndx]["child"] = null;
-				rowData[dataIndx]["height"] = 0
-			}
-		}
-		this.refresh();
-		if (objP.scrollRow) {
-			var rowIndx = objP.rowIndx;
-			this.scrollRow({
-				rowIndx: rowIndx
-			})
-		}
+		this.iHierarchy.rowExpand(objP)
 	};
 	fn.rowInvalidate = function(objP) {
-		var rowData = this.getRowData(objP),
-			dataIndx = "pq_detail";
-		var $temp = rowData[dataIndx]["child"];
-		$temp.remove();
-		rowData[dataIndx]["child"] = null
+		this.iHierarchy.rowInvalidate(objP)
 	};
 	fn.rowCollapse = function(objP) {
-		var rowData = this.getRowData(objP),
-			detM = this.options.detailModel,
-			dataIndx = "pq_detail";
-		if (rowData == null || rowData[dataIndx] == null) {
-			return
-		} else {
-			if (rowData[dataIndx]["show"] === true) {
-				if (!detM.cache) {
-					var $temp = rowData[dataIndx]["child"];
-					if ($temp) {
-						$temp.remove();
-						rowData[dataIndx]["child"] = null;
-						rowData[dataIndx]["height"] = 0
-					}
-				}
-				rowData[dataIndx]["show"] = false;
-				this.refresh();
-				if (objP.scrollRow) {
-					var rowIndx = objP.rowIndx;
-					this.scrollRow({
-						rowIndx: rowIndx
-					})
-				}
-			}
-		}
+		this.iHierarchy.rowCollapse(objP)
 	};
 	var cHeaderSearch = function(that) {
 		this.that = that;
@@ -9282,7 +9727,7 @@
 		that.element.on(widgetEventPrefix + "headerkeydown" + eventNamespace, function(evt, ui) {
 			if (self.belongs(evt)) {
 				var $src = $(evt.originalEvent.target);
-				if ($src.hasClass("pq-search-hd-field")) {
+				if ($src.hasClass("pq-grid-hd-search-field")) {
 					return self.onKeyDown(evt, ui, $src)
 				} else {
 					return true
@@ -9325,7 +9770,7 @@
 		var that = this.that,
 			freezeCols = that.options.freezeCols,
 			$tbl_left = $(that.$tbl_header[0]),
-			$inp, selector = ".pq-search-hd-field[name='" + dataIndx + "']",
+			$inp, selector = ".pq-grid-hd-search-field[name='" + dataIndx + "']",
 			$tbl_right = $(that.$tbl_header[(that.$tbl_header.length == 2) ? 1 : 0]);
 		if (colIndx >= freezeCols) {
 			$inp = $tbl_right.find(selector)
@@ -9360,7 +9805,8 @@
 					if (shiftKey) {
 						$inp = $ele[0]
 					}
-				} if ($inp) {
+				}
+				if ($inp) {
 					$inp.focus();
 					evt.preventDefault();
 					return false
@@ -9371,7 +9817,8 @@
 					colIndx--
 				} else {
 					colIndx++
-				} if (colIndx < 0 || colIndx >= CM.length) {
+				}
+				if (colIndx < 0 || colIndx >= CM.length) {
 					break
 				}
 				var column = CM[colIndx],
@@ -9412,11 +9859,12 @@
 
 		function handleFocus(e) {
 			that._fixTableViewPort();
-			var $inp = $(e.target);
-			var dataIndx = $inp.attr("name");
+			var $target = $(e.target),
+				$inp = $target.closest(".pq-grid-hd-search-field"),
+				dataIndx = $inp.attr("name");
 			if (that.scrollColumn({
-				dataIndx: dataIndx
-			})) {
+					dataIndx: dataIndx
+				})) {
 				var colIndx = that.getColIndx({
 					dataIndx: dataIndx
 				});
@@ -9424,7 +9872,7 @@
 				$ele.focus()
 			}
 		}
-		var $trs = that.$header.find(".pq-grid-header-search");
+		var $trs = that.$header.find(".pq-grid-header-search-row");
 		for (var i = 0; i < $trs.length; i++) {
 			$($trs[i]).on("focusin", handleFocus)
 		}
@@ -9440,10 +9888,11 @@
 		}
 		this._bindFocus();
 		var CM = that.colModel,
-			initH = that.initH,
-			finalH = that.finalH,
 			freezeCols = options.freezeCols,
 			virtualX = options.virtualX,
+			virtualXHeader = options.virtualXHeader,
+			initH = (virtualXHeader === false) ? that.initHH : that.initH,
+			finalH = (virtualXHeader === false) ? that.finalHH : that.finalH,
 			$tbl_header = that.$tbl_header,
 			$tbl_left = $($tbl_header[0]),
 			$tbl_right = $($tbl_header[1]),
@@ -9491,11 +9940,9 @@
 				})
 			} else {
 				if (ftype == "select") {
-					$ele.val(value);
-					var wd = this.getWidth(column, columnBorders);
-					$ele.css({
-						width: wd
-					})
+					if (value != null) {
+						$ele.val(value)
+					}
 				}
 			}
 			var finit = filter.init;
@@ -9517,8 +9964,8 @@
 						(function($ele, handler, dataIndx) {
 							$ele.bind(event, function(evt) {
 								var column = that.getColumn({
-									dataIndx: dataIndx
-								}),
+										dataIndx: dataIndx
+									}),
 									filter = column.filter;
 								if (filter.type == "checkbox") {
 									if (filter.subtype == "triple") {
@@ -9549,27 +9996,25 @@
 			}
 		}
 	};
-	_pHeaderSearch.getWidth = function(column, columnBorders) {
-		var wd = parseInt(column.width) + ((columnBorders) ? 1 : 0),
-			wd = wd - 15;
-		return wd
-	};
 	_pHeaderSearch.createDOM = function(buffer, td_const_cls) {
 		var that = this.that,
 			self = this,
-			initH = that.initH,
-			finalH = that.finalH,
 			thisOptions = that.options,
-			freezeCols = thisOptions.freezeCols,
 			virtualX = thisOptions.virtualX,
+			virtualXHeader = thisOptions.virtualXHeader,
+			initH = (virtualXHeader === false) ? that.initHH : that.initH,
+			finalH = (virtualXHeader === false) ? that.finalHH : that.finalH,
+			freezeCols = thisOptions.freezeCols,
 			CM = that.colModel,
-			zIndex = that.element.zIndex() + 5,
-			columnBorders = thisOptions.columnBorders,
 			dataHS = this.dataHS,
-			numberCell = thisOptions.numberCell;
-		buffer.push("<tr class='pq-grid-header-search'>");
+			numberCell = thisOptions.numberCell,
+			betweenTmpl = function(input1, input2) {
+				var strS = ["<div class='pq-from-div'>", input1, "</div>", "<span class='pq-from-to-center'>-</span>", "<div class='pq-to-div'>", input2, "</div>"].join("");
+				return strS
+			};
+		buffer.push("<tr class='pq-grid-header-search-row'>");
 		if (numberCell.show) {
-			buffer.push(["<td pq-grid-col-indx='-1' class='pq-grid-number-col' rowspan='1'>", "<div class='pq-grid-header-table-div'>&nbsp;</div></td>"].join(""))
+			buffer.push(["<td pq-col-indx='-1' class='pq-grid-number-col' rowspan='1'>", "<div class='pq-td-div'>&nbsp;</div></td>"].join(""))
 		}
 		for (var i = 0; i <= finalH; i++) {
 			if (i < initH && i >= freezeCols && virtualX) {
@@ -9604,45 +10049,38 @@
 					type = filter.type,
 					value = filter.value,
 					condition = filter.condition,
-					wd = this.getWidth(column, columnBorders),
 					cls = filter.cls,
-					cls = "pq-search-hd-field " + (cls ? cls : ""),
+					cls = "pq-grid-hd-search-field " + (cls ? cls : ""),
 					style = filter.style,
 					style = style ? style : "",
-					style = style + "z-index:" + zIndex + ";",
 					attr = filter.attr,
 					attr = attr ? attr : "",
-					strS = "",
-					wdhalf;
+					strS = "";
 				if (condition == "between") {
 					var value2 = filter.value2,
-						value2 = (value2 != null) ? value2 : "",
-						wdhalf = ((wd / 2) - 9)
+						value2 = (value2 != null) ? value2 : ""
 				}
 				if (type === "textbox") {
 					value = value ? value : "";
 					cls = cls + " ui-corner-all pq-search-txt";
 					if (condition == "between") {
-						strS = this._input(dataIndx, value, wdhalf, cls + " pq-from", style, attr);
-						strS += "-" + this._input(dataIndx, value2, wdhalf, cls + " pq-to", style, attr)
+						strS = betweenTmpl(this._input(dataIndx, value, cls + " pq-from", style, attr), this._input(dataIndx, value2, cls + " pq-to", style, attr))
 					} else {
-						strS = this._input(dataIndx, value, wd, cls, style, attr)
+						strS = this._input(dataIndx, value, cls, style, attr)
 					}
 				} else {
 					if (type === "textarea") {
 						value = value ? value : "";
 						cls = cls + " ui-corner-all pq-search-txt";
 						if (condition == "between") {
-							strS = this._textarea(dataIndx, value, wdhalf, cls, style, attr);
-							strS += "-" + this._textarea(dataIndx, value2, wdhalf, cls, style, attr)
+							strS = betweenTmpl(this._textarea(dataIndx, value, cls + " pq-from", style, attr), this._textarea(dataIndx, value2, cls + " pq-to", style, attr))
 						} else {
-							strS = this._textarea(dataIndx, value, wd, cls, style, attr)
+							strS = this._textarea(dataIndx, value, cls, style, attr)
 						}
 					} else {
 						if (type === "select") {
 							if (filter.cache) {
-								strS = filter.cache;
-								strS = strS.replace(/z-index:\d;/, "z-index:" + zIndex + ";")
+								strS = filter.cache
 							} else {
 								var opts = filter.options;
 								if (typeof opts === "function") {
@@ -9656,7 +10094,7 @@
 									})
 								}
 								cls = cls + " ui-corner-all";
-								var attrSelect = ["name='", dataIndx, "' class='", cls, "' style='width:", wd, "px;", style, "' ", attr].join("");
+								var attrSelect = ["name='", dataIndx, "' class='", cls, "' style='", style, "' ", attr].join("");
 								strS = $.paramquery.select({
 									options: opts,
 									attr: attrSelect,
@@ -9692,18 +10130,18 @@
 						}
 					}
 				}
-				buffer.push(["<td class='", td_cls, "'><div class='pq-grid-header-table-div' style='padding:0px 2px;' >", "", strS, "</div></td>"].join(""))
+				buffer.push(["<td class='", td_cls, "'><div class='pq-td-div' >", "", strS, "</div></td>"].join(""))
 			} else {
-				buffer.push(["<td class='", td_cls, "'><div class='pq-grid-header-table-div' >", "&nbsp;", "</div></td>"].join(""))
+				buffer.push(["<td class='", td_cls, "'><div class='pq-td-div' >", "&nbsp;", "</div></td>"].join(""))
 			}
 		}
 		buffer.push("</tr>")
 	};
-	_pHeaderSearch._input = function(dataIndx, value, wd, cls, style, attr) {
-		return ['<input value="', value, "\" name='", dataIndx, "' type=text style='width:", wd, "px;" + style + "' class='" + cls + "' " + attr + " />"].join("")
+	_pHeaderSearch._input = function(dataIndx, value, cls, style, attr) {
+		return ['<input value="', value, "\" name='", dataIndx, "' type=text style='" + style + "' class='" + cls + "' " + attr + " />"].join("")
 	};
-	_pHeaderSearch._textarea = function(dataIndx, value, wd, cls, style, attr) {
-		return ["<textarea name='", dataIndx, "' style='width:", wd, "px;" + style + "' class='" + cls + "' " + attr + " >", value, "</textarea>"].join("")
+	_pHeaderSearch._textarea = function(dataIndx, value, cls, style, attr) {
+		return ["<textarea name='", dataIndx, "' style='" + style + "' class='" + cls + "' " + attr + " >", value, "</textarea>"].join("")
 	};
 	$.paramquery.select = function(objP) {
 		var attr = objP.attr,
@@ -9711,64 +10149,64 @@
 			groupIndx = objP.groupIndx,
 			labelIndx = objP.labelIndx,
 			valueIndx = objP.valueIndx,
+			jsonFormat = (labelIndx != null && valueIndx != null),
+			grouping = (groupIndx != null),
 			prepend = objP.prepend,
-			groupV, groupVLast;
-		var buffer = ["<select ", attr, " >"];
+			dataMap = objP.dataMap,
+			groupV, groupVLast, jsonF, dataMapFn = function() {
+				var jsonObj = {};
+				for (var k = 0; k < dataMap.length; k++) {
+					var key = dataMap[k];
+					jsonObj[key] = option[key]
+				}
+				return "data-map='" + (JSON.stringify(jsonObj)) + "'"
+			},
+			buffer = ["<select ", attr, " >"];
 		if (prepend) {
 			for (var key in prepend) {
 				buffer.push('<option value="', key, '">', prepend[key], "</option>")
 			}
 		}
-		if (groupIndx) {
-			if (opts && opts.length) {
-				for (var i = 0, len = opts.length; i < len; i++) {
-					var option = opts[i],
-						value = option[valueIndx];
+		if (opts && opts.length) {
+			for (var i = 0, len = opts.length; i < len; i++) {
+				var option = opts[i];
+				if (jsonFormat) {
+					var value = option[valueIndx],
+						disabled = (option.pq_disabled ? 'disabled="disabled" ' : ""),
+						selected = (option.pq_selected ? 'selected="selected" ' : "");
 					if (value == null) {
 						continue
 					}
-					groupV = option[groupIndx];
-					if (groupVLast != groupV) {
-						if (groupVLast != null) {
-							buffer.push("</optgroup>")
-						}
-						buffer.push('<optgroup label="', groupV, '">');
-						groupVLast = groupV
-					}
-					if (valueIndx != labelIndx) {
-						var label = option[labelIndx];
-						buffer.push('<option value="', value, '">', label, "</option>")
-					} else {
-						buffer.push("<option>", value, "</option>")
-					}
-				}
-				buffer.push("</optgroup>")
-			}
-		} else {
-			if (opts && opts.length) {
-				for (var i = 0, len = opts.length; i < len; i++) {
-					var option = opts[i];
-					if (labelIndx != null && valueIndx != null) {
-						var value = option[valueIndx];
-						if (value == null) {
-							continue
-						}
-						if (labelIndx == valueIndx) {
-							buffer.push("<option>", value, "</option>")
-						} else {
-							var label = option[labelIndx];
-							buffer.push('<option value="', value, '">', label, "</option>")
-						}
-					} else {
-						if (typeof option == "object") {
-							for (var key in option) {
-								buffer.push('<option value="', key, '">', option[key], "</option>")
+					jsonF = dataMap ? dataMapFn() : "";
+					if (grouping) {
+						var disabled_group = (option.pq_disabled_group ? 'disabled="disabled" ' : "");
+						groupV = option[groupIndx];
+						if (groupVLast != groupV) {
+							if (groupVLast != null) {
+								buffer.push("</optgroup>")
 							}
-						} else {
-							buffer.push("<option>", option, "</option>")
+							buffer.push('<optgroup label="', groupV, '" ', disabled_group, " >");
+							groupVLast = groupV
 						}
 					}
+					if (labelIndx == valueIndx) {
+						buffer.push("<option ", selected, disabled, jsonF, ">", value, "</option>")
+					} else {
+						var label = option[labelIndx];
+						buffer.push("<option ", selected, disabled, jsonF, ' value="', value, '">', label, "</option>")
+					}
+				} else {
+					if (typeof option == "object") {
+						for (var key in option) {
+							buffer.push('<option value="', key, '">', option[key], "</option>")
+						}
+					} else {
+						buffer.push("<option>", option, "</option>")
+					}
 				}
+			}
+			if (grouping) {
+				buffer.push("</optgroup>")
 			}
 		}
 		buffer.push("</select>");
@@ -9781,15 +10219,15 @@
 				this.prop("indeterminate", false);
 				if (val) {
 					val = false;
-					this.removeAttr("checked")
+					this.prop("checked", false)
 				} else {
 					if (val === false) {
 						val = null;
 						this.prop("indeterminate", true);
-						this.removeAttr("checked")
+						this.prop("checked", false)
 					} else {
 						val = true;
-						this.attr("checked", "checked")
+						this.prop("checked", true)
 					}
 				}
 				this.data("pq_value", val);
@@ -9800,12 +10238,12 @@
 				this.prop("indeterminate", false);
 				if (val == null) {
 					this.prop("indeterminate", true);
-					this.removeAttr("checked")
+					this.prop("checked", false)
 				} else {
 					if (val) {
-						this.attr("checked", "checked")
+						this.prop("checked", true)
 					} else {
-						this.removeAttr("checked")
+						this.prop("checked", false)
 					}
 				}
 				return this
@@ -9820,22 +10258,32 @@
 			thisOptions = that.options,
 			numberCell = thisOptions.numberCell,
 			groupTitle = rowObj.groupTitle,
-			GMTitle = GM.title,
 			groupLevel = rowObj.level,
 			GMRowIndx = rowObj.GMRowIndx,
+			GMTitle = GM.title,
 			GMIcon = GM.icon,
 			GMIcon = GMIcon ? GMIcon[groupLevel] : null,
 			GMIcon = (GMIcon && GMIcon.length && GMIcon.length == 2 && typeof GMIcon.push === "function") ? GMIcon : ["ui-icon-minus", "ui-icon-plus"];
 		if (GMTitle && GMTitle[groupLevel] != null) {
-			if (GMTitle[groupLevel] === false) {
+			GMTitle = GMTitle[groupLevel];
+			if (GMTitle === false) {
 				return
 			}
-			groupTitle = GMTitle[groupLevel].replace("{0}", groupTitle);
-			groupTitle = groupTitle.replace("{1}", rowObj.items)
+			if (typeof GMTitle == "function") {
+				groupTitle = GMTitle(rowObj)
+			} else {
+				groupTitle = GMTitle.replace("{0}", groupTitle);
+				groupTitle = groupTitle.replace("{1}", rowObj.items)
+			}
 		} else {
 			groupTitle = groupTitle + " - " + rowObj.items + " item(s)"
 		}
-		buffer.push(["<tr class='pq-group-row pq-grid-row", (lastFrozenRow ? " pq-last-freeze-row" : ""), "' title=\"", rowObj.groupTitle, "\" level='", groupLevel, "' GMRowIndx='", GMRowIndx, "'>"].join(""));
+		var row_cls = 'pq-group-row pq-grid-row",(lastFrozenRow?" pq-last-frozen-row":""),"',
+			titleCls = GM.titleCls;
+		if (titleCls && (titleCls = titleCls[groupLevel])) {
+			row_cls += " " + titleCls
+		}
+		buffer.push(["<tr class='", row_cls, "' title=\"", rowObj.groupTitle, "\" level='", groupLevel, "' GMRowIndx='", GMRowIndx, "'>"].join(""));
 		if (numberCell.show) {
 			buffer.push("<td class='pq-grid-number-cell ui-state-default'>&nbsp;</td>")
 		}
@@ -9846,9 +10294,15 @@
 		buffer.push("<td class='pq-grid-cell' colSpan='100' >", "<div class='pq-td-div' style='margin-left:", (groupLevel * 16), "px;'>", "<span class='ui-icon ", icon, "'></span>", groupTitle, "</div></td>");
 		buffer.push("</tr>")
 	};
-	_pGenerateView._generateSummaryRow = function(rowData, thisColModel, buffer, lastFrozenRow) {
-		var row_cls = "pq-summary-row pq-grid-row" + (lastFrozenRow ? " pq-last-freeze-row" : ""),
-			that = this.that,
+	_pGenerateView._generateSummaryRow = function(GM, rowObj, thisColModel, buffer, lastFrozenRow) {
+		var level = rowObj.level,
+			groupRowData = rowObj.rowData,
+			row_cls = "pq-summary-row pq-grid-row" + (lastFrozenRow ? " pq-last-frozen-row" : ""),
+			summaryCls = GM.summaryCls;
+		if (summaryCls && (summaryCls = summaryCls[level])) {
+			row_cls += " " + summaryCls
+		}
+		var that = this.that,
 			thisOptions = that.options,
 			virtualX = thisOptions.virtualX,
 			initH = that.initH,
@@ -9856,7 +10310,6 @@
 			freezeCols = thisOptions.freezeCols,
 			numberCell = thisOptions.numberCell,
 			columnBorders = thisOptions.columnBorders,
-			wrap = thisOptions.wrap,
 			offset = this.offset;
 		var const_cls = "pq-grid-cell ";
 		var row_str = "<tr class='" + row_cls + "'>";
@@ -9884,13 +10337,25 @@
 				if (column.align == "center") {
 					cls += " pq-align-center"
 				}
-			} if (col == freezeCols - 1 && columnBorders) {
-				cls += " pq-last-freeze-col"
+			}
+			if (col == freezeCols - 1 && columnBorders) {
+				cls += " pq-last-frozen-col"
 			}
 			if (column.cls) {
 				cls = cls + " " + column.cls
 			}
-			var valCell = (rowData[dataIndx] == null) ? "&nbsp;" : rowData[dataIndx];
+			var valCell = groupRowData[dataIndx],
+				title;
+			if (valCell && (title = column.summary.title) && (title = title[level])) {
+				if (typeof title == "function") {
+					rowObj.dataIndx = dataIndx;
+					rowObj.cellData = valCell;
+					valCell = title.call(that.element[0], rowObj)
+				} else {
+					valCell = title.replace("{0}", valCell)
+				}
+			}
+			valCell = (valCell == null) ? "&nbsp;" : valCell;
 			var str = ["<td class='", cls, "' style='", strStyle, "' >", valCell, "</td>"].join("");
 			buffer.push(str)
 		}
@@ -9900,7 +10365,7 @@
 	_pGenerateView._generateDetailRow = function(rowData, rowIndx, thisColModel, buffer, objP, lastFrozenRow) {
 		var row_cls = "pq-grid-row pq-detail-child";
 		if (lastFrozenRow) {
-			row_cls += " pq-last-freeze-row"
+			row_cls += " pq-last-frozen-row"
 		}
 		var that = this.that,
 			thisOptions = that.options,
@@ -9990,7 +10455,8 @@
 		} else {
 			rowObj.collapsed = false;
 			collapsed = false
-		} if (collapsed) {
+		}
+		if (collapsed) {
 			this.showHideRows(GMRowIndx + 1, level, true)
 		} else {
 			var arr = this.showHideRows(GMRowIndx + 1, level, false);
@@ -10158,24 +10624,20 @@
 										summaryType = (summary) ? (summary.type ? summary.type[u] : null) : null;
 									if (summaryType) {
 										var dataIndx = column.dataIndx,
-											summaryCellData = "",
-											summaryTitle = summary.title ? summary.title[u] : null,
-											sText = "{0}";
+											summaryCellData = "";
 										if (typeof summaryType == "function") {
 											summaryCellData = summaryType(cols[u][dataIndx], column.dataType)
 										} else {
-											sText = summaryType + ": {0}";
 											summaryCellData = this[summaryType](cols[u][dataIndx], column.dataType)
-										} if (summaryTitle) {
-											sText = summaryTitle
 										}
-										groupRowData[dataIndx] = sText.replace("{0}", summaryCellData)
+										groupRowData[dataIndx] = summaryCellData
 									}
 								}
 								dataGM.push({
 									groupSummary: true,
 									level: u,
-									data: groupRowData
+									prevRowData: data[i - 1],
+									rowData: groupRowData
 								})
 							}
 						}
@@ -10196,6 +10658,7 @@
 						dataGM.push({
 							groupTitle: groupVal[m],
 							level: m,
+							nextRowData: rowData,
 							GMRowIndx: dataGM.length,
 							collapsed: (GMcollapsed && (GMcollapsed[m] != null)) ? GMcollapsed[m] : false
 						});
@@ -10220,202 +10683,6 @@
 		} else {
 			that.dataGM = null
 		}
-	};
-	var cDragColumns = function(that) {
-		this.that = that;
-		this.$drag_helper = null;
-		var dragColumns = that.options.dragColumns,
-			topIcon = dragColumns.topIcon,
-			bottomIcon = dragColumns.bottomIcon,
-			self = this;
-		this.status = "stop";
-		this.$arrowTop = $("<div class='pq-arrow-down ui-icon " + topIcon + "'></div>").appendTo(that.element);
-		this.$arrowBottom = $("<div class='pq-arrow-up ui-icon " + bottomIcon + "' ></div>").appendTo(that.element);
-		this.hideArrows();
-		if (dragColumns && dragColumns.enabled) {
-			that.$header_o.on("mousedown", "td.pq-grid-col", function(evt, ui) {
-				if ($(evt.target).is("input,select,textarea")) {
-					return
-				}
-				if (!evt.pq_composed) {
-					self.setDraggables(evt, ui);
-					evt.pq_composed = true;
-					var e = $.Event("mousedown", evt);
-					$(evt.target).trigger(e)
-				}
-			})
-		}
-	};
-	var _pDragColumns = cDragColumns.prototype;
-	_pDragColumns.showFeedback = function($td, leftDrop) {
-		var that = this.that;
-		var td = $td[0];
-		var offParent = td.offsetParent.offsetParent;
-		var left = td.offsetLeft + offParent.offsetLeft + ((!leftDrop) ? td.offsetWidth : 0) - 8;
-		var top = that.$grid_inner[0].offsetTop + td.offsetTop - 16;
-		var top2 = that.$grid_inner[0].offsetTop + that.$header[0].offsetHeight;
-		this.$arrowTop.css({
-			left: left,
-			top: top,
-			display: ""
-		});
-		this.$arrowBottom.css({
-			left: left,
-			top: top2,
-			display: ""
-		})
-	};
-	_pDragColumns.showArrows = function() {
-		this.$arrowTop.show();
-		this.$arrowBottom.show()
-	};
-	_pDragColumns.hideArrows = function() {
-		this.$arrowTop.hide();
-		this.$arrowBottom.hide()
-	};
-	_pDragColumns.updateDragHelper = function(accept) {
-		var that = this.that,
-			dragColumns = that.options.dragColumns,
-			acceptIcon = dragColumns.acceptIcon,
-			rejectIcon = dragColumns.rejectIcon,
-			$drag_helper = this.$drag_helper;
-		if (!$drag_helper) {
-			return
-		}
-		if (accept) {
-			$drag_helper.children("span.pq-drag-icon").addClass(acceptIcon).removeClass(rejectIcon);
-			$drag_helper.removeClass("ui-state-error")
-		} else {
-			$drag_helper.children("span.pq-drag-icon").removeClass(acceptIcon).addClass(rejectIcon);
-			$drag_helper.addClass("ui-state-error")
-		}
-	};
-	_pDragColumns.setDraggables = function(evt, ui) {
-		var $td = $(evt.currentTarget),
-			that = this.that,
-			dragColumns = that.options.dragColumns,
-			rejectIcon = dragColumns.rejectIcon,
-			self = this;
-		if ($td.hasClass("ui-draggable")) {
-			return
-		}
-		if (!that.getHeaderColumnFromTD($td)) {
-			return
-		}
-		$td.draggable({
-			distance: 10,
-			cursorAt: {
-				top: -18,
-				left: -10
-			},
-			helper: function() {
-				var $this = $(this);
-				self.status = "helper";
-				self._setupDroppables($this);
-				that.$header.find(".pq-grid-col-resize-handle").hide();
-				var colIndx = $this.attr("pq-col-indx");
-				var rowIndx = $this.attr("pq-row-indx");
-				$this.droppable("destroy");
-				var column = that.headerCells[rowIndx][colIndx];
-				var $drag_helper = $("<div class='pq-col-drag-helper ui-widget-content ui-corner-all' ><span class='pq-drag-icon ui-icon " + rejectIcon + "'></span>" + column.title + "</div>");
-				self.$drag_helper = $drag_helper;
-				return $drag_helper[0]
-			},
-			zIndex: "1000",
-			appendTo: that.element,
-			revert: "invalid",
-			drag: function(evt, ui) {
-				self.status = "drag";
-				var $td = $("td.pq-drop-hover", that.$header);
-				if ($td.length > 0) {
-					self.showArrows();
-					self.updateDragHelper(true);
-					var wd = $td.width();
-					var lft = evt.clientX - $td.offset().left + $(document).scrollLeft();
-					if (lft < wd / 2) {
-						self.leftDrop = true;
-						self.showFeedback($td, true)
-					} else {
-						self.leftDrop = false;
-						self.showFeedback($td, false)
-					}
-				} else {
-					self.hideArrows();
-					if (that.$toolbar.hasClass("pq-drop-hover")) {
-						self.updateDragHelper(true)
-					} else {
-						self.updateDragHelper()
-					}
-				}
-			},
-			stop: function(evt, ui) {
-				self.status = "stop";
-				that.$header.find(".pq-grid-col-resize-handle").show();
-				self.hideArrows()
-			}
-		})
-	};
-	_pDragColumns._columnIndexOf = function(colModel, column) {
-		for (var i = 0, len = colModel.length; i < len; i++) {
-			if (colModel[i] == column) {
-				return i
-			}
-		}
-		return -1
-	};
-	_pDragColumns._setupDroppables = function($td) {
-		var that = this.that,
-			o = that.options,
-			self = this;
-		var objDrop = {
-			hoverClass: "pq-drop-hover ui-state-highlight",
-			tolerance: "pointer",
-			drop: function(evt, ui) {
-				if (that.dropPending) {
-					return
-				}
-				var colIndxDrag = parseInt(ui.draggable.attr("pq-col-indx"));
-				var rowIndxDrag = parseInt(ui.draggable.attr("pq-row-indx"));
-				var colIndxDrop = parseInt($(this).attr("pq-col-indx"));
-				var rowIndxDrop = $(this).attr("pq-row-indx");
-				var optCM = that.options.colModel;
-				var headerCells = that.headerCells;
-				var columnDrag = headerCells[rowIndxDrag][colIndxDrag];
-				var colModelDrag, colModelDrop;
-				if (rowIndxDrag == 0) {
-					colModelDrag = optCM
-				} else {
-					colModelDrag = headerCells[rowIndxDrag - 1][colIndxDrag].colModel
-				} if (rowIndxDrop == 0) {
-					colModelDrop = optCM
-				} else {
-					colModelDrop = headerCells[rowIndxDrop - 1][colIndxDrop].colModel
-				}
-				var columnDrop = headerCells[rowIndxDrop][colIndxDrop];
-				var indxDrag = self._columnIndexOf(colModelDrag, columnDrag);
-				var column = colModelDrag.splice(indxDrag, 1)[0];
-				var indxDrop = self._columnIndexOf(colModelDrop, columnDrop);
-				var decr = (self.leftDrop) ? 1 : 0;
-				colModelDrop.splice(indxDrop + 1 - decr, 0, column);
-				that.dropPending = true;
-				window.setTimeout(function() {
-					that._calcThisColModel();
-					that.refresh();
-					that.dropPending = false
-				}, 0)
-			}
-		};
-		var $tds = that.$header_left.find("td.pq-left-col");
-		var $tds2 = that.pqpanes.v ? that.$header_right.find("td.pq-right-col") : that.$header_left.find("td.pq-right-col");
-		$tds = $tds.add($tds2);
-		$tds.each(function(i, td) {
-			var $td = $(td);
-			if ($td.hasClass("ui-droppable")) {
-				return
-			}
-			$td.droppable(objDrop)
-		});
-		return
 	};
 	fn.options = {
 		detailModel: {
@@ -10454,20 +10721,17 @@
 		this.iHeaderSearch = new cHeaderSearch(this);
 		this.iUCData = new $.paramquery.cUCData(this);
 		this.iMouseSelection = new $.paramquery.cMouseSelection(this);
-		this._super.apply(this);
+		this._super();
 		this.iGroupView.bindEvents();
-		this.iDragColumns = new cDragColumns(this);
+		this.iDragColumns = new $.paramquery.cDragColumns(this);
 		this._createToolbar();
+		if (o.dataModel.location === "remote") {
+			this.refresh({
+				table: true
+			})
+		}
 		this.refreshDataAndView({
 			header: true
-		});
-		this.refresh({
-			table: true
-		});
-		var widgetEventPrefix = that.widgetEventPrefix.toLowerCase(),
-			widgetName = that.widgetName;
-		that.element.one(widgetEventPrefix + "load." + widgetName, function(evt, ui) {
-			that.refresh()
 		})
 	};
 	fn._createToolbar = function() {
@@ -10509,7 +10773,7 @@
 		}
 	};
 	fn._createHeader = function() {
-		this._super.apply(this);
+		this._super();
 		if (this.options.showHeader) {
 			this._trigger("createHeader")
 		}
@@ -10557,7 +10821,8 @@
 							}
 						} else {
 							filter.on = true
-						} if (condition) {
+						}
+						if (condition) {
 							filter.condition = condition
 						}
 						condition = filter.condition;
@@ -10630,10 +10895,13 @@
 			} else {
 				if (type === "detail") {
 					column.dataIndx = "pq_detail";
-					this.iHierarchy = new cHierarchy(this)
+					this.iHierarchy = new $.paramquery.cHierarchy(this)
 				}
 			}
 		}
+	};
+	fn.refreshHeader = function() {
+		this._createHeader()
 	};
 	fn.refreshDataFromDataModel = function() {
 		this._super.apply(this);
@@ -10648,7 +10916,7 @@
 		this.that = that
 	};
 	var _pSort = cSort.prototype;
-	_pSort._refreshSorters = function(pDataIndx) {
+	_pSort._refreshSorters = function(pDataIndx, pdir) {
 		var that = this.that,
 			thisOptions = that.options,
 			DM = thisOptions.dataModel,
@@ -10698,14 +10966,15 @@
 					}
 				} else {
 					if (DM.sortIndx == pDataIndx) {
-						DM.sortDir = (DM.sortDir == "up") ? "down" : "up"
+						DM.sortDir = (pdir ? pdir : (DM.sortDir == "up" ? "down" : "up"))
 					} else {
 						DM.sortIndx = pDataIndx;
-						DM.sortDir = "up"
+						DM.sortDir = pdir ? pdir : "up"
 					}
 				}
 			}
-		} if (DM.sortIndx != null) {
+		}
+		if (DM.sortIndx != null) {
 			if (multiSort) {
 				for (var i = 0; i < DMsortIndx.length; i++) {
 					var dataIndx = DMsortIndx[i];
@@ -10738,10 +11007,8 @@
 		}
 		return found
 	};
-	_pSort._sortLocalData = function(data) {
+	_pSort.sortLocalData = function(data) {
 		var that = this.that,
-			thisOptions = that.options,
-			DM = thisOptions.dataModel,
 			CM = that.colModel,
 			sorters = this.sorters;
 		for (var i = 0; i < sorters.length; i++) {
@@ -10750,14 +11017,17 @@
 				colIndx = that.getColIndx({
 					dataIndx: dataIndx
 				}),
-				dataType = CM[colIndx].dataType;
-			sorter.dataType = dataType
+				column = CM[colIndx],
+				sortType = column.sortType,
+				dataType = column.dataType;
+			sorter.dataType = dataType;
+			sorter.sortType = sortType
 		}
-		return this.__sortLocalData(sorters, data)
+		return this._sortLocalData(sorters, data)
 	};
-	_pSort.__sortLocalData = function(sorters, data) {
+	_pSort._sortLocalData = function(sorters, data) {
 		if (data == null || data.length == 0) {
-			return
+			return []
 		}
 		if (!sorters || !sorters.length) {
 			return data
@@ -10783,6 +11053,10 @@
 			var val1 = obj1[dataIndx];
 			var val2 = obj2[dataIndx];
 			return (dataType(val1, val2) * dir)
+		}
+
+		function sort_custom2(obj1, obj2, dataIndx, dir, sortType) {
+			return (sortType(obj1, obj2, dataIndx) * dir)
 		}
 
 		function sort_float(obj1, obj2, dataIndx, dir) {
@@ -10859,6 +11133,7 @@
 				var sorter = sorters[i],
 					dataIndx = sorter.dataIndx,
 					dir = (sorter.dir == "up") ? 1 : -1,
+					sortType = sorter.sortType,
 					dataType = sorter.dataType;
 				arrDataIndx[i] = dataIndx;
 				arrDir[i] = dir;
@@ -10875,16 +11150,24 @@
 								}
 							})(dataType)
 						} else {
-							if (dataType == "date") {
-								arrFn[i] = sort_date
+							if (sortType) {
+								arrFn[i] = (function(sortType) {
+									return function(obj1, obj2, dataIndx, dir) {
+										return sort_custom2(obj1, obj2, dataIndx, dir, sortType)
+									}
+								})(sortType)
 							} else {
-								if (dataType == "stringi") {
-									arrFn[i] = sort_stringi
+								if (dataType == "date") {
+									arrFn[i] = sort_date
 								} else {
-									if (dataType == "bool") {
-										arrFn[i] = sort_bool
+									if (dataType == "stringi") {
+										arrFn[i] = sort_stringi
 									} else {
-										arrFn[i] = sort_string
+										if (dataType == "bool") {
+											arrFn[i] = sort_bool
+										} else {
+											arrFn[i] = sort_string
+										}
 									}
 								}
 							}
@@ -10898,37 +11181,7 @@
 		return data
 	};
 	fn._refreshHeaderSortIcons = function() {
-		var thisOptions = this.options,
-			DM = thisOptions.dataModel,
-			sorters = this.iSort.sorters,
-			thisColModel = this.colModel;
-		var $header = this.$header;
-		if (!$header) {
-			return
-		}
-		var $pQuery_cols = $header.find(".pq-grid-col");
-		$pQuery_cols.removeClass("pq-col-sort-asc pq-col-sort-desc ui-state-active");
-		$header.find(".pq-col-sort-icon").removeClass("ui-icon ui-icon-triangle-1-n ui-icon-triangle-1-s");
-		for (var i = 0; i < sorters.length; i++) {
-			var sorter = sorters[i];
-			var dataIndx = sorter.dataIndx;
-			var colIndx = this.getColIndx({
-				dataIndx: dataIndx
-			});
-			var dir = sorter.dir;
-			var addClass = "ui-state-active pq-col-sort-" + (dir == "up" ? "asc" : "desc");
-			var cls2 = "ui-icon ui-icon-triangle-1-" + (dir == "up" ? "n" : "s");
-			$header.find(".pq-grid-col[pq-grid-col-indx=" + colIndx + "]").addClass(addClass);
-			$header.find(".pq-grid-col[pq-grid-col-indx=" + colIndx + "] .pq-col-sort-icon").addClass(cls2)
-		}
-	};
-	fn.getHeaderColumnFromTD = function($td) {
-		var colIndx = $td.attr("pq-grid-col-indx");
-		if (colIndx == null) {
-			return
-		}
-		var column = this.colModel[colIndx];
-		return column
+		this.iHeader.refreshHeaderSortIcons()
 	};
 	fn.getIndxInSorters = function(dataIndx) {
 		var sorters = this.sorters;
@@ -11008,12 +11261,12 @@
 				dataType: column.dataType
 			})
 		}
-		arr = this.iSort.__sortLocalData(sorters, arr);
+		arr = this.iSort._sortLocalData(sorters, arr);
 		var arr2 = [],
 			item2 = undefined;
 		for (var i = 0; i < arr.length; i++) {
-			var rowData = arr[i];
-			var item = JSON.stringify(rowData);
+			var rowData = arr[i],
+				item = JSON.stringify(rowData);
 			if (item !== item2) {
 				arr2.push(rowData);
 				item2 = item
@@ -11052,7 +11305,8 @@
 						return true
 					}
 				}
-			}, getValue = function(cd, dataType) {
+			},
+			getValue = function(cd, dataType) {
 				if (location == "remote") {
 					cd = (cd == null) ? "" : cd;
 					return cd.toString()
@@ -11195,7 +11449,7 @@
 			}
 		},
 		begin: function(cd, value) {
-			if (cd.indexOf(value) == 0) {
+			if ((cd + "").indexOf(value) == 0) {
 				return true
 			}
 		},
@@ -11374,7 +11628,8 @@
 			iFD.isMatchCell = iFD.isMatchCellMultiple
 		} else {
 			iFD.isMatchCell = iFD.isMatchCellSingle
-		} if (FM.on && FMmode) {
+		}
+		if (FM.on && FMmode) {
 			if (data1) {
 				for (var i = 0, len = data1.length; i < len; i++) {
 					var rowData = data1[i];
@@ -11408,7 +11663,8 @@
 					arr1.push(rowData)
 				}
 			}
-		} if (apply) {
+		}
+		if (apply) {
 			DM.data = arr1;
 			DM.dataUF = arr2;
 			this._trigger("filter", null, {
@@ -11443,9 +11699,10 @@
 			data = this.filterLocalData(objP).data
 		} else {
 			data = DM.data
-		} if (DM.sorting && DM.sorting == "local") {
+		}
+		if (DM.sorting && DM.sorting == "local") {
 			if (sort !== false) {
-				data = this.iSort._sortLocalData(data)
+				data = this.iSort.sortLocalData(data)
 			}
 		}
 		if (apply === false) {
@@ -11456,11 +11713,13 @@
 		this.refreshView(objP)
 	};
 	fn.sort = function(obj) {
+		obj = obj ? obj : {};
 		var that = this,
 			options = this.options,
 			colIndx = obj.colIndx,
 			EM = options.editModel,
 			dataIndx = obj.dataIndx,
+			dir = obj.dir,
 			evt = obj.evt,
 			DM = options.dataModel;
 		if (colIndx == null && dataIndx == null) {
@@ -11475,10 +11734,10 @@
 		var column = this.colModel[colIndx];
 		dataIndx = (dataIndx == null) ? column.dataIndx : dataIndx;
 		if (that._trigger("beforeSort", evt, {
-			dataModel: DM,
-			column: column,
-			dataIndx: dataIndx
-		}) == false) {
+				dataModel: DM,
+				column: column,
+				dataIndx: dataIndx
+			}) == false) {
 			return
 		}
 		if (EM.indices) {
@@ -11486,9 +11745,14 @@
 				force: true
 			})
 		}
-		this.iSort._refreshSorters(dataIndx);
+		this.iSort._refreshSorters(dataIndx, dir);
 		if (DM.sorting == "local") {
-			this.iSort._sortLocalData(DM.data);
+			this.iSort.sortLocalData(DM.data);
+			that._trigger("sort", evt, {
+				dataModel: DM,
+				column: column,
+				dataIndx: dataIndx
+			});
 			this.refreshView()
 		} else {
 			if (DM.sorting == "remote") {
@@ -11504,11 +11768,6 @@
 				})
 			}
 		}
-	};
-	fn._setScrollVLength = function(data) {
-		var GM = this.options.groupModel;
-		data = (GM) ? this.dataGM : data;
-		this._super.call(this, data)
 	};
 	$.widget("paramquery.pqGrid", $.paramquery._pqGrid, fn);
 	$.paramquery.pqGrid.regional = {};
@@ -11530,12 +11789,19 @@
 					DM = options.dataModel,
 					data = DM.data,
 					dataLength = data.length,
-					response = [];
+					width, response = [];
 				var header = [];
 				for (var i = 0; i < CMLength; i++) {
 					var column = CM[i];
 					if (column.copy !== false) {
-						header.push('<Column ss:AutoFitWidth="1"  ss:Width="' + column._width + '" />')
+						width = column._width;
+						if (!width) {
+							width = parseInt(column.width);
+							if (!width) {
+								width = 100
+							}
+						}
+						header.push('<Column ss:AutoFitWidth="1"  ss:Width="' + width + '" />')
 					}
 				}
 				header.push("<Row>");
@@ -11562,7 +11828,8 @@
 				response = response.join("\n");
 				var excelDoc = ['<?xml version="1.0"?>', '<?mso-application progid="Excel.Sheet"?>', '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"', ' xmlns:o="urn:schemas-microsoft-com:office:office"', ' xmlns:x="urn:schemas-microsoft-com:office:excel"', ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"', ' xmlns:html="http://www.w3.org/TR/REC-html40">', '<Worksheet ss:Name="', sheetName, '">', "<Table>", header, response, "</Table>", "</Worksheet>", "</Workbook>"];
 				return excelDoc.join("\n")
-			}, getCSVContent = function() {
+			},
+			getCSVContent = function() {
 				var CM = that.colModel,
 					CMLength = CM.length,
 					options = that.options,
@@ -11805,7 +12072,8 @@
 				updateList: [],
 				addList: [],
 				deleteList: []
-			}, mupdateList = [],
+			},
+			mupdateList = [],
 			updateList = [],
 			addList = [],
 			mdeleteList = [],
@@ -11864,7 +12132,8 @@
 				updateList: [],
 				addList: [],
 				deleteList: []
-			}, updateList = [],
+			},
+			updateList = [],
 			addList = [],
 			deleteList = [];
 		for (var i = 0, len = ddata.length; i < len; i++) {
@@ -11941,7 +12210,8 @@
 						}
 					}
 					if (_found) {
-						var newRow = {}, oldRow = {};
+						var newRow = {},
+							oldRow = {};
 						newRow[recIndx] = row[recIndx];
 						oldRow[recIndx] = rowData[recIndx];
 						rowList.push({
@@ -12152,7 +12422,8 @@
 			var rec = udata[i],
 				recId = rec.recId,
 				rowData = rec.rowData,
-				oldRow = {}, newRow = rec.oldRow;
+				oldRow = {},
+				newRow = rec.oldRow;
 			if (recId == null) {
 				continue
 			}
@@ -12540,7 +12811,8 @@
 						}
 					}
 				}
-			} if (listeners) {
+			}
+			if (listeners) {
 				for (var j = 0; j < listeners.length; j++) {
 					var listener = listeners[j];
 					for (var event in listener) {
@@ -13160,7 +13432,7 @@
 					colIndx: colIndx
 				});
 				if ($td) {
-					$td.addClass("pq-cell-select ui-state-highlight")
+					$td.addClass("pq-state-select ui-state-highlight")
 				}
 			}
 			this._addToData({
@@ -13310,7 +13582,8 @@
 			}
 		} else {
 			ret = this._add(objP)
-		} if (ret) {
+		}
+		if (ret) {
 			that._fixIE();
 			this.triggerSelectChange({
 				evt: evt
@@ -13340,7 +13613,8 @@
 			}
 		} else {
 			ret = this._add(objP)
-		} if (ret) {
+		}
+		if (ret) {
 			that._fixIE();
 			this.triggerSelectChange({
 				evt: evt
@@ -13376,7 +13650,7 @@
 					all: true
 				});
 				if ($td) {
-					$td.removeClass("pq-cell-select ui-state-highlight");
+					$td.removeClass("pq-state-select ui-state-highlight");
 					$td.removeAttr("tabindex")
 				}
 			}
@@ -13461,7 +13735,8 @@
 			}
 		} else {
 			ret = this._remove(objP)
-		} if (ret) {
+		}
+		if (ret) {
 			this.triggerSelectChange({
 				evt: evt
 			})
@@ -13489,7 +13764,8 @@
 			}
 		} else {
 			ret = this._remove(objP)
-		} if (ret) {
+		}
+		if (ret) {
 			this.triggerSelectChange({
 				evt: evt
 			})
@@ -13832,7 +14108,8 @@
 				column: column,
 				dataIndx: dataIndx,
 				source: "header"
-			}, inpT = $(evt.target).is("input") ? true : false,
+			},
+			inpT = $(evt.target).is("input") ? true : false,
 			inpChk = $inp.is(":checked"),
 			finalChk = inpChk;
 		if (!inpT) {
@@ -13931,11 +14208,11 @@
 				}
 			}
 			if (that._trigger("check", null, {
-				rows: rows,
-				column: column,
-				dataIndx: dataIndx,
-				source: "dataAvailable"
-			}) !== false) {
+					rows: rows,
+					column: column,
+					dataIndx: dataIndx,
+					source: "dataAvailable"
+				}) !== false) {
 				for (var i = 0; i < len; i++) {
 					var rowData = data[i];
 					if (rowData[dataIndx]) {
@@ -13954,7 +14231,7 @@
 		var that = this.that,
 			rows = ui.rows,
 			rowData = ui.rowData,
-			dataIndx = this._findSelectionIndx();
+			dataIndx = this.dataIndx;
 		if (rows) {
 			for (var i = 0, len = rows.length; i < len; i++) {
 				var row = rows[i],
@@ -13981,7 +14258,7 @@
 		var that = this.that,
 			rows = ui.rows,
 			rowData = ui.rowData,
-			dataIndx = this._findSelectionIndx();
+			dataIndx = this.dataIndx;
 		if (rows) {
 			for (var i = 0, len = rows.length; i < len; i++) {
 				var row = rows[i],
@@ -14056,55 +14333,74 @@
 		}
 	}
 })(jQuery);
+(function() {
+	var lastTime = 0,
+		prefix = ["moz", "webkit"];
+	for (var i = 0; !window.requestAnimationFrame && i < prefix.length; i++) {
+		window.requestAnimationFrame = window[prefix[i] + "RequestAnimationFrame"];
+		window.cancelAnimationFrame = window[prefix[i] + "CancelAnimationFrame"] || window[prefix[i] + "CancelRequestAnimationFrame"]
+	}
+	if (!window.requestAnimationFrame) {
+		window.requestAnimationFrame = function(callback) {
+			var curTime = new Date().getTime(),
+				interval = Math.max(0, 16 - (curTime - lastTime)),
+				id = window.setTimeout(function() {
+					lastTime = new Date().getTime();
+					callback()
+				}, interval);
+			return id
+		}
+	}
+	if (!window.cancelAnimationFrame) {
+		window.cancelAnimationFrame = function(id) {
+			clearTimeout(id)
+		}
+	}
+}());
 (function($) {
+	var calcWidthCols = $.paramquery.pqgrid.calcWidthCols;
+
 	function cMouseSelection(that) {
 		this.that = that;
 		var self = this,
 			element = that.element,
 			prefix = that.widgetEventPrefix.toLowerCase(),
 			eventNamespace = that.eventNamespace;
+		this.scrollTop = 0;
+		this.scrollLeft = 0;
 		element.on(prefix + "contmousedown" + eventNamespace, function(evt, ui) {
 			if (self.belongs(evt)) {
 				return self._onContMouseDown(evt, ui)
 			}
-		});
-		element.on(prefix + "mousedrag" + eventNamespace, function(evt, ui) {
+		}).on(prefix + "mousedrag" + eventNamespace, function(evt, ui) {
 			if (self.belongs(evt) && self.swipedown) {
 				return self._onMouseDrag(evt, ui)
 			}
-		});
-		element.on(prefix + "mousestop" + eventNamespace, function(evt, ui) {
+		}).on(prefix + "mousestop" + eventNamespace, function(evt, ui) {
 			return self._onMouseStop(evt, ui)
-		});
-		element.on(prefix + "mousepqup." + eventNamespace, function(evt, ui) {
+		}).on(prefix + "mousepqup" + eventNamespace, function(evt, ui) {
 			return self._onMousePQUp(evt, ui)
-		});
-		element.on(prefix + "rowmousedown" + eventNamespace, function(evt, ui) {
+		}).on(prefix + "rowmousedown" + eventNamespace, function(evt, ui) {
 			if (self.belongs(evt)) {
 				return self._onRowMouseDown(evt, ui)
 			}
-		});
-		element.on(prefix + "cellmousedown" + eventNamespace, function(evt, ui) {
+		}).on(prefix + "cellmousedown" + eventNamespace, function(evt, ui) {
 			if (self.belongs(evt)) {
 				return self._onCellMouseDown(evt, ui)
 			}
-		});
-		element.on(prefix + "beforetableview" + eventNamespace, function(evt, ui) {
+		}).on(prefix + "beforetableview" + eventNamespace, function(evt, ui) {
 			if (self.belongs(evt)) {
 				return self._beforeTableView(evt, ui)
 			}
-		});
-		element.on(prefix + "refresh" + eventNamespace, function(evt, ui) {
+		}).on(prefix + "refresh" + eventNamespace, function(evt, ui) {
 			if (self.belongs(evt)) {
 				return self._onRefresh(evt, ui)
 			}
-		});
-		element.on(prefix + "cellmouseenter" + eventNamespace, function(evt, ui) {
+		}).on(prefix + "cellmouseenter" + eventNamespace, function(evt, ui) {
 			if (self.belongs(evt)) {
 				return self._onCellMouseEnter(evt, ui)
 			}
-		});
-		element.on(prefix + "rowmouseenter" + eventNamespace, function(evt, ui) {
+		}).on(prefix + "rowmouseenter" + eventNamespace, function(evt, ui) {
 			if (self.belongs(evt)) {
 				return self._onRowMouseEnter(evt, ui)
 			}
@@ -14133,6 +14429,25 @@
 			}
 		}
 	};
+	_pMouseSelection.inViewPort = function($tdr) {
+		var that = this.that,
+			iR = that.iRefresh,
+			htCont = iR.getEContHt(),
+			wdCont = iR.getEContWd() + 1,
+			tdr = $tdr[0],
+			iMS = this,
+			marginTop = iMS.marginTop,
+			scrollLeft = iMS.scrollLeft;
+		if (htCont >= (tdr.offsetTop + tdr.offsetHeight + marginTop)) {
+			if (tdr.nodeName.toUpperCase() == "TD") {
+				if (wdCont >= (tdr.offsetLeft + tdr.offsetWidth + scrollLeft)) {
+					return true
+				}
+			} else {
+				return true
+			}
+		}
+	};
 	_pMouseSelection._onRefresh = function(evt, ui) {
 		var that = this.that,
 			objLF = this.lastFocus,
@@ -14142,14 +14457,11 @@
 				$tdr = that.getCell(objLF)
 			} else {
 				$tdr = that.getRow(objLF)
-			} if ($tdr && $tdr.length) {
-				if (that.inViewPort($tdr)) {
-					$tdr.attr("tabindex", "0").focus()
-				}
-				return
+			}
+			if ($tdr && $tdr.length) {
+				$tdr.attr("tabindex", "0").focus()
 			}
 		}
-		return
 	};
 	_pMouseSelection._onCellMouseDown = function(evt, ui) {
 		var that = this.that,
@@ -14175,9 +14487,9 @@
 		} else {
 			if ((evt.ctrlKey || evt.metaKey) && mode != "single") {
 				if (that.iCells.isSelected({
-					rowIndx: rowIndx,
-					colIndx: colIndx
-				})) {
+						rowIndx: rowIndx,
+						colIndx: colIndx
+					})) {
 					that.iCells.remove({
 						rowIndx: rowIndx,
 						colIndx: colIndx
@@ -14190,8 +14502,8 @@
 				}
 			} else {
 				this.mousedown = {
-					rowIndx: rowIndx,
-					colIndx: colIndx
+					r1: rowIndx,
+					c1: colIndx
 				};
 				that.setSelection(null);
 				that.setSelection({
@@ -14284,8 +14596,8 @@
 		} else {
 			if ((evt.ctrlKey || evt.metaKey) && mode != "single") {
 				if (that.iRows.isSelected({
-					rowIndx: rowIndx
-				})) {
+						rowIndx: rowIndx
+					})) {
 					that.iRows.remove({
 						rowIndx: rowIndx
 					})
@@ -14333,6 +14645,7 @@
 			self.swipedownPrev = null
 		}
 		window.clearInterval(self.intID);
+		window.cancelAnimationFrame(self.intID);
 		self.intID = null
 	};
 	_pMouseSelection._onMouseStop = function(evt, ui) {
@@ -14356,19 +14669,22 @@
 				var count = 0,
 					count2 = SW.repeat;
 				self._stopSwipe();
-				self.intID = window.setInterval(function() {
+				var animate = function() {
 					count += SW.speed;
 					count2--;
-					if (count2 <= 0) {
-						self._stopSwipe(true)
-					}
 					var pageX = x2 + (count * xdiff / tsdiff),
 						pageY = y2 + (count * ydiff / tsdiff);
 					self._onMouseDrag({
 						pageX: pageX,
 						pageY: pageY
-					})
-				}, 50)
+					});
+					if (count2 > 0) {
+						self.intID = window.requestAnimationFrame(animate)
+					} else {
+						self._stopSwipe(true)
+					}
+				};
+				animate()
 			} else {
 				self.swipedown = null;
 				self.swipedownPrev = null
@@ -14390,18 +14706,13 @@
 				y: y1,
 				ts: (new Date()).getTime()
 			};
-			if (that.$td_edit) {
-				that.quitEditMode({
-					silent: true
-				})
+			if (!o.virtualY && o.height !== "flex") {
+				this.scrollVertSmooth(y1, y2);
+				this.syncScrollBarVert()
 			}
-			if (!o.virtualY) {
-				this._scrollVertSmooth(y1, y2);
-				that._syncScrollBarVert()
-			}
-			if (!o.virtualX) {
-				this._scrollHorSmooth(x1, x2);
-				that._syncScrollBarHor()
+			if (!o.virtualX && o.width !== "flex") {
+				this.scrollHorSmooth(x1, x2);
+				this.syncScrollBarHor()
 			}
 			m.x = x2;
 			m.y = y2
@@ -14413,92 +14724,338 @@
 			return false
 		}
 		var that = this.that,
-			$tbl = that.getTableForVertScroll(),
-			$cont = that.$cont,
-			sbHt = that._getScollBarHorizontalHeight(),
-			contHeight = $cont.data("offsetHeight") - sbHt;
+			$tbl = this.getTableForVertScroll(),
+			contHt = that.iRefresh.getEContHt();
 		if (!$tbl || !$tbl.length) {
 			return false
 		}
-		var tblHeight = $tbl.data("offsetHeight"),
-			marginTop = parseInt($tbl.css("marginTop")) + diffY;
-		if (marginTop >= 0) {
-			$tbl.css({
-				marginTop: -1
-			})
+		var tblHeight = $tbl.data("offsetHeight") - 1,
+			scrollTop = this.scrollTop - diffY,
+			scrollTop2;
+		if (scrollTop < 0) {
+			scrollTop2 = 0
 		} else {
-			if ((diffY < 0) && contHeight - tblHeight - marginTop > 0) {
-				if (contHeight - $tbl[0].offsetHeight - marginTop > 0) {
-					var new_marginTop = contHeight - $tbl[0].offsetHeight;
-					if (new_marginTop < 0) {
-						$tbl.css({
-							marginTop: new_marginTop
-						})
-					}
-				} else {
-					$tbl.css({
-						marginTop: marginTop
-					})
-				}
+			if ((diffY < 0) && contHt - tblHeight + scrollTop > 0) {
+				scrollTop2 = tblHeight - contHt
 			} else {
-				$tbl.css({
-					marginTop: marginTop
-				})
+				scrollTop2 = scrollTop
 			}
 		}
+		this.setScrollTop(scrollTop2, $tbl);
 		return true
 	};
-	_pMouseSelection._scrollVertSmooth = function(y1, y2) {
+	_pMouseSelection.setScrollTop = function(margin, $tbl) {
+		if (margin >= 0) {
+			margin = Math.round(margin);
+			this.scrollTop = margin;
+			$tbl.parent("div").scrollTop(margin)
+		} else {}
+	};
+	_pMouseSelection.getScrollLeft = function() {
+		return this.scrollLeft
+	};
+	_pMouseSelection.getScrollTop = function() {
+		return this.scrollTop
+	};
+	_pMouseSelection.setScrollLeft = function(margin, $tbls, $tbl_h) {
+		if (margin >= 0) {
+			margin = Math.round(margin);
+			this.scrollLeft = margin;
+			if ($tbl_h) {
+				$tbl_h.css({
+					marginLeft: -1 * margin
+				})
+			}
+			if ($tbls) {
+				$tbls.parent("div").scrollLeft(margin)
+			}
+		}
+	};
+	_pMouseSelection.scrollVertSmooth = function(y1, y2) {
 		if (y1 == y2) {
 			return
 		}
 		this.updateTableY(y2 - y1)
 	};
-	_pMouseSelection._scrollHorSmooth = function(x1, x2) {
+	_pMouseSelection.scrollHorSmooth = function(x1, x2) {
 		if (x1 == x2) {
 			return
 		}
 		var that = this.that,
 			diffX = x2 - x1,
-			$tbl = that.getTableForHorScroll(),
-			$tbl_h = that.getTableHeaderForHorScroll(),
-			$cont = that.$cont,
-			sbWd = that._getSBWidth(),
-			contWd = $cont.data("offsetWidth") - sbWd;
+			$tbl = this.getTableForHorScroll(),
+			$tbl_h = this.getTableHeaderForHorScroll(),
+			contWd = that.iRefresh.getEContWd();
 		if (!$tbl && !$tbl_h) {
 			return
 		}
 		var $tbl_r = $tbl ? $tbl : $tbl_h,
 			tblWd = $tbl_r.data("scrollWidth"),
-			marginLeft = parseInt($tbl_r.css("marginLeft")) + diffX;
-		if (marginLeft > 0) {
-			if ($tbl) {
-				$tbl.css({
-					marginLeft: 0
-				})
-			}
-			if ($tbl_h) {
-				$tbl_h.css({
-					marginLeft: 0
-				})
-			}
+			new_scrollLeft, scrollLeft = this.scrollLeft - diffX;
+		if (scrollLeft < 0) {
+			new_scrollLeft = 0
 		} else {
-			if (contWd - tblWd - marginLeft > 0) {
-				if (contWd - tblWd <= 0) {
-					if ($tbl) {
-						$tbl.css("marginLeft", contWd - tblWd)
-					}
-					if ($tbl_h) {
-						$tbl_h.css("marginLeft", contWd - tblWd)
-					}
-				}
+			if (tblWd - contWd - scrollLeft < 0) {
+				new_scrollLeft = tblWd - contWd
 			} else {
-				if ($tbl) {
-					$tbl.css("marginLeft", marginLeft)
+				new_scrollLeft = scrollLeft
+			}
+		}
+		this.setScrollLeft(new_scrollLeft, $tbl, $tbl_h)
+	};
+	_pMouseSelection.syncViewWithScrollBarVert = function(ratio) {
+		if (ratio == null) {
+			return
+		}
+		var that = this.that,
+			$tbl = this.getTableForVertScroll();
+		if (!$tbl || !$tbl.length) {
+			return
+		}
+		var o = that.options;
+		if (o.editModel.indices) {
+			that.blurEditor({
+				force: true
+			})
+		}
+		var tblHt = $tbl.data("offsetHeight") - 1,
+			contHt = that.iRefresh.getEContHt(),
+			excess = tblHt - contHt,
+			marginTop = excess * ratio;
+		if (!tblHt || !contHt) {
+			if (o.debug) {
+				throw "_syncViewWithScrollBarVert !tblHt || !contHt"
+			}
+		}
+		if (marginTop < 0) {
+			marginTop = 0
+		}
+		this.setScrollTop(marginTop, $tbl)
+	};
+	_pMouseSelection.syncViewWithScrollBarHor = function(ratio) {
+		if (ratio == null) {
+			return
+		}
+		var that = this.that,
+			$tbl = this.getTableForHorScroll();
+		var $tbl_h = this.getTableHeaderForHorScroll();
+		if (!$tbl && !$tbl_h) {
+			return
+		}
+		var o = that.options;
+		if (o.editModel.indices) {
+			that.blurEditor({
+				force: true
+			})
+		}
+		var $tbl_r = $tbl ? $tbl : $tbl_h,
+			tblWd = $tbl_r.data("scrollWidth"),
+			contWd = that.iRefresh.getEContWd(),
+			excess = tblWd - contWd,
+			scrollLeft = excess * ratio;
+		if (!tblWd || !contWd) {
+			return
+		}
+		if (scrollLeft < 0) {
+			scrollLeft = 0
+		}
+		this.setScrollLeft(scrollLeft, $tbl, $tbl_h)
+	};
+	_pMouseSelection.resetMargins = function() {
+		this.scrollLeft = 0;
+		this.scrollTop = 0
+	};
+	_pMouseSelection.syncHeaderViewWithScrollBarHor = function(cur_pos) {
+		if (cur_pos == null) {
+			return
+		}
+		var that = this.that,
+			$tbl_h = this.getTableHeaderForHorScroll();
+		if (!$tbl_h) {
+			return
+		}
+		var o = that.options,
+			freezeCols = o.freezeCols;
+		if (o.editModel.indices) {
+			that.blurEditor({
+				force: true
+			})
+		}
+		var $tbl_r = $tbl_h,
+			tblWd = $tbl_r.data("scrollWidth"),
+			contWd = that.iRefresh.getEContWd(),
+			scrollLeft = calcWidthCols.call(that, freezeCols, cur_pos + freezeCols);
+		if (!tblWd || !contWd) {
+			return
+		}
+		if (scrollLeft < 0) {
+			scrollLeft = 0
+		}
+		$tbl_h.css("marginLeft", -scrollLeft)
+	};
+	_pMouseSelection.syncScrollBarVert = function() {
+		var that = this.that,
+			$tbl = this.getTableForVertScroll();
+		if (!$tbl || !$tbl.length) {
+			return
+		}
+		var tblHt = $tbl.data("offsetHeight"),
+			contHt = that.iRefresh.getEContHt(),
+			excess = tblHt - contHt,
+			scrollTop = this.scrollTop,
+			ratio = scrollTop / excess;
+		if (ratio >= 0 && ratio <= 1) {
+			if (that.$vscroll.hasClass("pq-sb-vert")) {
+				that.$vscroll.pqScrollBar("option", "ratio", ratio)
+			}
+		}
+	};
+	_pMouseSelection.syncScrollBarHor = function() {
+		var that = this.that,
+			$tbl = this.getTableForHorScroll(),
+			$tbl_h = this.getTableHeaderForHorScroll();
+		if (!$tbl && !$tbl_h) {
+			return
+		}
+		var $tbl_r = $tbl ? $tbl : $tbl_h;
+		var tblWd = $tbl_r.data("scrollWidth"),
+			contWd = that.iRefresh.getEContWd(),
+			excess = tblWd - contWd,
+			scrollLeft = this.scrollLeft,
+			ratio = (scrollLeft / excess);
+		if (ratio >= 0 && ratio <= 1) {
+			if (that.$hscroll.hasClass("pq-sb-horiz")) {
+				that.$hscroll.pqScrollBar("option", "ratio", ratio)
+			}
+		}
+	};
+	_pMouseSelection.getTableForVertScroll = function() {
+		var that = this.that,
+			pqpanes = that.pqpanes,
+			$tbl = that.$tbl;
+		if (!$tbl || !$tbl.length) {
+			return
+		}
+		if (pqpanes.h && pqpanes.v) {
+			$tbl = $([$tbl[2], $tbl[3]])
+		} else {
+			if (pqpanes.v) {
+				$tbl = $([$tbl[0], $tbl[1]])
+			} else {
+				if (pqpanes.h) {
+					$tbl = $($tbl[1])
 				}
-				if ($tbl_h) {
-					$tbl_h.css("marginLeft", marginLeft)
+			}
+		}
+		return $tbl
+	};
+	_pMouseSelection.getTableForHorScroll = function() {
+		var that = this.that,
+			pqpanes = that.pqpanes,
+			tbl = [],
+			$tbl = that.$tbl;
+		if (!$tbl || !$tbl.length) {
+			return
+		}
+		if (pqpanes.h && pqpanes.v) {
+			tbl.push($tbl[1], $tbl[3])
+		} else {
+			if (pqpanes.v) {
+				tbl.push($tbl[1])
+			} else {
+				if (pqpanes.h) {
+					tbl.push($tbl[0], $tbl[1])
+				} else {
+					tbl.push($tbl[0])
 				}
+			}
+		}
+		if (that.tables.length) {
+			var $tbl2 = that.tables[0].$tbl;
+			if (pqpanes.v) {
+				tbl.push($tbl2[1])
+			} else {
+				tbl.push($tbl2[0])
+			}
+		}
+		return $(tbl)
+	};
+	_pMouseSelection.getTableHeaderForHorScroll = function() {
+		var that = this.that,
+			pqpanes = that.pqpanes,
+			$tbl = that.$tbl_header;
+		if (!$tbl || !$tbl.length) {
+			return
+		}
+		if (pqpanes.vH) {
+			$tbl = $($tbl[1])
+		} else {
+			$tbl = $($tbl[0])
+		}
+		return $tbl.parent()
+	};
+	_pMouseSelection.scrollRowNonVirtual = function(obj) {
+		var that = this.that,
+			o = that.options,
+			rowIndxPage = obj.rowIndxPage,
+			nested = (that.iHierarchy ? true : false),
+			rowIndx = obj.rowIndx,
+			contHt = that.iRefresh.getEContHt(),
+			rowIndxPage = (rowIndxPage == null) ? (rowIndx - that.rowIndxOffset) : rowIndxPage,
+			freezeRows = parseInt(o.freezeRows);
+		if (rowIndxPage < freezeRows) {
+			return
+		}
+		var $tbl = that.get$Tbl(rowIndxPage),
+			$tr = that.getRow({
+				rowIndxPage: rowIndxPage
+			}),
+			tr = $tr[0];
+		if (!tr) {
+			return
+		}
+		var trHt = tr.offsetHeight,
+			scrollTop = this.getScrollTop(),
+			trTop = tr.offsetTop,
+			marginTop = parseInt($tbl.css("marginTop"));
+		if (trTop - scrollTop + marginTop < 0) {
+			var scrollTop2 = trTop + marginTop;
+			this.setScrollTop(scrollTop2, $tbl);
+			this.syncScrollBarVert()
+		} else {
+			if (trTop + trHt - scrollTop > contHt) {
+				var scrollTop2 = trHt + trTop - contHt;
+				this.setScrollTop(scrollTop2, $tbl);
+				this.syncScrollBarVert()
+			}
+		}
+	};
+	_pMouseSelection.scrollColumnNonVirtual = function(objP) {
+		var that = this.that,
+			colIndx = objP.colIndx,
+			colIndx = (colIndx == null) ? that.getColIndx({
+				dataIndx: objP.dataIndx
+			}) : colIndx,
+			freezeCols = that.options.freezeCols;
+		if (colIndx < freezeCols) {
+			return
+		}
+		var td_right = that._calcRightEdgeCol(colIndx).width,
+			td_left = that._calcRightEdgeCol(colIndx - 1).width,
+			wdFrozen = that._calcRightEdgeCol(freezeCols - 1).width,
+			$tbl = this.getTableForHorScroll(),
+			$tbl_h = this.getTableHeaderForHorScroll(),
+			contWd = that.iRefresh.getEContWd(),
+			scrollLeft = this.scrollLeft;
+		if (td_right - scrollLeft > contWd) {
+			var scrollLeft2 = td_right - contWd;
+			this.setScrollLeft(scrollLeft2, $tbl, $tbl_h);
+			this.syncScrollBarHor()
+		} else {
+			if (td_left - wdFrozen < scrollLeft) {
+				var scrollLeft2 = td_left - wdFrozen;
+				this.setScrollLeft(scrollLeft2, $tbl, $tbl_h);
+				this.syncScrollBarHor()
 			}
 		}
 	}
@@ -14514,7 +15071,8 @@
 			on: true,
 			header: true,
 			zIndex: 10000
-		}, pasteModel = {
+		},
+		pasteModel = {
 			on: true,
 			compare: "byVal",
 			select: true,
@@ -14843,7 +15401,7 @@
 	$(document).unbind(".pqExcel").bind("keydown.pqExcel", function(evt) {
 		if (evt.ctrlKey || evt.metaKey) {
 			var $ae = $(evt.target);
-			if (!$ae.hasClass("pq-grid-row") && !$ae.hasClass("pq-grid-cell") && !$ae.is("#pq-grid-excel") && !$ae.is("div.pq-cont")) {
+			if (!$ae.hasClass("pq-grid-row") && !$ae.hasClass("pq-grid-cell") && !$ae.is("#pq-grid-excel") && !$ae.is("div.pq-grid-cont")) {
 				return
 			}
 			var $grid = $ae.closest(".pq-grid");
@@ -14925,11 +15483,12 @@
 	var _pHistory = cHistory.prototype = new $.paramquery.cClass;
 	_pHistory._onKeyDown = function(evt, ui) {
 		var keyCodes = {
-			z: "90",
-			y: "89",
-			c: "67",
-			v: "86"
-		}, ctrlMeta = (evt.ctrlKey || evt.metaKey);
+				z: "90",
+				y: "89",
+				c: "67",
+				v: "86"
+			},
+			ctrlMeta = (evt.ctrlKey || evt.metaKey);
 		if (ctrlMeta && evt.keyCode == keyCodes.z) {
 			if (this.undo()) {}
 			return false
@@ -15252,7 +15811,7 @@
 		}
 	};
 	fn._create = function() {
-		this._superApply();
+		this._super();
 		var $ele = this.element,
 			eventNamespace = this.eventNamespace;
 		$ele.on("pqtooltipopen" + eventNamespace, function(evt, ui) {
@@ -15264,8 +15823,8 @@
 			ui.tooltip.css("zIndex", $td.zIndex() + 5);
 			if ($grid.is(".pq-grid")) {
 				var obj = $grid.pqGrid("getCellIndices", {
-					$td: $td
-				}),
+						$td: $td
+					}),
 					rowIndx = obj.rowIndx,
 					dataIndx = obj.dataIndx,
 					a, rowData = $grid.pqGrid("getRowData", {

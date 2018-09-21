@@ -4,7 +4,7 @@ jQuery grid plugin, supports 100,000+ records.
 
 [Angularjs Grid](http://angularjsgrid.com) (for Angularjs)
 
-Copyright (c) 2012-2017 Paramvir Dhindsa 
+Copyright (c) 2012-2018 Paramvir Dhindsa 
 
 [Released under GPL v3 license](http://paramquery.com/license)
  

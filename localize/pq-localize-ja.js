@@ -18,7 +18,7 @@ $.paramquery.pqPager.regional['ja']={
     strFirstPage:"最初",
     strLastPage:"最後",
     strNextPage:"次",
-    strPage:"{0}　/ {1}  ページ",
+    strPage:"{0}  / {1}  ページ",
     strPrevPage:"前",
     strRefresh:"リフレッシュ",
     strRpp:"１ページあたりのレコード: {0}",

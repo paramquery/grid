@@ -2813,7 +2813,7 @@
 							}
 							if (style) {
 								var olds = ui.tooltip.attr("style");
-								ui.tooltip.attr("style", olds + ";" + style).css("zIndex", $cell.zIndex() + 5)
+								ui.tooltip.attr("style", olds + ";" + style).css("zIndex", $cell.css("z-index") + 5)
 							}
 							if (css) {
 								ui.tooltip.css(css)
@@ -4245,7 +4245,7 @@
 				$parent.css("padding", 0).empty()
 			}
 			this.$div_focus = $(["<div class='pq-editor-outer'>", "<div class='pq-editor-inner'>", "</div>", "</div>"].join("")).appendTo($parent);
-			this.$div_focus.css("zIndex", $parent.zIndex() + 5)
+			this.$div_focus.css("zIndex", $parent.css("z-index") + 5)
 		}
 		var obj = $.extend({
 			all: true
@@ -15820,7 +15820,7 @@
 			$td.on("remove", function(evt) {
 				$grid.pqTooltip("close", evt, true)
 			});
-			ui.tooltip.css("zIndex", $td.zIndex() + 5);
+			ui.tooltip.css("zIndex", $td.css("z-index") + 5);
 			if ($grid.is(".pq-grid")) {
 				var obj = $grid.pqGrid("getCellIndices", {
 						$td: $td

@@ -1,4 +1,325 @@
-Version 2.4.1 (02/08/2018)
+Version 3.5.0 (07/01/2021)
+==========================
+
+Fixes:
+++++++
+npm module
+fix pq namespace in pqgrid.dev.js
+Modularize localization files
+Add package.json
+
+css in modern frameworks
+sorted header cell color is white same as background
+header gradient style missing
+
+
+Version 3.4.1 (06/24/2017)
+==========================
+
+Fixes:
+++++++
+frozen columns not rendered when all unfrozen columns are hidden
+paste doesn't work in modal dialog
+Excel export: unable to add new sheet
+formulas unnecessarily called for summary rows
+
+Additions:
+++++++++++
+
+Knockoutjs bindings
+
+
+Version 3.4.0 (03/15/2017)
+==========================
+
+Fixes:
+++++++
+width of spanned merge columns large than sum of width of constituent header columns with flex. (Chrome)
+
+Range
+pq.extend faulty this._super
+Range.value set and get 2 dimensional array.
+
+Grouping		
+group.collapse and group.expand API work like toggle
+alignment of group titles when column.align is center or right
+column.groupable is not working
+refreshColumns used o.colModel instead of that.colModel		
+IE focus issue with editModel: {tab:'nextEdit', save: 'nextEdit'}
+
+Sorting		
+Shift key turns sorting into multiple sorting permanently.
+Default sort dir should be 'up'
+		
+missing {0} in strRpp in some Localization files.
+IE pager input box enter key doesn't cause page change
+left, right keys don't work in in FF numeric editor with filterKeys.
+
+
+Additions:
++++++++++
+Options: autofill, fillHandle, groupModel.summaryInTitleRow
+
+Events: beforeFillHandle
+
+Decoupling of Sorting/ grouping.
+
+
+Version 3.3.5 (01/10/2017)
+==========================
+
+Fixes:
+++++++
+combined use of copy: false and hidden: true cause incorrectly hidden columns and incorrectly assign widths to columns in Excel export
+width of spanned merge columns large than sum of width of constituent header columns
+unable to edit custom aggregates when it returns a string
+make editable column uneditable during paste in beforeValidate event.
+Paste -> undo, leaves that column cells dirty
+filter doesn't work correctly for dataType: 'stringi'
+stripe rows doesn't work with appendRow (used by vertical scroll )
+exportRender: true doesn't work with boolean values
+state issue wrt hidden columns
+Missing left columns and horizontal scrollbar during fast enlargement of table
+sortModel.multiKey default value of "shiftKey" turns multi column sorting into single column sorting incorrectly.
+
+Additions:
++++++++++
+Methods: refreshCM, group() { addGroup, collapse, collapseAll, collapseTo, expand, expandAll, expandTo, removeGroup }
+
+Events: beforeGroupExpand, groupChange
+
+Scrolling with mouse drag outside the viewport
+Ctrl-click on grouping toolbar expand/collapse all levels after that level.
+Polyfill for Array ( forEach, find, findIndex, map )
+
+Version 3.3.4 (11/16/2016)
+==========================
+
+Fixes:
+++++++
+incorrect merged cell colspan/rowspan with hidden columns/rows in frozen pane.
+removal of remaining zIndex() calls from editor and tooltips.
+multiple selections when shift key is pressed while selectionModel.mode = "single".
+scrollRow() last row in grid with horizontal scrollbar, height="flex" and virtualY -> top row removed bug
+
+Additions:
++++++++++
+hidden columns state included in saveState/ loadState.
+
+
+Version 3.3.3 (10/23/2016)
+==========================
+
+Fixes:
+++++++
+missing scrollbar in parent grid when there is only single row in case of nested grids.(cRefresh)
+Html export of multi page grid with merge cells (cMerge.getRootCell)
+Remote paging - when empty results are returned - pager not updated (remoteRequest)
+Row selections retain same rowIndx but different rowData on sorting/filter.(Selection.renew)
+
+
+Version 3.3.2 (08/07/2016)
+==========================
+
+Additions:
++++++++++
+Angularjs grid: ng.pqgrid.js
+
+Fixes:
+++++++
+error when click on svg in cell
+bring back functionality to add/ remove rows upon ctrl key with mouse click
+fix to window resize with multiple grids in same document (also patch fix)
+performance improvement for filtering of large dataset
+
+
+Version 3.3.1 (05/28/2016)
+==========================
+
+Fixes:
+++++++
+
+jQuery.noConflict and use of $
+touch stops working by double touch
+horizontal cell merging for > 1 GM.dataIndx
+Continuation symbol (...) while hwrap
+filter rows with large number, data1.push.apply throws error 
+
+
+Version 3.3.0 (03/12/2016)
+==========================
+
+Additions:
++++++++++
+
+options: column: { exportRender, format, formula, groupable, groupChange, nodrag, nodrop, parent, summary.edit },
+	groupModel: { fixCols, grandSummary, header, headerMenu, menuItems, merge, on, showSummary, summaryEditable, titleDefault},
+	maxWidth,
+	mergeCells.cls,
+	sortModel.ignoreCase,
+	summaryData, summaryOptions, summaryTitle,
+	toolbar.items[]{ type=textarea, value, listener(direct without event type.)}
+
+methods: exportData, group, groupOption, refreshToolbar, reset, pq.formatNumber, pq.aggregate: {avg, count, max, min, sum}, Range.merge, Range.unmerge
+
+events: beforeExport, columnDrag, complete, exportData, filter, group, selectEnd
+
+Custom themes including bootstrap.
+
+Changes:
++++++++
+
+options: groupModel: { icon }, column: { summary.type }
+context of all toolbar events and callbacks changed to grid instance from jQuery object.
+numberCell based on rowIndx instead of rowIndxPage.
+jQueryUI dependency >= 1.11.4
+
+Fixes:
++++++
+
+jQUery 2.x compatibility.
+Right click loses selection.
+tracking not required for checkbox selection column.
+loadState should be able to work with missing columns in new colModel.
+Column grouping: a) parent also hidden when first child node is hidden.
+	b) parent should be removed from view when all child nodes are hidden.
+Tracking: Add a new row, undo all. Records left in updateList.
+In IE missing borders of merged cells & relative positioned cells.
+if a column has copy:false then that and all next columns are not copied.
+toggle restore state in IE loses previous state.
+clean unfiltered rows upon refreshDataAndView.
+rendering of view with virtualY and paging.
+custom sorting for non-string dataTypes also.
+deep clone for nested objects in columnTemplate.
+trigger load event before any other event.
+
+Deperecated
++++++++++++
+
+file: bootstrap.ui.css 
+options: bootstrap
+methods: exportExcel, exportCsv
+
+Obsolete:
+++++++++
+
+column.summary.title
+groupModel: { summaryCls, titleCls }
+pqgrid.bootstrap.css
+
+
+
+Version 3.2.0 (10/12/2015)
+==========================
+Additions:
+
+options: freezeBorders, realFocus, mergeCells, trigger, bubble, 
+	column.cb.check, column.cb.uncheck, 
+	editModel.onTab, editModel.onSave,
+	selectionModel.onTab,
+	sortModel.multiKey
+methods: search, cut, clear, on, one, off, pager, vscrollbar, hscrollbar, 
+	isValidChange, toolbar, focus
+
+New constructors for widgets: pq.grid, pq.pager, pq.scrollbar
+
+New Objects: Range, Selection
+
+Changes:
+
+options: column.render, rowInit, column.postRender, column.editor=false, column.dataType="object"
+methods: addRow, updateRow, deleteRow allow multiple records, param name changed to newRow
+	editInvalid param added to isValid.
+	exportExcel, exportCsv: new params added: render, source
+	getChanges({format:'byVal'}) also provides cell level changes and oldRow.
+context of all callbacks changed to grid instance from jQuery object.
+'checkBoxSelection': renamed to type='checkbox', dataType mandatory, use cb.select instead of check event to bind selections with checkbox, column.title and column.render can be implemented to override default renderers.
+
+
+Fixes:
+
+column.postRender
+tooltips invisible in maximized state when body has position:relative
+getCellsByClass
+page gets sluggish after large paste operation.
+scrolling of summary row when cell in main table is edited.
+checkbox cells become checked while row remains unselected.
+checkbox for type='checkBoxSelection' in grouped column header.
+multiline editor with height:'flex' in IE8.
+normal font-weight in toolbar and filter row.
+assignment of dataIndx for column.type='detail' before initialization of this.colIndxs
+column.dataType= 'object' for column.type='detail'
+
+Obsolete:
+
+Methods: selection generic methods,
+Events: rowSelect, rowUnSelect, cellSelect, cellUnSelect, beforeUnCheck, beforeCheck
+
+
+
+Version 3.1.0 (07/15/2015)
+==========================
+Additions:
+
+options: column.postRender, postRenderInterval
+
+
+Fixes:
+In IE, toggle button in nesting grid throws error.
+click on vertical scrollbar causes more than one page move.
+vertical scrollbar not visible at borderline cases in virtualY mode.
+vertical scrollbar causes oscillation in viewport at the bottom in virtualY mode.
+In batch editing, 1. make a change 2. Delete the row. 3. Undo. The dirty triangle doesn't show up.
+set virtualX, virtualY after init
+minimize toggle button breaks the fluid layout of document.
+
+
+
+Version 3.0.0 (06/29/2015)
+==========================
+General:
+	Bootstrap support
+	pqgrid.bootstrap.css & pqgrid.ui.css files
+	Assignment of colIndx = -1 to number cell.
+	<td> in header cells changed to <th>
+pqGrid
+------
+
+Additions:
+
+options: bootstrap, flex, maxHeight, rowInit, sortModel, dataType: 'stringi', 
+	column.editor callback can return other type of editors ('textbox', 'textarea', 'select', etc to support different editors in different rows.
+	column.filter.condition callback
+	
+methods: flex, sort, saveState, loadState
+Events: more arguments in beforeSort, sort
+	columnOrder
+	cellClick on numberCell with colIndx of -1
+	ui.source argument in refresh.
+	
+Removal: virtualXHeader
+
+Changes: load event fires before view refresh. 
+	filterModel.type="local" by default
+	beforeSort, sort event fire when sort method is called directly or indirectly through header cell click or remote request with pq_sort parameters. Previously they were fired only while local sorting via header cell click.
+
+
+Fixes: Removal of unfiltered rows when set new dataModel.data.(1206)
+	getRowIndx should not search through unfiltered rows.
+	In IE, cell click on lower most cell causes viewport scoll when virtualY: true.(1068)
+	column.filter.type=callback throws error (1131)
+	setting groupModel to null should show the hidden rows.(828)
+	row/cell selection covers the dirty cell triangle. (1179)
+	Browser zoom causes misalignment in grouped columns with virtualXHeader = false. (1082)
+	grouping on blank values. (1150)
+	mouse wheel scrolling on grid should not prevent default when scrollbar reaches edge.
+
+Deprecated:
+options: dataModel: {sortIndx, sortDir, sorting}, sortable
+events: dataIndx argument in beforeSort & sort events.
+
+
+Version 2.4.1 (03/20/2015)
 ==========================
 Fixes: 
 	Text same color as background in some themes e.g., Le-frog
@@ -13,7 +334,7 @@ Fixes:
 	Firefox scroll with height:'flex'
 	export to excel broken with hidden columns.(column._width)
 
-Version 2.4.0 (02/08/2018)
+Version 2.4.0 (02/16/2015)
 ==========================
 Additions: 
 
@@ -38,9 +359,8 @@ Fixes: scrollModel autoFit imperfection w.r.t last column and vertical scrollbar
 	slow scrolling in IE, Firefox, touch tablets. (changed margin* to scroll* and layout of panes)
 	Header filtering with scrollModel.autoFit could affect the widths of columns in other grids on same page.
 
-Version 2.3.0 (12/14/2017)
+Version 2.3.0 (11/24/2014)
 ==========================
-
 Additions:
 
 options: virtualXHeader, warning
@@ -66,10 +386,8 @@ Fixes: copy/paste for Mac,
 	validation callback was not called when value null.
 	filterKeys for Firefox.
 
-
-Version 2.2.0 (01/24/2017)
+Version 2.2.0 (09/13/2014)
 ==========================
-
 Addditions:
 
 options: pasteModel, column.copy, historyModel
@@ -87,10 +405,8 @@ DnD columns with use of columTemplate and array data
 numberCell resize fix
 last row selection with grouping
 
-
-Version 2.1.0 (11/06/2016)
+Version 2.1.0 (05/27/2014)
 ==========================
-
 Additions:
 
 options: virtualY, swipeModel, columnTemplate, column.maxWidth, editModel.onBlur
@@ -118,21 +434,10 @@ Fixes:
 updateRow, refreshRow for rows in master grid.
 dataModel.location = local in master grid
 empty row grouped data when no data.
+touch-punch: prevent touch on jqueryui cancel & allow native click (to support focus on dynamic controls) by selective preventDefault.
 
-
-Version 2.0.5 (08/15/2016)
+Version 2.0.4 (02/26/2014)
 ==========================
-
-Addition:
-
-Angularjs bindings.
-
-User contributed translations.
-
-
-Version 2.0.4 (10/19/2015)
-==========================
-
 Addition:
 
 filter conditions: between, range, regexp, lte, gte, notbegin, notend
@@ -145,7 +450,8 @@ Changes:
 
 rowSelect, rowUnSelect, cellSelect, cellUnSelect, pq-sb-vert, pq-sb-horiz
 
-
+Version 2.0.3 (12/04/2013)
+==========================
 New features:
 Nested grids & detail View (rowExpand,rowCollapse,rowInvalidate,detailModel)
 multiple Selections with mouse drag.
@@ -158,6 +464,8 @@ Migration steps:
 Move paging properties from dataModel to pageModel.
 
 
+Version 2.0.2 (10/22/2013)
+==========================
 editModel	
 editor	
 validation	
@@ -175,6 +483,8 @@ Migration steps:
 View needs to be refreshed manually
 
 
+Version 2.0.1 (10/10/2013)
+==========================
 Fixes:
 _refreshWidths
 _refreshWidthsAutoFit
@@ -191,81 +501,3 @@ rollback
 commit
 getChanges
 _refreshResizeColumnStop
-
-
-Version: 1.1.3
-
-1) Improved support for JSON: dataIndx can be int or String
-2) flexWidth fix for IE10
-3) Correction in camelCase cellKeyDown and cellEditKeyDown
-
-Version: 1.1.2
-
-Grouping bug fix.  
-
-Version: 1.1.1
-
-Options: bottomVisible, oddRowsHighlight, roundCorners, rowBorders
-Methods: getEditCell
-Events: cellEditKeyDown, cellKeyDown, rowDblClick
-
-Version: 1.1.0
-
-internationalization and localization
-
-Version: 1.0.9
-
-ThemeRoller ready.
-
-Version: 1.0.8
-
-1) Method: createTable
-2) Events: refresh
-
-Version: 1.0.7
-
-1) Page scroll till bottom.
-2) removal of $.browser
-3) jQuery 1.9 compatibility.
-4) Option: topVisible.
-5) Change adapter namespace to paramquery.
-
-Version: 1.0.6
-
-1) FlexHeight, FlexWidth & ScrollModel > horizontal
-2) Added new scrollbar look.
-
-Version: 1.0.5
-
-Edit field and dataIndx bug fixes
-
-Version: 1.0.4
-
-1) Header background css
-2) Nested colModels for grouped columns.
-3) Name of column > saveCell callback changed to column > getEditCellData 
-4) dataIndx introduced to bind colModel > columns with data columns explicitly.
-5) Events: cellSave, cellClick, cellDblClick, cellSelect, cellUnSelect, rowClick, rowSelect, rowUnSelect
-6) Options: column > dataIndx, column > sortable, customData, editModel, hoverMode, selectionModel
-7) Methods: getColIndxFromDataIndx, getCell, getEditCellData, getRow, isEditableCell, refreshCell, refreshColumn, refreshRow, selection
-8) getSelection method removed.
-
-Version: 1.0.3
-
-1) Added beforeTableView event
-2) Added DataModel > error method
-3) Added classes pq-row-select,pq-cell-select,pq-grid-row, pq-grid-row-hover
-4) Added scrollPace option 
-
-Version: 1.0.2
-
-1) Added render event.
-2) Absolute address with paging made possible with setSelection and getSelection.
-3) Support for adding toolbar.
-
-Version: 1.0.1
-
-1) Added refresh button in pager.
-2) Added public methods: editCell,saveEditCell & quitEditMode.
-
-

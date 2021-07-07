@@ -2,13 +2,15 @@
 <html>
 <head>
 <!--jQuery dependencies-->
-	<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/themes/base/jquery-ui.css" />    
+	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css" />
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
 
 <!--PQ Grid files-->
     <link rel="stylesheet" href="pqgrid.min.css" />
-    <script src="pqgrid.min.js"></script>
+    <link rel="stylesheet" href="pqgrid.ui.min.css" />
+    
+    <script src="pqgrid.dev.js"></script>
 
 <!--jqueryui touch punch for touch devices-->
     <script src="touch-punch/touch-punch.min.js"></script>
@@ -16,6 +18,14 @@
 <!--PQ Grid Office theme-->
     <link rel='stylesheet' href='themes/office/pqgrid.css' />
 
+<!--jsZip for zip and xlsx export-->
+    <script src="jsZip-2.5.0/jszip.min.js"></script>
+<style>
+    *{
+        font-size:12px;
+        font-family: Arial;
+    }
+</style>
 <script>
     $(function () {
         var data = [[1, 'Exxon Mobil', '339938.0', '36130.0'],

@@ -1,14 +1,14 @@
 /*!
- * Angularjs grid v2.0.5
- *
- * Copyright (c) 2016 Paramvir Dhindsa (http://paramquery.com)
+ * ParamQuery Pro v3.5.0
+ * 
+ * Copyright (c) 2012-2021 Paramvir Dhindsa (http://paramquery.com)
  * Released under GNU General Public License v3
  * http://paramquery.com/license
- *
+ * 
  */
+ 
 (function($) {
     "use strict";
-    var pq = window.pq = window.pq || {};
     if (pq.ng) {
         return;
     }
@@ -69,13 +69,13 @@
             }
         })() : null;
         dataStr && (DM.data = $scope.$eval(dataStr));
-        options.render = self.onRender(self, options, options.render);
-        ngM.compileHeader && (options.refreshHeader = self.onRefreshHeader(self, options.refreshHeader));
-        ngM.compileToolbar && (options.dataAvailable = self.oneDataReady(self, 'dataAvailable'));
-        options.beforeRefreshData = self.onDataReady(self, dataStr, options.dataReady);
-        compileRows && (options.refresh = self.onRefresh(self, options.refresh));
-        $ele.pqGrid(options).data('pqGrid');
-        $ele.on("pqgridcellsave", self.onRefreshRowCell(self, compileRows)).on("destroy", self.onDestroy(self));
+        options.render = self.onRender(self, options, options.render, function(grid) {
+            ngM.compileHeader && grid.on('refreshHeader', self.onRefreshHeader(self));
+            ngM.compileToolbar && grid.one('dataReady', self.oneDataReady(self));
+            grid.on('dataReady', self.onDataReady(self, dataStr));
+            compileRows && grid.on('refresh', self.onRefresh(self));
+        });
+        self.grid = pq.grid($ele, options).on("refreshRow refreshCell", self.onRefreshRowCell(self, compileRows)).on("destroy", self.onDestroy(self));
         self.bindEvents($attr);
         watch === true && dataStr && self.digest($scope);
     };
@@ -98,7 +98,7 @@
         for (key in keys) {
             if (key.indexOf("on") === 0) {
                 eventName = key.substring(2, 3).toLowerCase() + key.substr(3);
-                self.$ele.on("pqgrid" + eventName.toLowerCase(), self.onEvent(self, $attr[key]));
+                self.grid.on(eventName, self.onEvent(self, $attr[key]));
             }
         }
     };
@@ -197,7 +197,7 @@
     _p.onDataReady = function(self, dataStr) {
         return function onDataReady(evt) {
             if (dataStr) {
-                var data = self.grid.options.dataModel.data;
+                var data = this.options.dataModel.data;
                 self.updateObjInt(data);
                 self.$parse(dataStr).assign(self.$scope, data);
             };
@@ -237,18 +237,14 @@
     _p.onRefreshRowCell = function(self, bind) {
         return function(evt, ui) {
             if (bind) {
-                var $tr = self.grid.getRow(ui);
-                setTimeout(function() {
-                    try {
-                        self.rowScope($tr, ui.rowData, ui.rowIndx);
-                    } catch (ex) {}
-                });
+                var $tr = this.getRow(ui);
+                self.rowScope($tr, ui.rowData, ui.rowIndx);
             }
         };
     };
     _p.onRefresh = function(self) {
         return function() {
-            var grid = self.grid,
+            var grid = this,
                 $trs, $tr, i = 0,
                 len, ui, rd;
             self.cleanRowScopes();
@@ -266,30 +262,29 @@
     };
     _p.onRefreshHeader = function(self) {
         return function() {
-            var grid = self.grid,
+            var grid = this,
                 $scope = self.$scope;
             self.$compile(grid.$header)($scope);
             self.digest($scope);
         };
     };
-    _p.oneDataReady = function(self, str) {
+    _p.oneDataReady = function(self) {
         return function() {
-            var grid = self.grid,
+            var grid = this,
                 $scope = self.$scope;
-            self.$compile(grid.$toolbar)($scope);
+            self.$compile(grid.toolbar())($scope);
             self.digest($scope);
-            $(this).pqGrid('option', str, null);
         };
     };
-    _p.onRender = function(self, options, cb) {
+    _p.onRender = function(self, options, optionsRender, cb) {
         return function(evt, ui) {
-            var grid = $(this).data('paramqueryPqGrid'),
+            var grid = this,
                 $scope = self.$scope;
             $scope.grid = grid;
-            self.grid = grid;
             grid.$scope = $scope;
             options.grid = grid;
-            cb && cb.call(this, evt, ui);
+            optionsRender && optionsRender.call(grid, evt, ui);
+            cb(grid);
         };
     };
     _p.onDestroy = function(self) {
@@ -344,9 +339,7 @@
                 column.render = self.templateCell(template);
             }
             if (template = column.editorTemplate) {
-                column.editor = {
-                    type: self.templateEditor(self, column.editor, template, $compile, $scope)
-                };
+                column.editor = self.templateEditor(self, column.editor, template, $compile, $scope);
             }
             if (valids = column.validations) {
                 for (var j = 0; j < valids.length; j++) {
@@ -377,6 +370,7 @@
             $compile(tmpl)(edScope);
             scope_editor = edScope.editor;
             edScope.$destroy();
+            return $.extend(editor, scope_editor);
         };
     };
     _p.templateCell = function(tmpl) {

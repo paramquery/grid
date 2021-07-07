@@ -2,20 +2,29 @@
 <html>
 <head>
 <!--jQuery dependencies-->
-	<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.1/themes/base/jquery-ui.css" />    
+	<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css" />
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
 
 <!--PQ Grid files-->
     <link rel="stylesheet" href="pqgrid.min.css" />
-    <script src="pqgrid.min.js"></script>
+    <link rel="stylesheet" href="pqgrid.ui.min.css" />
+
+    <script src="pqgrid.dev.js"></script>
 
 <!--jqueryui touch punch for touch devices-->
     <script src="touch-punch/touch-punch.min.js"></script>
 
-<!--PQ Grid Office theme-->
-    <link rel='stylesheet' href='themes/office/pqgrid.css' />
+<!--PQ Grid bootstrap theme-->
+    <link rel='stylesheet' href='themes/bootstrap/pqgrid.css' />
 
+<!--jsZip for zip and xlsx export-->
+    <script src="jsZip-2.5.0/jszip.min.js"></script>
+<style>
+    .pq-grid{
+        font-size:13px;
+    }
+</style>
 <script>
 $(function () {
     var data = [
@@ -40,9 +49,9 @@ $(function () {
         { rank: 19, company: 'Crédit Agricole', revenues: '110764.6', profits: '7434.3' },
         { rank: 20, company: 'American Intl. Group', revenues: '108905.0', profits: '10477.0' }
     ];
-    var obj = { 
+    var obj = {        
         numberCell:{resizable:true,title:"#",width:30,minWidth:30},
-	editor: {type: 'textbox'},
+        editor: {type: 'textbox'},
         title: "ParamQuery Grid with JSON Data",
         resizable:true,
         scrollModel:{autoFit:true, theme:true}

@@ -1,19 +1,20 @@
 {
-	"name": "pqGrid",
-	"description": "Data grid inspired by MS Excel, provides sorting, filtering, paging, grouping, nesting, rows and cell selections, frozen rows, frozen columns, Add, delete, update, search, can display HTML, JSON, Array, XML, inline editing, validations, virtual rendering, virtual scrolling, cross browser, cross platform, Themeroller ready with 24 ready to use themes.",
-	"version": "2.4.1",
-	"author": {
+  "name": "pqGrid",
+  "description": "Data grid with spreadsheet features, row grouping, sorting, filtering, etc",
+  "version": "3.5.0",
+  "author": {
     "name": "Paramvir Singh Dhindsa",
     "email": "pdhindsa@paramquery.com",
     "url": "http://www.paramquery.com/"
   },
-	"main": [
-		"pqgrid.dev.js",
-		"pqgrid.dev.css"
-	],
-	"keywords": [
+  "main": [
+    "pqgrid.dev.js",
+    "pqgrid.dev.css",
+    "pqgrid.ui.dev.css"
+  ],
+  "keywords": [
     "grid",
-    "excel",    
+    "excel",
     "datagrid",
     "table",
     "ajax",
@@ -31,6 +32,6 @@
   "bugs": "https://github.com/paramquery/grid/issues",
   "dependencies": {
     "jquery": ">=1.7.0",
-    "jqueryui": ">=1.9.2"
+    "jqueryui": ">=1.11.4"
   }
 }

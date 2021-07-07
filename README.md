@@ -1,18 +1,12 @@
-jQuery grid plugin, supports 100,000+ records.
-==================================================
-[ParamQuery Grid](http://paramquery.com) (for jQuery)
+jQuery grid plugin, also support Angular, Reactjs, Vuejs
+========================================================
+[ParamQuery Grid](http://paramquery.com)
 
-[Angularjs Grid](http://angularjsgrid.com) (for Angularjs)
-
-Copyright (c) 2012-2018 Paramvir Dhindsa 
+Copyright (c) 2012-2021 Paramvir Dhindsa 
 
 [Released under GPL v3 license](http://paramquery.com/license)
- 
-      
-ParamQuery grid is a lightweight jQuery grid plugin inspired by MS Excel and Google spreadsheet. 
-
-Angularjs binding is also supported now. More bindings with other MVC/MVVM frameworks like Knockoutjs, Reactjs are coming soon.
-
+       
+ParamQuery grid is a lightweight javascript grid for Angular, jQuery, Reactjs, Vuejs
 
 
 1. [Tutorial](http://paramquery.com/tutorial)
@@ -31,7 +25,16 @@ Angularjs binding is also supported now. More bindings with other MVC/MVVM frame
 ### Features:
 
 ```
+
+Supports 100,000+ records.
+
+Support for Angular, Reactjs, Vuejs, Knockout, plain js. 
+
 Copy paste to and from Excel.
+
+Autofill, drag to fill.
+
+State management.
 
 Edit history and tracking: undo and redo.
 
@@ -45,7 +48,7 @@ Column and row grouping and fixed summary row.
 
 Frozen rows & columns like Excel.
 
-Export to Excel & CSV format.
+Export to Excel(xlsx), HTML, JSON & CSV format.
 
 Nesting of grids and row details.
 
@@ -59,7 +62,7 @@ Theme support.
 
 i18n.
 
-Consistent look and functionality across all major browsers IE(8+), Firefox, Chrome, Opera, etc
+Consistent look and functionality across all major browsers IE(11), Edge, Firefox, Chrome, Opera, etc
 
 Displays data source formats like HTML, Array, XML, JSON, etc.
 

@@ -1,3 +1,12 @@
+Version 3.5.1 (07/12/2021)
+==========================
+
+Fixes:
+++++++
+Localization
+{0} in strPage displayed as such in ja localization
+
+
 Version 3.5.0 (07/01/2021)
 ==========================
 

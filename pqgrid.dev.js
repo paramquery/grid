@@ -1,5 +1,5 @@
 /*!
- * ParamQuery Pro v3.5.0
+ * ParamQuery Pro v3.5.1
  * 
  * Copyright (c) 2012-2021 Paramvir Dhindsa (http://paramquery.com)
  * Released under GNU General Public License v3
@@ -859,7 +859,7 @@
 		var options = this.options,
 			bts = options.bootstrap,
 			strPage = options.strPage,
-			arr = strPage.split(" "),
+			arr = strPage.split(/\s/),
 			str = [];
 		for (var i = 0, len = arr.length; i < len; i++) {
 			var ele = arr[i];

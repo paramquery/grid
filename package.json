@@ -1,43 +1,52 @@
 {
-    "name": "pqgridf",
-    "version": "3.5.1",
-    "main": "index.js",
-    "author": {
-        "name": "Paramvir Dhindsa",
-        "url": "http://www.paramquery.com/"
+  "name": "pqgridf",
+  "version": "3.6.0",
+  "description": "ParamQuery Grid Free / GPL Edition",
+  "main": "pqgrid.min.js",
+  "types": "pqgrid.d.ts",
+  "exports": {
+    ".": {
+      "types": "./pqgrid.d.ts",
+      "default": "./pqgrid.min.js"
     },
-    "license": "GNU GPL v3",
-    "peerDependencies": {
-        "jquery": ">=2.2.1",
-        "@types/jquery": ">=2.2.1",
-        "jquery-ui-pack": "^1.12.3",
-        "@types/jqueryui": ">=1.12.1",
-        "jszip": "2.5.0"
-    },
-    "keywords": [
-        "datagrid",
-        "grid",
-        "angular grid",
-        "jquery grid",
-        "react grid",
-        "vue grid"
-    ],
-    "files": [
-        "/images",
-        "/localize",
-        "/themes",
-        "GPL-LICENSE.txt",
-        "changelog.txt",
-        "index.js",    
-        "pqgrid.dev.js",
-        "pqgrid.min.js",
-        "pqgrid.dev.css",
-        "pqgrid.min.css",
-        "pqgrid.ui.dev.css",
-        "pqgrid.ui.min.css",
-        "readme.md"
-    ],
-    "devDependencies": {},
-    "types": "pqgrid.d.ts",
-    "dependencies": {}
+    "./*.css": "./*.css"
+  },
+  "author": {
+    "name": "Paramvir Dhindsa",
+    "url": "https://paramquery.com/"
+  },
+  "license": "GPL-3.0-or-later",
+  "keywords": [
+    "datagrid",
+    "grid",
+    "angular grid",
+    "jquery grid",
+    "react grid",
+    "vue grid"
+  ],
+  "peerDependencies": {
+    "jquery": ">=2.2.4 <5",
+    "@types/jquery": ">=2.2.4",
+    "jquery-ui-pack": ">=1.12.3",
+    "@types/jqueryui": ">=1.12.3",
+    "jszip": "^2.5.0"
+  },
+  "files": [
+    "images",
+    "localize",
+    "themes",
+    "pqTouch",
+    "GPL-LICENSE.txt",
+    "ChangeLog.txt",
+    "pqgrid.d.ts",
+    "pqgrid.dev.js",
+    "pqgrid.min.js",
+    "pqgrid.dev.css",
+    "pqgrid.min.css",
+    "pqgrid.ui.dev.css",
+    "pqgrid.ui.min.css",
+    "README.md"
+  ],
+  "dependencies": {},
+  "devDependencies": {}
 }
